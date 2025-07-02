@@ -10,9 +10,8 @@
   <head>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="text/html; charset=utf-8" http-equiv="content-type">
-    <link rel="me" href="https://micro.blog/muan">
     <link rel="alternate" type="application/rss+xml" href="/notes.xml">
-    <link rel="apple-touch-icon" href="https://muan.co/assets/apple-touch-icon.png?v1">
+    <link rel="apple-touch-icon" href="https://site.bazinga.ink/assets/apple-touch-icon.png?v1">
     <link rel="icon" href="/assets/apple-touch-icon.png?v1" type="image/png" sizes="500x500">
     <link rel="icon" href="/assets/fav.svg?v1" type="image/svg+xml" sizes="24x24">
     <!--link rel="icon" href="/assets/fav.png" type="image/png" sizes="96x96"-->
@@ -36,33 +35,32 @@
       <meta content="{{ page.content | strip_html | truncate: 240 }}" name="description">
       <meta content="{{ page.content | strip_html | truncate: 240 }}" name="og:description">
       <meta content="{{ page.date | date_to_xmlschema }}" name="og:published_time">
-      <meta content="Mu-An Chiou" property="profile:username">
+      <meta content="Bazinga" property="profile:username">
       <!-- https://developer.apple.com/documentation/technotes/tn3156-create-rich-previews-for-messages#Enable-social-network-link-previews -->
       <link href="{{ site.url }}/activitypub.json" rel="alternate" type="application/activity+json">
       {% if page.collection == "posts" or page.collection == "notes" %}
         <meta content="article" property="og:type">
-        <meta content="@muanchiou" property="twitter:site">
         <meta name="twitter:card" content="summary_large_image">
       {% endif %}
       {% if page.image %}
-        <meta content="https://muan.co/images/{{ page.image }}" property="og:image">
-        <meta content="https://muan.co/images/{{ page.image }}" property="twitter:image">
+        <meta content="https://site.bazinga.ink/images/{{ page.image }}" property="og:image">
+        <meta content="https://site.bazinga.ink/images/{{ page.image }}" property="twitter:image">
       {% elsif page.image_text %}
-        <meta content="https://muan-text-image.herokuapp.com/title?v=2&text={{ page.image_text | strip | url_encode }}" property="og:image">
-        <meta content="https://muan-text-image.herokuapp.com/title?v=2&text={{ page.image_text | strip | url_encode }}" property="twitter:image">
+        <meta content="https://site.bazinga.ink/images/banner.png" property="og:image">
+        <meta content="https://site.bazinga.ink/images/banner.png" property="twitter:image">
       {% else %}
         <meta property="og:image:width" content="200">
         <meta property="og:image:height" content="200">
-        <meta content="https://muan.co/assets/logo.png" property="twitter:image">
-        <meta content="https://muan.co/assets/logo.png" property="og:image">
+        <meta content="https://site.bazinga.ink/assets/logo.png" property="twitter:image">
+        <meta content="https://site.bazinga.ink/assets/logo.png" property="og:image">
       {% endif %}
       
     {% else %}
       <meta content="summary" name="twitter:card">
       <meta property="og:image:width" content="200">
       <meta property="og:image:height" content="200">
-      <meta content="https://muan.co/assets/logo.png" property="twitter:image">
-      <meta content="https://muan.co/assets/logo.png" property="og:image">
+      <meta content="https://site.bazinga.ink/assets/logo.png" property="twitter:image">
+      <meta content="https://site.bazinga.ink/assets/logo.png" property="og:image">
       <meta content="{{ site.description }}" name="description">
       <meta content="website" property="og:type">
     {% endif %}
@@ -82,7 +80,7 @@
           <path d="M53.3782 160.773C64.4534 151.592 86.0271 133.546 97.4226 133.546C112.866 133.546 113.373 160.773 126.168 160.773C138.963 160.773 150.185 155.479 150.185 155.479" stroke="#cccccc" stroke-width="16" stroke-linecap="round"/>
         </svg>
         {% if page.root != true %}
-          <span class="font">Mu-An Chiou</span>
+          <span class="font">Bazinga</span>
         {% endif %}
       </div>
       <h1 class="h1">
@@ -134,7 +132,7 @@
         <div class="smol">
           <div class="monospace">
             <div id="like-prompt">Like this {% if page.collection == "posts" %}post{% elsif page.collection == "notes" %}note{% else %}page{% endif %}? let me know!</div>
-            &gt;<open-heart class="text-open-heart" href="https://likes.muan.dev/?id={{ page.url }}" emoji="❤️" aria-labelledby="like-prompt">
+            &gt;<open-heart class="text-open-heart" href="https://site.bazinga.ink/like?id={{ page.url }}" emoji="❤️" aria-labelledby="like-prompt">
               <span class="on">Liked.<br>(Thanks!)</span><span class="off">Sure. <kbd>⏎</kbd></span>
             </open-heart>
           </div>
@@ -146,7 +144,7 @@
       <nav class="monospace" aria-label="About this site">
         <a href="/accessibility-statement">{{ site.i18n[lang].accessibility }}</a>
         <hr class="inline-hr">
-        <a href="https://github.com/muan/site">{{ site.i18n[lang].source }}</a>
+        <a href="https://github.com/bazinga/site">{{ site.i18n[lang].source }}</a>
       </nav>
       <p>
         <a title="88×31" href="{% link _pages/banners.md %}"><img loading="lazy" src="/images/banner.svg" width="88" height="31" alt="Banner assets. An animated banner with one short line, one medium line, one long line, a symbol resembling the tilde, each being drawn in order."></a>

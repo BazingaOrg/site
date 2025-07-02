@@ -5,7 +5,7 @@ permalink: /photos.xml
 {% capture srcbase %}src="{{site.url}}/{% endcapture %}
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>@muan's photos</title>
+    <title>@bazinga's photos</title>
     <description>Photos.</description>
     {% assign photos = site.data.photos | sort: "uploaded" | reverse %}
     <lastBuildDate>{{ photos.first.uploaded | date_to_rfc822 }}</lastBuildDate>
@@ -16,11 +16,11 @@ permalink: /photos.xml
         <title>{{ photo.meta.caption | xml_escape }}</title>
         <description>
           {% capture openheart %}
-            <br><a href="https://muan.co{% link _pages/like.html %}?id=photo-P{{ photo.id }}">❤️</a><br><small><a href="https://github.com/dddddddddzzzz/OpenHeart">(Backed by OpenHeart protocol)</a></small>
+            <br><a href="https://site.bazinga.ink{% link _pages/like.html %}?id=photo-P{{ photo.id }}">❤️</a><br><small><a href="https://github.com/dddddddddzzzz/OpenHeart">(Backed by OpenHeart protocol)</a></small>
           {% endcapture %}
           {% capture content %}
-            <a href="https://photos.muan.dev/cdn-cgi/imagedelivery/-wp_VgtWlgmh1JURQ8t1mg/{{ photo.id }}/public">
-              <img src="https://photos.muan.dev/cdn-cgi/imagedelivery/-wp_VgtWlgmh1JURQ8t1mg/{{ photo.id }}/public" width="100%" alt="{{ photo.meta.alt }}"/>
+            <a href="https://site.bazinga.ink/images/placeholder.jpg">
+              <img src="https://site.bazinga.ink/images/placeholder.jpg" width="100%" alt="{{ photo.meta.alt }}"/>
             </a>
           {% endcapture %}
           {{ content | xml_escape }}{{ openheart | xml_escape }}

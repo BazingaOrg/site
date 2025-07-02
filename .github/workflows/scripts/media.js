@@ -48,14 +48,14 @@ caption: |
 `
 } else {
   frontmatter += `
-image: https://photos.muan.dev/cdn-cgi/imagedelivery/-wp_VgtWlgmh1JURQ8t1mg/${json.id}/public
+image: https://site.bazinga.ink/images/placeholder.jpg
 caption: |
   ${json.meta.caption || ''}
 alt: |
   ${desc}`
 
   markdown = `
-![${json.meta.alt}](https://photos.muan.dev/cdn-cgi/imagedelivery/-wp_VgtWlgmh1JURQ8t1mg/${json.id}/public)
+![${json.meta.alt}](https://site.bazinga.ink/images/placeholder.jpg)
 
 ${json.meta.caption}`
 }

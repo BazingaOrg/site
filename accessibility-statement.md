@@ -1,14 +1,14 @@
 ---
 layout: default
-title: Accessibility Statement for muan.co
+title: Accessibility Statement for site.bazinga.ink
 type: static
 ---
 
-This is an accessibility statement from Mu-An Chiou.
+This is an accessibility statement from Bazinga.
 
 ## Measures to support accessibility
 
-Mu-An Chiou takes the following measures to ensure accessibility of muan.co:
+Bazinga takes the following measures to ensure accessibility of site.bazinga.ink:
 
 - Include accessibility as part of my mission statement.
 - Include accessibility throughout my internal policies.
@@ -16,16 +16,16 @@ Mu-An Chiou takes the following measures to ensure accessibility of muan.co:
 
 ## Conformance status
 
-The Web Content Accessibility Guidelines (WCAG) defines requirements for designers and developers to improve accessibility for people with disabilities. It defines three levels of conformance: Level A, Level AA, and Level AAA. muan.co is partially conformant with WCAG 2.1 level AA. Partially conformant means that some parts of the content do not fully conform to the accessibility standard.
+The Web Content Accessibility Guidelines (WCAG) defines requirements for designers and developers to improve accessibility for people with disabilities. It defines three levels of conformance: Level A, Level AA, and Level AAA. site.bazinga.ink is partially conformant with WCAG 2.1 level AA. Partially conformant means that some parts of the content do not fully conform to the accessibility standard.
 
 - I am aware that there is one color contrast violation on the front page.
 - I constantly experiment things on the site so it might not be fully conformant at all times.
 
 ## Feedback
 
-I welcome all feedback on the accessibility of muan.co. Please let me know if you encounter accessibility barriers on the site.
+I welcome all feedback on the accessibility of site.bazinga.ink. Please let me know if you encounter accessibility barriers on the site.
 
-To report, [open an issue on GitHub](https://github.com/muan/site/issues/new) or [message me on Mastodon](https://mastodon.social/@muan), and I will try to respond within 1 week.
+To report, [open an issue on GitHub](https://github.com/bazinga/site/issues/new), and I will try to respond within 1 week.
 
 ## Date
 

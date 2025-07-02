@@ -4,7 +4,7 @@ permalink: /notes.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>@muan's notes</title>
+    <title>@bazinga's notes</title>
     <description>Micro posts.</description>
     {% assign notes = site.notes | reverse %}
     <lastBuildDate>{{ notes.first.date | date_to_rfc822 }}</lastBuildDate>
@@ -15,7 +15,7 @@ permalink: /notes.xml
       {% assign note_time = note.date | date: "%s" | plus: 0 %}
       {% if note_time > one_day_ago %}{% continue %}{% endif %}
       {% capture openheart %}
-        <br><a href="https://muan.co{% link _pages/like.html %}?id={{ note.url }}">Like</a><br><small><a href="https://github.com/dddddddddzzzz/OpenHeart">(Backed by OpenHeart protocol)</a></small>
+        <br><a href="https://site.bazinga.ink{% link _pages/like.html %}?id={{ note.url }}">Like</a><br><small><a href="https://github.com/dddddddddzzzz/OpenHeart">(Backed by OpenHeart protocol)</a></small>
       {% endcapture %}
       <item>
         <title>{{ note.date | date: "%Y-%m-%d" }}</title>
