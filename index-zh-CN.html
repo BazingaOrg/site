@@ -1,41 +1,41 @@
 ---
 title: Bazinga
-permalink: /zh-TW/
+permalink: /zh-CN/
 layout: default
 root: true
 ---
 
 <p>
-  軟體設計、工程師，做著低調好用的網站。<a href="https://infrequently.org/stickers/">Anti JavaScript JavaScript Club</a> 的成員之一。
+  软件设计师、工程师，制作简洁实用的网站。<a href="https://infrequently.org/stickers/">Anti JavaScript JavaScript Club</a> 的成员之一。
 </p>
 <p>
-  <span class="time" data-timestamp-text="現在時間：{time}"></span>
+  <span class="time" data-timestamp-text="当前时间：{time}"></span>
 </p>
 <p>
-  截至 {{ site.recent_date | date: "%m/%d" }} 專注於各種專案開發。熱愛程式設計、網頁開發，致力於創造無障礙的數位體驗。
+  截至 {{ site.recent_date | date: "%m/%d" }} 专注于各种项目开发。热爱编程、网页开发，致力于创造无障碍的数字体验。
 </p>
 
-<nav aria-label="額外內容">
-  <a href="{% link _pages/qna.md %}">問與答</a><hr class="inline-hr">
-  <a href="{% link _pages/stuff.md %}">實體東西</a><hr class="inline-hr">
-  <a href="{% link _pages/blogroll.md %}">部落格名單</a><hr class="inline-hr">
+<nav aria-label="额外内容">
+  <a href="{% link _pages/qna.md %}">问与答</a><hr class="inline-hr">
+  <a href="{% link _pages/stuff.md %}">实体物品</a><hr class="inline-hr">
+  <a href="{% link _pages/blogroll.md %}">博客列表</a><hr class="inline-hr">
   <a href="{% link _pages/issues.html %}">Issues</a><hr class="inline-hr">
   <a href="{% link _pages/banners.md %}">88&times;31</a>
 </nav>
-<nav aria-label="社群連結">
+<nav aria-label="社交链接">
   <a href="https://github.com/bazinga" rel="me">GitHub</a>
 </nav>
 
 <div class="lang">
-  <a href="/zh-TW/" srclang="zh-TW" aria-current="true">正體中文</a><a href="/" srclang="en-US">English</a><a href="/de-DE/" srclang="de-DE">Deutsch</a>
+  <a href="/zh-CN/" srclang="zh-CN" aria-current="true">简体中文</a><a href="/" srclang="en-US">English</a>
 </div>
 
 <hr class="hr">
 
-<h2 class="normal-heading">動態</h2> <a href="/stories.xml" class="styled-link">RSS</a><a href="https://github.com/dddddddddzzzz/OpenStories" class="styled-link">這是什麼？</a>
+<h2 class="normal-heading">动态</h2> <a href="/stories.xml" class="styled-link">RSS</a><a href="https://github.com/dddddddddzzzz/OpenStories" class="styled-link">这是什么？</a>
 
 <div class="stories">
-  {% include stories.html lang="zh-TW" %}
+  {% include stories.html lang="zh-CN" %}
 </div>
 
 <hr class="hr">
@@ -51,7 +51,7 @@ root: true
 {% endfor %}
 </div>
 
-<h2 class="normal-heading">底片照片</h2><a href="/film" class="styled-link">全部底片照片</a> <a href="/film.xml" class="styled-link">RSS</a>
+<h2 class="normal-heading">胶片照片</h2><a href="/film" class="styled-link">全部胶片照片</a> <a href="/film.xml" class="styled-link">RSS</a>
 <div class="photos">
 {% assign photos = site.data.film | reverse | slice: 0, 10 %}
 {% for photo in photos %}
@@ -65,7 +65,7 @@ root: true
 <hr class="hr">
 
 {% assign note = site.notes | last %}
-<h2 class="normal-heading">隨筆</h2><a href="/notes" class="styled-link">近期隨筆</a> <a href="/notes.xml" class="styled-link">RSS</a>
+<h2 class="normal-heading">随笔</h2><a href="/notes" class="styled-link">近期随笔</a> <a href="/notes.xml" class="styled-link">RSS</a>
 <div class="note">
   <time class="general-actions monospace" datetime="{{ note.date | date_to_xmlschema }}">
     {{ note.date | date: "%Y/%m/%d" }}
