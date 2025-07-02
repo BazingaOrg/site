@@ -6,7 +6,7 @@ type: static
 
 ## Anti-JavaScript JavaScript Club stickers
 
-[Write JavaScript responsibly]({% link _posts/2024-11-02-javascript.md %}), with sticker owning friends from Taiwan, Germany, Australia, Denmark, Norway, Portugal, Vietnam, Canada, Colombia, England, Brazil, and the US!
+Write JavaScript responsibly, with sticker owning friends from Taiwan, Germany, Australia, Denmark, Norway, Portugal, Vietnam, Canada, Colombia, England, Brazil, and the US!
 
 I have streamlined this, and the postage is less than ¢50 USD for up to 40 stickers. Don't not worry about it. 
 
