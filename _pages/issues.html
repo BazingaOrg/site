@@ -9,6 +9,7 @@ open_heart: true
   <a href="/issues.xml">RSS</a>
 </p>
 
+{% if site.data.issues and site.data.issues.size > 0 %}
 <ul class="issues">
 {% for issue in site.data.issues %}
   <li class="issue" id="issues-{{ forloop.rindex }}">
@@ -24,3 +25,9 @@ open_heart: true
   </li>
 {% endfor %}
 </ul>
+{% else %}
+<div class="empty-state" style="text-align: center; padding: 2em 0; opacity: 0.6;">
+  <p><em>No GitHub issues are currently being tracked.</em></p>
+  <p class="smol">Issues that catch my attention will appear here. Check back later!</p>
+</div>
+{% endif %}
