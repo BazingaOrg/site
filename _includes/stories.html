@@ -1,4 +1,5 @@
-{% assign categories = "Animals,Meow,Polaroid,Self,Chat,Travel,Taiwan,Books,Cook,Plants,Friends,Hobby,Mails,Oven" | split: "," %}
+{% assign categories = "Animals" | split: "," %}
+{% if site.data.stories and site.data.stories.size > 0 %}
 {% assign stories = site.data.stories | sort: "uploaded" | reverse %}
 {% assign new_categories_arr = "" | split: "" | compact %}
 {% for story in stories %}
@@ -9,6 +10,9 @@
   {% endif %}
 {% endfor %}
 {% assign new_categories_arr = new_categories_arr | uniq %}
+{% else %}
+{% assign new_categories_arr = "" | split: "" | compact %}
+{% endif %}
 
 <div class="stories">
   <open-stories src="/stories.json" show-metadata><span>
@@ -17,7 +21,11 @@
 
   {% for type in new_categories_arr %}
     {% unless categories contains type %}{% continue %}{% endunless %}
+    {% if site.data.stories and site.data.stories.size > 0 %}
     {% assign c = site.data.stories | where_exp: "s", "s.meta.tags contains type" | where_exp: "s", "s.meta.tags contains 'Highlight'" | size %}
+    {% else %}
+    {% assign c = 0 %}
+    {% endif %}
     <open-stories src="/stories-{{ type | downcase }}.json" show-metadata is-highlight loading="lazy">
       {% if include.lang == "en" %}{{ type }}{% else %}{{ site.i18n[include.lang][type] }}{% endif %}
       <span class="count">&times; {{c}}</span></open-stories>

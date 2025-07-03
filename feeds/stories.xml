@@ -7,10 +7,13 @@ permalink: /stories.xml
   <channel>
     <title>@muan's stories</title>
     <description>Stories.</description>
+    {% if site.data.stories and site.data.stories.size > 0 %}
     {% assign stories = site.data.stories | sort: "uploaded" | where_exp: "story", "story.meta.tags contains 'Life'" | reverse %}
     <lastBuildDate>{{ stories.first.uploaded | date_to_rfc822 }}</lastBuildDate>
+    {% endif %}
     <atom:link href="{{ site.url }}/stories.xml" rel="self" type="application/rss+xml" />
     <link>{{ site.url }}/stories.xml</link>
+    {% if site.data.stories and site.data.stories.size > 0 %}
     {% assign one_day_ago = site.time | date: "%s" | minus: 86400 %}
     {% for story in stories limit:10 %}
       {% assign story_time = story.uploaded | date: "%s" | plus: 0 %}
@@ -38,5 +41,6 @@ permalink: /stories.xml
         {% if story.meta.tags contains "Highlight" %}<guid isPermaLink="true">{{ site.url }}/stories/{{ story.id }}</guid>{% endif %}
       </item>
     {% endfor %}
+    {% endif %}
   </channel>
 </rss>
