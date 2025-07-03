@@ -6,7 +6,7 @@ type: "Mails"
 {
   "version": "https://jsonfeed.org/version/1.1",
   "title": "@bazinga's stories for {{ page.type }}",
-  "icon": "https://github.com/bazinga.png",
+  "icon": "https://github.com/bazingaOrg.png",
   "home_page_url": "https://site.bazinga.ink/",
   "feed_url": "https://site.bazinga.ink/stories-mails.json",
   "description": "Stories about {{ page.type }}.",

@@ -25,7 +25,7 @@ The Web Content Accessibility Guidelines (WCAG) defines requirements for designe
 
 I welcome all feedback on the accessibility of site.bazinga.ink. Please let me know if you encounter accessibility barriers on the site.
 
-To report, [open an issue on GitHub](https://github.com/bazinga/site/issues/new), and I will try to respond within 1 week.
+To report, [open an issue on GitHub](https://github.com/bazingaOrg/site/issues/new), and I will try to respond within 1 week.
 
 ## Date
 
