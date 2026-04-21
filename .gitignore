@@ -4,3 +4,5 @@ _site/
 .ruby-version
 _old_posts/
 .jekyll-cache/
+.env
+.env.local
