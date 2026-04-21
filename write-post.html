@@ -18,6 +18,34 @@ permalink: /write-post/
           <time class="monospace" id="preview-date" datetime="{{ "now" | date_to_xmlschema }}">{{ "now" | date: "%Y/%m/%d" }}</time>
           <h1 class="post-preview-title" id="preview-title">Post title will appear here</h1>
         </header>
+        <details class="ai-summary-block ai-summary-preview" id="preview-summary" hidden open>
+          <summary class="ai-summary-toggle">
+            <span class="ai-summary-title">
+              <span class="ai-summary-icon" aria-hidden="true">
+                <svg class="ai-summary-icon-open" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="5.5" />
+                  <g stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="35" cy="45" r="5" fill="currentColor" stroke="none" />
+                    <circle cx="65" cy="45" r="5" fill="currentColor" stroke="none" />
+                    <path d="M 70 28 Q 70 34 76 34 Q 70 34 70 40 Q 70 34 64 34 Q 70 34 70 28 Z" fill="currentColor" stroke="none" />
+                    <path d="M 42 62 Q 50 70 58 62" />
+                  </g>
+                </svg>
+                <svg class="ai-summary-icon-closed" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="5.5" />
+                  <g stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="34" cy="44" r="5" fill="currentColor" stroke="none" />
+                    <circle cx="66" cy="44" r="5" fill="currentColor" stroke="none" />
+                    <path d="M 40 60 L 60 60" />
+                    <path d="M 44 70 L 56 70" />
+                  </g>
+                </svg>
+              </span>
+              <span class="ai-summary-heading monospace">AI summary:</span>
+            </span>
+          </summary>
+          <p class="ai-summary-copy" id="preview-summary-copy"><span class="ai-summary-preview-text">A short AI summary will appear here for longer posts.</span></p>
+        </details>
         <div class="post-preview-body" id="preview-body">
           <p class="placeholder-text">The body will appear here as you type.</p>
         </div>
@@ -54,6 +82,16 @@ permalink: /write-post/
         <textarea id="body" name="body" placeholder="Write freely. Leave a blank line for new paragraphs. Markdown is supported." required></textarea>
         <span class="field-feedback" id="body-feedback" role="status" aria-live="polite"></span>
         <div class="field-hint monospace" id="body-stats">Lines: 0 (0 chars)</div>
+      </div>
+
+      <div class="form-field ai-summary-field">
+        <div class="field-title">
+          <label for="ai-summary" class="field-label monospace">AI summary</label>
+          <button type="button" class="ghost-button ghost-button--sm" id="generate-summary-btn">Generate summary</button>
+        </div>
+        <textarea id="ai-summary" name="ai-summary" placeholder="For longer posts, generate a short summary draft here and edit it before publishing."></textarea>
+        <span class="field-feedback" id="summary-feedback" role="status" aria-live="polite"></span>
+        <p class="field-hint" id="summary-hint">Longer posts should ship with a short AI summary. You can always edit the generated draft.</p>
       </div>
 
       <div class="meta-preview">
@@ -139,14 +177,18 @@ permalink: /write-post/
   const featureCheckbox = document.getElementById('feature');
   const imageInput = document.getElementById('image');
   const imageTextInput = document.getElementById('image-text');
+  const summaryInput = document.getElementById('ai-summary');
   const accessKeyInput = document.getElementById('access-key');
   const form = document.getElementById('post-form');
   const submitBtn = document.getElementById('submit-btn');
   const resetBtn = document.getElementById('reset-btn');
+  const generateSummaryBtn = document.getElementById('generate-summary-btn');
   const submitStatus = document.getElementById('submit-status');
   const autoDateEl = document.getElementById('auto-date');
   const generatedFilenameEl = document.getElementById('generated-filename');
   const previewTitleEl = document.getElementById('preview-title');
+  const previewSummaryEl = document.getElementById('preview-summary');
+  const previewSummaryCopyEl = document.querySelector('.ai-summary-preview-text');
   const previewBodyEl = document.getElementById('preview-body');
   const previewDateEl = document.getElementById('preview-date');
   const previewMediaEl = document.getElementById('preview-media');
@@ -161,22 +203,28 @@ permalink: /write-post/
   const draftBanner = document.getElementById('draft-banner');
   const titleFeedback = document.getElementById('title-feedback');
   const bodyFeedback = document.getElementById('body-feedback');
+  const summaryFeedback = document.getElementById('summary-feedback');
+  const summaryHint = document.getElementById('summary-hint');
   const slugFeedback = document.getElementById('slug-feedback');
   const keyFeedback = document.getElementById('key-feedback');
 
   const FEEDBACK = {
     title: titleFeedback,
     body: bodyFeedback,
+    summary: summaryFeedback,
     slug: slugFeedback,
     key: keyFeedback
   };
 
   const DRAFT_STORAGE_KEY = 'post-draft';
   const ACCESS_KEY_STORAGE = 'post-access-key';
+  const CHINESE_LONG_FORM_CHAR_THRESHOLD = 600;
+  const LONG_FORM_LINE_THRESHOLD = 12;
 
   let hasUserInteracted = false;
   let slugManuallyEdited = false;
   let frontMatterCache = '';
+  let isGeneratingSummary = false;
 
   const state = {
     publish: buildPublishMeta(computeShanghaiDate()),
@@ -210,6 +258,12 @@ permalink: /write-post/
     bodyInput.addEventListener('input', () => {
       hasUserInteracted = true;
       updateBodyStats();
+      updateOutputs();
+    });
+
+    summaryInput.addEventListener('input', () => {
+      hasUserInteracted = true;
+      summaryInput.removeAttribute('data-autofill');
       updateOutputs();
     });
 
@@ -251,6 +305,8 @@ permalink: /write-post/
       updateOutputs();
     });
 
+    generateSummaryBtn.addEventListener('click', handleGenerateSummary);
+
     copyFrontmatterBtn.addEventListener('click', () => {
       if (frontMatterCache) {
         copyText(frontMatterCache, copyFrontmatterBtn);
@@ -263,6 +319,7 @@ permalink: /write-post/
 
     resetBtn.addEventListener('click', () => {
       form.reset();
+      summaryInput.removeAttribute('data-autofill');
       slugManuallyEdited = false;
       hasUserInteracted = false;
       loadAccessKey();
@@ -327,6 +384,7 @@ permalink: /write-post/
 
     titleInput.value = draft.title || '';
     bodyInput.value = draft.body || '';
+    summaryInput.value = draft.aiSummary || '';
     featureCheckbox.checked = Boolean(draft.feature);
     imageInput.value = draft.image || '';
     imageTextInput.value = draft.imageText || '';
@@ -411,12 +469,81 @@ permalink: /write-post/
       });
   }
 
+  function handleGenerateSummary() {
+    hasUserInteracted = true;
+    clearStatus();
+
+    const title = titleInput.value.trim();
+    const body = bodyInput.value.trim();
+    const accessKey = accessKeyInput.value.trim();
+
+    if (!title) {
+      showFeedback('title', 'Add a title before generating the summary.');
+      return;
+    }
+
+    if (!body) {
+      showFeedback('body', 'Add the body first so the summary has something real to work with.');
+      return;
+    }
+
+    if (!isLongFormPost(body)) {
+      showFeedback('summary', 'Summary generation is reserved for longer posts. You can still write a summary manually.', 'soft');
+      return;
+    }
+
+    if (!accessKey) {
+      showFeedback('key', 'Add the access key before generating the summary.');
+      return;
+    }
+
+    setGeneratingSummary(true);
+
+    fetch('/api/generate-post-summary', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': accessKey
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        lang: detectPostLanguage(body)
+      })
+    })
+      .then(async (response) => {
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result.error || 'Summary generation failed.');
+        }
+
+        const nextSummary = sanitizeSummary(result.summary || '');
+        if (!nextSummary) {
+          throw new Error('The generator returned an empty summary.');
+        }
+
+        localStorage.setItem(ACCESS_KEY_STORAGE, btoa(accessKey));
+        summaryInput.value = nextSummary;
+        summaryInput.setAttribute('data-autofill', 'true');
+        showFeedback('summary', result.refined ? 'Summary draft generated and refined. Edit it if you want to sharpen the tone.' : 'Summary draft generated. Edit it freely before publishing.', 'soft');
+        updateOutputs();
+      })
+      .catch((error) => {
+        console.error('Summary generation failed:', error);
+        showFeedback('summary', error.message || 'Summary generation failed. Try again in a moment.');
+      })
+      .finally(() => {
+        setGeneratingSummary(false);
+      });
+  }
+
   function gatherFormData() {
     return {
       title: titleInput.value.trim(),
       body: bodyInput.value.trim(),
+      ai_summary: sanitizeSummary(summaryInput.value),
       slug: state.slug,
-      lang: 'zh-CN',
+      lang: detectPostLanguage(bodyInput.value),
       feature: featureCheckbox.checked ? 1 : 0,
       image: imageInput.value.trim(),
       image_text: imageTextInput.value.trim(),
@@ -492,6 +619,8 @@ permalink: /write-post/
     updateFilenameDisplay();
     updatePreviewTitle();
     updatePreviewDate();
+    updateSummaryHint();
+    updatePreviewSummary();
     updatePreviewBody();
     updatePreviewMedia();
     updateFrontMatter();
@@ -518,6 +647,30 @@ permalink: /write-post/
 
   function formatPreviewDate() {
     return state.publish.dayDisplay;
+  }
+
+  function updateSummaryHint() {
+    if (isLongFormPost(bodyInput.value.trim())) {
+      summaryHint.textContent = 'This draft is long enough that it should ship with an AI summary. Generate one, then edit it to match the final tone.';
+      return;
+    }
+
+    summaryHint.textContent = 'Shorter posts do not need an AI summary. You can still write one manually if the context helps.';
+  }
+
+  function updatePreviewSummary() {
+    const summary = sanitizeSummary(summaryInput.value);
+    const longForm = isLongFormPost(bodyInput.value.trim());
+
+    if (!summary && !longForm) {
+      previewSummaryEl.hidden = true;
+      previewSummaryCopyEl.textContent = '';
+      return;
+    }
+
+    previewSummaryEl.hidden = false;
+    previewSummaryCopyEl.textContent = summary || 'A short AI summary will appear here for longer posts.';
+    previewSummaryEl.classList.toggle('is-placeholder', !summary);
   }
 
   function updatePreviewBody() {
@@ -659,6 +812,11 @@ permalink: /write-post/
       lines.push(`image_text: "${escapeYAML(imageText)}"`);
     }
 
+    const summary = sanitizeSummary(summaryInput.value);
+    if (summary) {
+      lines.push(`ai_summary: "${escapeYAML(summary)}"`);
+    }
+
     if (slugManuallyEdited) {
       lines.push(`slug: "${escapeYAML(state.slug)}"`);
     }
@@ -673,7 +831,8 @@ permalink: /write-post/
     const content = bodyInput.value.trim();
     const lines = content ? content.split(/\r?\n/).filter(line => line.trim().length > 0).length : 0;
     const characters = content.length;
-    bodyStats.textContent = `Lines: ${lines} (${characters} chars)`;
+    const longFormBadge = isLongFormPost(content) ? ' • long-form' : '';
+    bodyStats.textContent = `Lines: ${lines} (${characters} chars${longFormBadge})`;
   }
 
   function showStatus(message, type) {
@@ -715,6 +874,12 @@ permalink: /write-post/
     }
   }
 
+  function setGeneratingSummary(isGenerating) {
+    isGeneratingSummary = isGenerating;
+    generateSummaryBtn.disabled = isGenerating;
+    generateSummaryBtn.textContent = isGenerating ? 'Generating…' : 'Generate summary';
+  }
+
   function validateForm(isPartial) {
     let isValid = true;
 
@@ -736,6 +901,16 @@ permalink: /write-post/
       showFeedback('body', 'A little more length will read like a full post.', 'soft');
     } else {
       clearFeedback('body');
+    }
+
+    const summary = sanitizeSummary(summaryInput.value);
+    if (isLongFormPost(body) && !summary) {
+      showFeedback('summary', 'Longer posts should include a short AI summary before publishing.');
+      isValid = false;
+    } else if (summary && !isSummaryLengthValid(summary)) {
+      showFeedback('summary', 'Keep the summary compact: 2 to 4 short sentences usually works best.', 'soft');
+    } else {
+      clearFeedback('summary');
     }
 
     if (!validateSlugValue(state.slug)) {
@@ -760,6 +935,32 @@ permalink: /write-post/
     return /^[\u4e00-\u9fa5a-z0-9-]+$/i.test(value);
   }
 
+  function isLongFormPost(content) {
+    const trimmedContent = String(content || '').trim();
+    if (!trimmedContent) return false;
+
+    const lines = trimmedContent.split(/\r?\n/).filter(line => line.trim().length > 0).length;
+    if (lines >= LONG_FORM_LINE_THRESHOLD) {
+      return true;
+    }
+
+    const chineseCharacters = (trimmedContent.match(/[\u4e00-\u9fff]/gu) || []).length;
+    return chineseCharacters >= CHINESE_LONG_FORM_CHAR_THRESHOLD;
+  }
+
+  function detectPostLanguage(content) {
+    return /[\u4e00-\u9fff]/u.test(String(content || '')) ? 'zh-CN' : 'en-US';
+  }
+
+  function isSummaryLengthValid(summary) {
+    const sentences = sanitizeSummary(summary)
+      .split(/(?<=[。！？!?])\s*|(?<=[.?!])\s+(?=[A-Z0-9"\u4e00-\u9fff])/u)
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    return sentences.length >= 2 && sentences.length <= 4;
+  }
+
   function showFeedback(field, message, tone = 'error') {
     const slot = FEEDBACK[field];
     if (!slot) return;
@@ -776,6 +977,13 @@ permalink: /write-post/
 
   function escapeYAML(value) {
     return value.replace(/"/g, '\\"');
+  }
+
+  function sanitizeSummary(value) {
+    return String(value || '')
+      .replace(/\r?\n+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function copyText(text, triggerButton) {
@@ -818,6 +1026,7 @@ permalink: /write-post/
     const draft = {
       title: titleInput.value,
       body: bodyInput.value,
+      aiSummary: summaryInput.value,
       feature: featureCheckbox.checked,
       image: imageInput.value,
       imageText: imageTextInput.value,

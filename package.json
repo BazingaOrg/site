@@ -4,6 +4,7 @@
     "hooks:install": "bash scripts/git-hooks/install.sh",
     "vendor:sync:open-heart": "bash scripts/vendor/sync-open-heart-element.sh",
     "vendor:sync": "npm run vendor:sync:open-heart",
+    "summarize:post": "node scripts/summarize-post.js",
     "check:terms": "bash scripts/check/check-terminology.sh",
     "check:i18n": "bash scripts/check/check-i18n-keys.sh",
     "check:routes": "bash scripts/check/check-language-routes.sh",

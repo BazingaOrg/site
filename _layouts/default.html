@@ -194,6 +194,36 @@
         {% endif %}
       {% endcapture %}
       {% if page.collection == "posts" or page.collection == "pages" %}
+        {% if page.collection == "posts" and page.ai_summary %}
+          <details class="ai-summary-block" open>
+            <summary class="ai-summary-toggle">
+              <span class="ai-summary-title">
+                <span class="ai-summary-icon" aria-hidden="true">
+                  <svg class="ai-summary-icon-open" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="5.5" />
+                    <g stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="35" cy="45" r="5" fill="currentColor" stroke="none" />
+                      <circle cx="65" cy="45" r="5" fill="currentColor" stroke="none" />
+                      <path d="M 70 28 Q 70 34 76 34 Q 70 34 70 40 Q 70 34 64 34 Q 70 34 70 28 Z" fill="currentColor" stroke="none" />
+                      <path d="M 42 62 Q 50 70 58 62" />
+                    </g>
+                  </svg>
+                  <svg class="ai-summary-icon-closed" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="5.5" />
+                    <g stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="34" cy="44" r="5" fill="currentColor" stroke="none" />
+                      <circle cx="66" cy="44" r="5" fill="currentColor" stroke="none" />
+                      <path d="M 40 60 L 60 60" />
+                      <path d="M 44 70 L 56 70" />
+                    </g>
+                  </svg>
+                </span>
+                <span class="ai-summary-heading monospace">AI summary</span>
+              </span>
+            </summary>
+            <p class="ai-summary-copy">{{ page.ai_summary }}</p>
+          </details>
+        {% endif %}
         <article>
           {{ content_and_then_some }}
         </article>

@@ -1,3 +1,9 @@
+import {
+  isLongFormPost,
+  normalizePostLanguage,
+  sanitizeSummaryText
+} from '../lib/post-summary.js'
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -39,6 +45,7 @@ export default async function handler(req, res) {
     feature,
     image,
     image_text: imageText,
+    ai_summary: providedSummary,
     date,
     filename: providedFilename
   } = req.body || {};
@@ -54,9 +61,15 @@ export default async function handler(req, res) {
   }
 
   const cleanedSlug = generateSlug(providedSlug || title);
-  const normalizedLang = typeof lang === 'string' && lang.trim() ? lang.trim() : 'zh-CN';
+  const normalizedLang = normalizePostLanguage(lang, body);
   const shouldFeature = feature === 1 || feature === '1' || feature === true;
   const publishInfo = buildPublishInfo(date);
+  const aiSummary = sanitizeSummaryText(providedSummary);
+
+  if (isLongFormPost(body, normalizedLang) && !aiSummary) {
+    res.status(400).json({ error: '长文发布前需要先生成或填写 AI 总结' });
+    return;
+  }
 
   const markdown = createMarkdown({
     title: String(title).trim(),
@@ -66,6 +79,7 @@ export default async function handler(req, res) {
     feature: shouldFeature,
     image,
     imageText,
+    aiSummary,
     date: publishInfo.frontMatter
   });
 
@@ -160,7 +174,7 @@ function computeShanghaiDate(baseDate = new Date()) {
   return new Date(utc + 8 * 60 * 60000);
 }
 
-function createMarkdown({ title, body, slug, lang, feature, image, imageText, date }) {
+function createMarkdown({ title, body, slug, lang, feature, image, imageText, aiSummary, date }) {
   const lines = [
     '---',
     `title: "${escapeYAML(title)}"`,
@@ -183,6 +197,10 @@ function createMarkdown({ title, body, slug, lang, feature, image, imageText, da
 
   if (imageText && String(imageText).trim()) {
     lines.push(`image_text: "${escapeYAML(String(imageText).trim())}"`);
+  }
+
+  if (aiSummary) {
+    lines.push(`ai_summary: "${escapeYAML(aiSummary)}"`);
   }
 
   if (slug && slug !== generateSlug(title)) {
