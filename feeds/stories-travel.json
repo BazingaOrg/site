@@ -27,7 +27,7 @@ type: "Travel"
       "summary": "{% if story.meta.caption == "" %}N/A{% else %}{{ story.meta.caption }}{% endif %} ({{ story.meta.alt }})",
 
       "authors": [{"name": "Bazinga", "url": "https://site.bazinga.ink"}],
-      "url": "{{ site.url }}/stories/{{ story.id }}",
+      "url": "{% if story.meta.story_url %}{{ site.url }}{{ story.meta.story_url }}{% else %}{{ site.url }}/stories/{{ story.id }}{% endif %}",
       "_open_stories": {
         "mime_type": "{% if story.meta.filetype %}{{ story.meta.filetype }}{% else %}image/jpeg{% endif %}",
         "url": "{% if story.playback %}{{ story.meta.url }}{% else %}{{ story.variants[0] }}{% endif %}",{% if story.meta.alt %}
