@@ -1838,18 +1838,18 @@ nav {
 
 @media (max-width: 720px), screen and (orientation: portrait) {
   .col-stories {
-    --story-header-space: clamp(5.75rem, 16vh, 8rem);
+    --story-header-space: clamp(4.75rem, 13vh, 6.5rem);
     font-size: 1.9vh;
 
     .story-header {
       align-items: flex-start;
       justify-content: flex-start;
-      row-gap: .35rem;
-      padding-top: .75rem;
+      row-gap: .15rem;
+      padding: .5rem 1rem max(.5rem, env(safe-area-inset-bottom));
     }
 
     .story-meta {
-      gap: .45em .8em;
+      gap: .2em .7em;
     }
 
     main img {
