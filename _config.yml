@@ -29,6 +29,7 @@ collections:
     output: true
   notes:
     output: true
+    permalink: /notes/:name/
   pages:
     output: true
     permalink: /:name/
