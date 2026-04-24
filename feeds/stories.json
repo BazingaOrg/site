@@ -23,7 +23,7 @@ permalink: /stories.json
       "title": "{{ story.uploaded | date: "%Y/%m/%d" }} {{ tag }}",
       "summary": "{% if story.meta.caption == "" %}N/A{% else %}{{ story.meta.caption }}{% endif %} ({{ story.meta.alt }})",
       "authors": [{"name": "Bazinga", "url": "https://site.bazinga.ink"}],{% if story.meta.tags contains "Highlight" %}
-      "url": "{% if story.meta.story_url %}{{ site.url }}{{ story.meta.story_url }}{% else %}{{ site.url }}/stories/{{ story.id }}{% endif %}",
+      "url": "{% if story.meta.story_url %}{{ site.url }}{{ story.meta.story_url }}?story={{ story.id }}{% else %}{{ site.url }}/stories/{{ story.id }}{% endif %}",
       {% endif %}"_open_stories": {
         "mime_type": "{% if story.meta.filetype %}{{ story.meta.filetype }}{% else %}image/jpeg{% endif %}",
         "url": "{% if story.playback %}{{ story.meta.url }}{% else %}{{ story.variants[0] }}{% endif %}",{% if story.meta.alt %}

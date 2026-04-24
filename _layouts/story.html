@@ -30,10 +30,10 @@
     <header class="story-header smol">
       <div class="story-meta">
         <a href="/" aria-label="Home">&leftarrow;</a>
-        <h1 class="normal-heading">
-          {{ page.title }}, {{ page.date | date: "%Y/%m/%d %H:%M" }}
+        <h1 class="normal-heading" id="story-title">
+          <span id="story-title-text">{{ page.title }}</span>, <time id="story-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y/%m/%d %H:%M" }}</time>
         </h1>
-        <open-heart class="text-open-heart monospace" href="https://site.bazinga.ink/like?id={{ page.url }}" emoji="❤️" aria-labelledby="like-prompt">
+        <open-heart class="text-open-heart monospace" id="story-like" href="https://site.bazinga.ink/like?id={{ page.url }}" emoji="❤️" aria-labelledby="like-prompt">
           (<span class="on">Liked ♥︎.</span><span class="off">Like?</span>)
         </open-heart>
       </div>
@@ -45,10 +45,64 @@
       {% if page.video %}
         <video height="100%" src="{{ page.video }}" poster='{{ page.image }}' aria-describedby="description" muted autoplay controls playsinline><!-- tracks --></video>
       {% else %}
-        <img src="{{ page.image }}" alt="{{ page.alt }}" class="story-image">
+        <img src="{{ page.image }}" alt="{{ page.alt | strip }}" class="story-image" id="story-image">
       {% endif %}
     </main>
 
+    {%- assign page_story_slug = page.slug | default: page.name | remove: ".md" -%}
+    <script type="application/json" id="story-items">
+      [
+        {%- assign first_story_item = true -%}
+        {%- for story in site.data.stories -%}
+          {%- if story.meta.story_url contains page_story_slug -%}
+            {%- unless first_story_item -%},{%- endunless -%}
+            {
+              "id": {{ story.id | jsonify }},
+              "uploaded": {{ story.uploaded | jsonify }},
+              "image": {{ story.variants[0] | jsonify }},
+              "alt": {{ story.meta.alt | jsonify }},
+              "caption": {{ story.meta.caption | jsonify }},
+              "title": {{ story.meta.title | jsonify }}
+            }
+            {%- assign first_story_item = false -%}
+          {%- endif -%}
+        {%- endfor -%}
+      ]
+    </script>
+    <script>
+      (() => {
+        const storyId = new URLSearchParams(window.location.search).get('story');
+
+        if (!storyId) return;
+
+        const storyItemsElement = document.getElementById('story-items');
+        const imageElement = document.getElementById('story-image');
+        const descriptionElement = document.getElementById('description');
+        const titleElement = document.getElementById('story-title-text');
+        const dateElement = document.getElementById('story-date');
+        const likeElement = document.getElementById('story-like');
+
+        if (!storyItemsElement || !imageElement || !descriptionElement || !titleElement || !dateElement) return;
+
+        const storyItems = JSON.parse(storyItemsElement.textContent || '[]');
+        const storyItem = storyItems.find(({ id }) => id === storyId);
+
+        if (!storyItem) return;
+
+        const uploadedDateText = storyItem.uploaded.slice(0, 16).replace('T', ' ').replace(/-/g, '/');
+
+        imageElement.src = storyItem.image;
+        imageElement.alt = storyItem.alt || '';
+        descriptionElement.textContent = storyItem.caption || '';
+        titleElement.textContent = storyItem.title || document.title;
+        dateElement.dateTime = storyItem.uploaded;
+        dateElement.textContent = uploadedDateText;
+
+        if (likeElement) {
+          likeElement.href = `https://site.bazinga.ink/like?id=/stories/${storyItem.id}`;
+        }
+      })();
+    </script>
     <script defer type="module" src="/assets/vendor/open-heart-element-{{ site.data.vendor_versions.open_heart_element }}.js"></script>
   </body>
 </html>
