@@ -6,8 +6,15 @@ This directory keeps project automation scripts with a consistent layout.
 
 - `check/`: validation and smoke-test scripts.
 - `perf/`: page-load metric collection and comparison scripts.
+- `photos/`: photo metadata maintenance scripts.
 - `vendor/`: third-party asset sync scripts.
 - `git-hooks/`: local git hook templates and installers.
+
+## Current publishing surface
+
+The only browser-based publishing entry still kept in this repo is `/write-note/`.
+
+The older `/write-post/` and `/upload-photo/` flows have been removed, so scripts and docs should not assume those pages still exist.
 
 ## Current checks
 

@@ -9,7 +9,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF0978",
       "caption": "手机举高了，山也配合沉默",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/6.4",
+        "shutter": "1/600s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:13"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -22,7 +37,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF0981",
       "caption": "悬崖边的松，站姿很有主见",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/6.4",
+        "shutter": "1/480s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:14"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -35,7 +65,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF0994",
       "caption": "取景的人，也被景收进去了",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/7.1",
+        "shutter": "1/320s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:19"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -48,7 +93,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1011",
       "caption": "栏杆负责弯，路负责往上",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "28mm",
+        "aperture": "f/7.1",
+        "shutter": "1/550s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:26"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -61,7 +121,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1024",
       "caption": "窄窄一眼，偏要看得很远",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/5.6",
+        "shutter": "1/320s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:33"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -74,7 +149,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1034",
       "caption": "上坡这件事，谁都装不轻松",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/5.6",
+        "shutter": "1/900s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:36"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -87,7 +177,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1043",
       "caption": "影子先替人伸了个懒腰",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/5.6",
+        "shutter": "1/280s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:53"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -100,7 +205,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1044",
       "caption": "拐弯之前，脚步先犹豫",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/5.6",
+        "shutter": "1/640s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:53"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -113,7 +233,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1045",
       "caption": "屋顶很会躲进树缝",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/5.6",
+        "shutter": "1/250s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 06:53"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -126,7 +261,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1065",
       "caption": "拍照姿势各有各的倔强",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "15mm",
+        "aperture": "f/8",
+        "shutter": "1/320s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 07:27"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -139,7 +289,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1069",
       "caption": "排队看山，也算认真生活",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "15mm",
+        "aperture": "f/8",
+        "shutter": "1/850s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 07:28"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -152,7 +317,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1078",
       "caption": "腿到此打住，眼睛继续上班",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "33.3mm",
+        "aperture": "f/8",
+        "shutter": "1/500s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 07:40"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -165,7 +345,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1084",
       "caption": "云层占了个好座位",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "33.3mm",
+        "aperture": "f/8",
+        "shutter": "1/600s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 07:42"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -178,7 +373,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1113",
       "caption": "鸟一出现，远处就有了标点",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/7.1",
+        "shutter": "1/1900s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 08:03"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -191,7 +401,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1133",
       "caption": "水面把松树留作备份",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "43.2mm",
+        "aperture": "f/7.1",
+        "shutter": "1/280s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 08:33"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   },
   {
@@ -204,7 +429,22 @@
       "ratio": 1.7739130434782608,
       "alt": "黄山旅途照片 DSCF1151",
       "caption": "留白越多，石头越有底气",
-      "location": "黄山"
+      "location": "黄山",
+      "exif": {
+        "camera": "X-T1",
+        "lens": "XC15-45mmF3.5-5.6 OIS PZ",
+        "focalLength": "45mm",
+        "aperture": "f/7.1",
+        "shutter": "1/800s",
+        "iso": "ISO 200",
+        "capturedAt": "2026/04/19 08:46"
+      },
+      "sourceFormat": "jpg",
+      "dynamicRange": "sdr",
+      "hdrCandidate": false,
+      "assetPolicy": "preserve-original",
+      "fallbackStrategy": "none",
+      "fallbackGenerated": false
     }
   }
 ]

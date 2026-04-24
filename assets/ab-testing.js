@@ -27,7 +27,7 @@ class ABTestManager {
           'compact': { weight: 25, name: 'Compact Layout' },
           'wizard': { weight: 25, name: 'Wizard Layout' }
         },
-        targetPages: ['/write-note/', '/upload-photo/'],
+        targetPages: ['/write-note/'],
         goals: ['form_submission', 'write_submit_success'],
         segments: ['desktop_user', 'mobile_user']
       },

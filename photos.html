@@ -19,7 +19,8 @@ permalink: /photos/
      data-umami-event="photo_full_view"
      data-umami-event-photo-id="{{ photo.id }}"
      data-umami-event-location="photos_page"
-     data-umami-event-ratio="{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}">
+     data-umami-event-ratio="{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}"
+     data-photo-meta='{{ photo.meta | jsonify | escape }}'>
     <img
       src="{{ image_url }}"
       alt="{{ photo.meta.alt }}"
