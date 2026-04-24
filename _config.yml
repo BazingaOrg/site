@@ -34,6 +34,7 @@ collections:
     permalink: /:name/
   stories:
     output: true
+    permalink: /stories/:name/
 i18n:
   en-US:
     accessibility: Accessibility statement
