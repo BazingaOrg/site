@@ -1330,7 +1330,7 @@ html.photo-overlay-open {
 
 .photo-overlay-caption-content {
   width: min(100%, 56rem);
-  margin: 0;
+  margin: 0 auto;
   padding: .05rem 0 .3rem;
   color: rgba(255, 255, 255, 0.82);
   font-size: .92rem;
@@ -1366,6 +1366,7 @@ html.photo-overlay-open {
 .photo-overlay-thumbs {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .4rem;
   overflow-x: auto;
   overflow-y: hidden;
