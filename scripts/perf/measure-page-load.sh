@@ -18,6 +18,28 @@ declare -a page_specs=(
 
 rows_json="[]"
 
+sum_photo_variant_bytes() {
+  local variant_key="$1"
+  local limit="${2:-0}"
+  local jq_filter='. | sort_by(.uploaded) | reverse'
+
+  if [[ "$limit" != "0" ]]; then
+    jq_filter="${jq_filter} | .[0:${limit}]"
+  fi
+
+  local total_bytes=0
+  while IFS= read -r asset_path; do
+    [[ -z "$asset_path" ]] && continue
+    local_asset_file="_site${asset_path}"
+    if [[ -f "$local_asset_file" ]]; then
+      asset_bytes="$(wc -c <"$local_asset_file" | tr -d ' ')"
+      total_bytes=$((total_bytes + asset_bytes))
+    fi
+  done < <(jq -r "${jq_filter} | .[] | .variants.${variant_key}.src // empty" _data/photos.json)
+
+  echo "$total_bytes"
+}
+
 for spec in "${page_specs[@]}"; do
   IFS="|" read -r page_key page_route page_file <<<"$spec"
 
@@ -47,6 +69,16 @@ for spec in "${page_specs[@]}"; do
 
   deferred_asset_count="$(rg -o '/assets/[a-z0-9-]+\.js' "$page_file" | sort -u | wc -l | tr -d ' ')"
   font_preconnect_count="$(rg -c 'rel="preconnect".*fonts\.(googleapis|gstatic)\.com' "$page_file")"
+  default_image_bytes=0
+  overlay_image_bytes=0
+  original_image_bytes=0
+  if [[ "$page_key" == "home" ]]; then
+    default_image_bytes="$(sum_photo_variant_bytes thumbnail 10)"
+  elif [[ "$page_key" == "photos" ]]; then
+    default_image_bytes="$(sum_photo_variant_bytes preview)"
+    overlay_image_bytes="$(sum_photo_variant_bytes large)"
+    original_image_bytes="$(sum_photo_variant_bytes original)"
+  fi
   open_heart_version=""
   open_heart_cdn_match="$(rg -o 'open-heart-element@[0-9]+\.[0-9]+\.[0-9]+' "$page_file" | head -n 1 || true)"
   open_heart_local_match="$(rg -o 'open-heart-element-[0-9]+\.[0-9]+\.[0-9]+\.js' "$page_file" | head -n 1 || true)"
@@ -68,6 +100,9 @@ for spec in "${page_specs[@]}"; do
     --argjson direct_asset_bytes "$direct_asset_bytes" \
     --argjson deferred_asset_count "$deferred_asset_count" \
     --argjson font_preconnect_count "$font_preconnect_count" \
+    --argjson default_image_bytes "$default_image_bytes" \
+    --argjson overlay_image_bytes "$overlay_image_bytes" \
+    --argjson original_image_bytes "$original_image_bytes" \
     --arg open_heart_version "$open_heart_version" \
     '{
       key: $key,
@@ -80,6 +115,9 @@ for spec in "${page_specs[@]}"; do
       direct_asset_bytes: $direct_asset_bytes,
       deferred_asset_count: $deferred_asset_count,
       font_preconnect_count: $font_preconnect_count,
+      default_image_bytes: $default_image_bytes,
+      overlay_image_bytes: $overlay_image_bytes,
+      original_image_bytes: $original_image_bytes,
       open_heart_version: $open_heart_version
     }')"
 
@@ -92,9 +130,9 @@ report_json="$(jq -n \
   --argjson pages "$rows_json" \
   '{generated_at: $generated_at, source: $source, pages: $pages}')"
 
-echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+---------------------+"
-echo "|  Page  |  Route  |  HTML B    |  Gzip B    |  Direct Module |  Direct Asset JS  |  Direct JS B    |  Deferred Asset Ref  |  Open Heart Version |"
-echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+---------------------+"
+echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+-----------------+---------------+------------------+"
+echo "|  Page  |  Route  |  HTML B    |  Gzip B    |  Direct Module |  Direct Asset JS  |  Direct JS B    |  Deferred Asset Ref  |  Default Img B  |  Overlay Img B |  Original Img B  |"
+echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+-----------------+---------------+------------------+"
 
 jq -r '.pages[] | [
   .key,
@@ -105,13 +143,15 @@ jq -r '.pages[] | [
   (.direct_asset_count|tostring),
   (.direct_asset_bytes|tostring),
   (.deferred_asset_count|tostring),
-  (if .open_heart_version == "" then "-" else .open_heart_version end)
-] | @tsv' <<<"$report_json" | while IFS=$'\t' read -r page route html_b gzip_b direct_m direct_a direct_js_b deferred_ref oh_version; do
-  printf "| %-6s | %-7s | %-10s | %-10s | %-14s | %-17s | %-15s | %-20s | %-19s |\n" \
-    "$page" "$route" "$html_b" "$gzip_b" "$direct_m" "$direct_a" "$direct_js_b" "$deferred_ref" "$oh_version"
+  (.default_image_bytes|tostring),
+  (.overlay_image_bytes|tostring),
+  (.original_image_bytes|tostring)
+] | @tsv' <<<"$report_json" | while IFS=$'\t' read -r page route html_b gzip_b direct_m direct_a direct_js_b deferred_ref default_img_b overlay_img_b original_img_b; do
+  printf "| %-6s | %-7s | %-10s | %-10s | %-14s | %-17s | %-15s | %-20s | %-15s | %-13s | %-16s |\n" \
+    "$page" "$route" "$html_b" "$gzip_b" "$direct_m" "$direct_a" "$direct_js_b" "$deferred_ref" "$default_img_b" "$overlay_img_b" "$original_img_b"
 done
 
-echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+---------------------+"
+echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+-----------------+---------------+------------------+"
 echo
 echo "$report_json" | jq .
 

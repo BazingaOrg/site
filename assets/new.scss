@@ -105,16 +105,14 @@ body::after {
 
 @media (prefers-color-scheme: dark) {
   body::before {
-    background-image: url("/assets/bg-constellation.png");
+    background-image: url("/assets/bg-constellation.webp");
     background-image: -webkit-image-set(
       url("/assets/bg-constellation.avif") type("image/avif") 1x,
-      url("/assets/bg-constellation.webp") type("image/webp") 1x,
-      url("/assets/bg-constellation.png") type("image/png") 1x
+      url("/assets/bg-constellation.webp") type("image/webp") 1x
     );
     background-image: image-set(
       url("/assets/bg-constellation.avif") type("image/avif") 1x,
-      url("/assets/bg-constellation.webp") type("image/webp") 1x,
-      url("/assets/bg-constellation.png") type("image/png") 1x
+      url("/assets/bg-constellation.webp") type("image/webp") 1x
     );
   }
 }
@@ -686,12 +684,17 @@ time.monospace {
 
   img {
     background-color: var(--photoBackground);
+    height: 200px;
+    width: auto;
     margin-top: 0;
+    object-fit: cover;
   }
 }
 
 figure {
   margin: 1em 0 3em;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
 
   img {
     margin: 0 auto;
@@ -704,6 +707,7 @@ figure {
     display: block;
     width: fit-content;
     margin: 0 auto 0.5em;
+    background-color: var(--photoBackground);
   }
 
   p {
@@ -841,6 +845,10 @@ figure {
     object-fit: cover;
     aspect-ratio: 4/3;
   }
+}
+
+.photos-wrapper[data-layout="grid2fr"] .image-link {
+  width: 100%;
 }
 
 .photo-metadata {

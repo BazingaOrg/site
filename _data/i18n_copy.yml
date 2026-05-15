@@ -48,6 +48,7 @@ list_pages:
     photos_title: Photos
     stories_title: Stories
     caption_expand: Expand
+    caption_collapse: Collapse
     camera_details: Photo details
     stories_empty: No stories yet.
   zh-CN:
@@ -61,6 +62,7 @@ list_pages:
     photos_title: 照片
     stories_title: 故事
     caption_expand: 展开
+    caption_collapse: 收起
     camera_details: 相片细节
     stories_empty: 还没有故事。
 

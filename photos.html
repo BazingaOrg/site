@@ -13,19 +13,29 @@ permalink: /photos/
 {% assign photos = site.data.photos | sort: "uploaded" | reverse %}
 {% if photos.size > 0 %}
 {% for photo in photos %}
+{% assign original = photo.variants.original %}
+{% assign thumbnail = photo.variants.thumbnail %}
+{% assign preview = photo.variants.preview %}
+{% assign large = photo.variants.large %}
 <figure id="{{ photo.id }}" class="figure-{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}">
-  {% assign image_url = photo.variants[0] %}
-  <a href="{{ image_url }}" class="image-link"
+  <a href="{{ large.src }}" class="image-link"
      data-umami-event="photo_full_view"
      data-umami-event-photo-id="{{ photo.id }}"
      data-umami-event-location="photos_page"
      data-umami-event-ratio="{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}"
+     data-photo-original-src="{{ original.src }}"
+     data-photo-thumbnail-src="{{ thumbnail.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
     <img
-      src="{{ image_url }}"
+      src="{{ preview.src }}"
+      srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px"
+      width="{{ preview.width }}"
+      height="{{ preview.height }}"
       alt="{{ photo.meta.alt }}"
       title="{{ photo.meta.alt }}"
-      loading="lazy"
+      loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+      {% if forloop.first %}fetchpriority="high"{% endif %}
       decoding="async">
   </a>
   <figcaption>
@@ -37,7 +47,7 @@ permalink: /photos/
       </open-heart>
     </div>
     {% if photo.meta.caption %}
-    <div class="caption-container">
+    <div class="caption-container" data-expand-label="{{ copy.caption_expand }}" data-collapse-label="{{ copy.caption_collapse }}">
       <div class="caption-content">{{ photo.meta.caption | markdownify }}</div>
       <button class="caption-toggle" style="display: none;">{{ copy.caption_expand }}</button>
     </div>

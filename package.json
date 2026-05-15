@@ -2,6 +2,7 @@
   "type": "module",
   "scripts": {
     "hooks:install": "bash scripts/git-hooks/install.sh",
+    "photos:generate-variants": "node scripts/photos/generate-variants.js",
     "photos:sync-exif": "node scripts/photos/sync-exif.js",
     "vendor:sync:open-heart": "bash scripts/vendor/sync-open-heart-element.sh",
     "vendor:sync": "npm run vendor:sync:open-heart",
@@ -14,5 +15,8 @@
     "test:full": "npm run test:quick && npm run perf:measure",
     "perf:measure": "bash scripts/perf/measure-page-load.sh docs/perf/latest.json",
     "perf:compare": "bash scripts/perf/compare-page-metrics.sh docs/perf/before.json docs/perf/latest.json"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }

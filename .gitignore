@@ -6,3 +6,4 @@ _old_posts/
 .jekyll-cache/
 .env
 .env.local
+node_modules/

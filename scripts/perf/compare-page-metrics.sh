@@ -19,9 +19,9 @@ if [[ ! -f "$after_file" ]]; then
   exit 1
 fi
 
-echo "+--------+------------+------------+------------+------------+-------------------+-------------------+"
-echo "|  Page  |  HTML Δ B  |  Gzip Δ B  |  Module Δ  |  Asset Δ   |  Direct JS Δ B    |  Deferred Ref Δ   |"
-echo "+--------+------------+------------+------------+------------+-------------------+-------------------+"
+echo "+--------+------------+------------+------------+------------+-------------------+-------------------+-----------------+-----------------+"
+echo "|  Page  |  HTML Δ B  |  Gzip Δ B  |  Module Δ  |  Asset Δ   |  Direct JS Δ B    |  Deferred Ref Δ   |  Default Img Δ  |  Overlay Img Δ  |"
+echo "+--------+------------+------------+------------+------------+-------------------+-------------------+-----------------+-----------------+"
 
 jq -nr \
   --slurpfile before "$before_file" \
@@ -37,7 +37,9 @@ jq -nr \
       module_delta: (($a[$k].direct_module_count // 0) - ($b[$k].direct_module_count // 0)),
       asset_delta: (($a[$k].direct_asset_count // 0) - ($b[$k].direct_asset_count // 0)),
       direct_js_delta: (($a[$k].direct_asset_bytes // 0) - ($b[$k].direct_asset_bytes // 0)),
-      deferred_ref_delta: (($a[$k].deferred_asset_count // 0) - ($b[$k].deferred_asset_count // 0))
+      deferred_ref_delta: (($a[$k].deferred_asset_count // 0) - ($b[$k].deferred_asset_count // 0)),
+      default_image_delta: (($a[$k].default_image_bytes // 0) - ($b[$k].default_image_bytes // 0)),
+      overlay_image_delta: (($a[$k].overlay_image_bytes // 0) - ($b[$k].overlay_image_bytes // 0))
     }
   | [
       .key,
@@ -46,12 +48,14 @@ jq -nr \
       (.module_delta | tostring),
       (.asset_delta | tostring),
       (.direct_js_delta | tostring),
-      (.deferred_ref_delta | tostring)
+      (.deferred_ref_delta | tostring),
+      (.default_image_delta | tostring),
+      (.overlay_image_delta | tostring)
     ]
   | @tsv
-' | while IFS=$'\t' read -r page html_delta gzip_delta module_delta asset_delta direct_js_delta deferred_ref_delta; do
-  printf "| %-6s | %-10s | %-10s | %-10s | %-10s | %-17s | %-17s |\n" \
-    "$page" "$html_delta" "$gzip_delta" "$module_delta" "$asset_delta" "$direct_js_delta" "$deferred_ref_delta"
+' | while IFS=$'\t' read -r page html_delta gzip_delta module_delta asset_delta direct_js_delta deferred_ref_delta default_image_delta overlay_image_delta; do
+  printf "| %-6s | %-10s | %-10s | %-10s | %-10s | %-17s | %-17s | %-15s | %-15s |\n" \
+    "$page" "$html_delta" "$gzip_delta" "$module_delta" "$asset_delta" "$direct_js_delta" "$deferred_ref_delta" "$default_image_delta" "$overlay_image_delta"
 done
 
-echo "+--------+------------+------------+------------+------------+-------------------+-------------------+"
+echo "+--------+------------+------------+------------+------------+-------------------+-------------------+-----------------+-----------------+"

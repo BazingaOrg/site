@@ -16,7 +16,7 @@ function main() {
   const photos = JSON.parse(readFileSync(photosDataPath, 'utf8'))
   const photoFiles = photos
     .map((photo) => {
-      const imagePath = photo?.variants?.[0]
+      const imagePath = resolveOriginalSource(photo)
       if (!imagePath) return null
 
       return {
@@ -56,7 +56,7 @@ function main() {
   )
 
   const updatedPhotos = photos.map((photo) => {
-    const imagePath = photo?.variants?.[0]
+    const imagePath = resolveOriginalSource(photo)
     if (!imagePath) return photo
 
     const absolutePath = path.join(repoRoot, imagePath.replace(/^\//, ''))
@@ -160,6 +160,17 @@ function deriveSourceFormat(imagePath) {
 
 function isHdrCandidate(sourceFormat) {
   return ['avif', 'heic', 'heif', 'jxl'].includes(sourceFormat)
+}
+
+function resolveOriginalSource(photo) {
+  if (Array.isArray(photo?.variants)) {
+    return photo.variants[0] || null
+  }
+
+  const original = photo?.variants?.original
+  if (typeof original === 'string') return original
+
+  return original?.src || null
 }
 
 main()

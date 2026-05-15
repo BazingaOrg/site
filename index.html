@@ -73,14 +73,21 @@ root: true
 {% assign photos = site.data.photos | sort: "uploaded" | reverse | slice: 0, 10 %}
 {% if photos.size > 0 %}
 {% for photo in photos %}
-  {% capture image_url %}{% for url in photo.variants %}{% if url contains "/thumbnail" %}{{ url }}{% endif %}{% endfor %}{% endcapture %}
-  {% assign image_url = image_url | strip %}
-  {% if image_url == '' %}{% assign image_url = photo.variants[0] %}{% endif %}
+  {% assign thumbnail = photo.variants.thumbnail %}
+  {% assign preview = photo.variants.preview %}
   <a href="/photos#{{ photo.id }}" class="image-link"
      data-umami-event="photo_click"
      data-umami-event-location="homepage"
      data-umami-event-photo-id="{{ photo.id }}">
-    <img src="{{ image_url }}" height="200" alt="{{ photo.meta.alt }}" loading="lazy" decoding="async">
+    <img
+      src="{{ thumbnail.src }}"
+      srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
+      sizes="200px"
+      width="{{ thumbnail.width }}"
+      height="{{ thumbnail.height }}"
+      alt="{{ photo.meta.alt }}"
+      loading="lazy"
+      decoding="async">
   </a>
 {% endfor %}
 {% else %}
