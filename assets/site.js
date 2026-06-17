@@ -1,5 +1,6 @@
 import { trackUmami } from './umami.js'
 import { initSakuraFall } from './sakura-fall.js'
+import { initStarField } from './star-field.js'
 
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
 
@@ -40,10 +41,30 @@ function syncSakuraByTheme() {
   window.__sakuraFallMounted = null
 }
 
+function shouldEnableStarField() {
+  const enabledToken = getComputedStyle(document.documentElement)
+    .getPropertyValue('--starFieldEnabled')
+    .trim()
+
+  return enabledToken === '1'
+}
+
+function syncStarFieldByTheme() {
+  if (shouldEnableStarField()) {
+    initStarField()
+    return
+  }
+
+  window.__starFieldMounted?.destroy()
+  window.__starFieldMounted = null
+}
+
 syncSakuraByTheme()
+syncStarFieldByTheme()
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   syncSakuraByTheme()
+  syncStarFieldByTheme()
 })
 
 function normalizePath(pathname) {

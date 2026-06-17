@@ -6,6 +6,7 @@ html { font-size: 100%; font: -apple-system-body; }
 :root {
   --backgroundColor: #FDFEFB;
   --sakuraEnabled: 1;
+  --starFieldEnabled: 0;
   --pageBackgroundOverlay: rgba(0, 0, 0, 0);
   --pageBackgroundBlur: 0px;
   --pageBackgroundSize: cover;
@@ -36,8 +37,9 @@ html { font-size: 100%; font: -apple-system-body; }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --backgroundColor: #151615;
+    --backgroundColor: #08090b;
     --sakuraEnabled: 0;
+    --starFieldEnabled: 1;
     --pageBackgroundOverlay: rgba(11, 12, 13, 0.38);
     --pageBackgroundBlur: 0.5px;
     --pageBackgroundPosition: center top;
@@ -95,27 +97,14 @@ body::before {
   background-size: var(--pageBackgroundSize);
   filter: blur(var(--pageBackgroundBlur));
   transform: scale(1.004);
-  z-index: 0;
+  z-index: -1;
 }
 
 body::after {
   background: var(--pageBackgroundOverlay);
-  z-index: 0;
+  z-index: -1;
 }
 
-@media (prefers-color-scheme: dark) {
-  body::before {
-    background-image: url("/assets/bg-constellation.webp");
-    background-image: -webkit-image-set(
-      url("/assets/bg-constellation.avif") type("image/avif") 1x,
-      url("/assets/bg-constellation.webp") type("image/webp") 1x
-    );
-    background-image: image-set(
-      url("/assets/bg-constellation.avif") type("image/avif") 1x,
-      url("/assets/bg-constellation.webp") type("image/webp") 1x
-    );
-  }
-}
 
 @media (max-width: 768px) {
   :root {
@@ -130,6 +119,152 @@ body::after {
   height: 100%;
   pointer-events: none;
   z-index: 2;
+}
+
+.star-field-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  contain: strict;
+}
+
+.star-field-star {
+  position: absolute;
+  top: var(--star-y);
+  left: var(--star-x);
+  width: var(--star-size, 1px);
+  height: var(--star-size, 1px);
+  border-radius: 50%;
+  background: var(--star-color, #fff);
+  opacity: var(--star-base-opacity, 0.6);
+  box-shadow: 0 0 var(--star-glow, 0) var(--star-color, #fff);
+  will-change: opacity, transform;
+}
+
+.star-field-star--twinkle {
+  animation: star-field-twinkle var(--twinkle-duration, 3.4s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+}
+
+@keyframes star-field-twinkle {
+  0%, 100% {
+    opacity: calc(var(--star-base-opacity, 0.6) * 0.35);
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: var(--star-base-opacity, 0.9);
+    transform: scale(1.1);
+  }
+}
+
+.star-field-shooter {
+  position: absolute;
+  top: var(--shooter-y, 12%);
+  left: var(--shooter-x, 78%);
+  width: var(--shooter-length, 90px);
+  height: 1.4px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 245, 220, 0.55) 65%,
+    rgba(255, 250, 235, 0.95) 100%
+  );
+  border-radius: 999px;
+  transform-origin: 100% 50%;
+  filter: drop-shadow(0 0 3px rgba(255, 240, 200, 0.7));
+  opacity: 0;
+  animation: star-field-shoot var(--shooter-duration, 1.1s) ease-out forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes star-field-shoot {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--shooter-angle, 155deg)) translateX(0);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--shooter-angle, 155deg)) translateX(var(--shooter-travel, 380px));
+  }
+}
+
+.star-field-constellation {
+  position: absolute;
+  top: 4vh;
+  right: 3vw;
+  width: clamp(220px, 30vw, 420px);
+  height: auto;
+  aspect-ratio: 100 / 80;
+  pointer-events: none;
+}
+
+.star-field-constellation-line {
+  stroke: rgba(220, 230, 255, 0.22);
+  stroke-width: 0.22;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: star-field-line-draw 1.6s ease-out var(--line-delay, 0.4s) forwards;
+}
+
+.star-field-constellation-star {
+  fill: rgb(255, 255, 255);
+  filter: drop-shadow(0 0 1.4px rgba(220, 230, 255, 0.85));
+  opacity: 0;
+  animation:
+    star-field-leo-in 0.9s ease-out var(--star-delay, 0s) forwards,
+    star-field-leo-pulse var(--star-glow-duration, 5s) ease-in-out calc(var(--star-delay, 0s) + 0.9s) infinite;
+}
+
+@keyframes star-field-line-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes star-field-leo-in {
+  to { opacity: 1; }
+}
+
+@keyframes star-field-leo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+@media (max-width: 768px) {
+  .star-field-constellation {
+    width: clamp(180px, 70vw, 300px);
+    top: 2vh;
+    right: 50%;
+    transform: translateX(50%);
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-field-star--twinkle {
+    animation: none;
+    opacity: var(--star-base-opacity, 0.6);
+    transform: none;
+  }
+
+  .star-field-shooter {
+    display: none;
+  }
+
+  .star-field-constellation-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .star-field-constellation-star {
+    animation: none;
+    opacity: 0.85;
+  }
 }
 
 ::-webkit-scrollbar {
