@@ -2,7 +2,7 @@ home:
   en-US:
     bio_intro: Just a Chinese Random Guy into AI :).
     bio_location: Lives in Hangzhou, Zhejiang.
-    bio_time: It is currently {time} there.
+    bio_time: is up at {time}
     nav_additional: Additional content
     nav_social: Social
     section_photos: Photos
@@ -20,7 +20,7 @@ home:
   zh-CN:
     bio_intro: 一个觉得AI很好玩的普通人 :)。
     bio_location: 生活在浙江杭州。
-    bio_time: 现在是 {time}。
+    bio_time: 在跑，现在 {time}
     nav_additional: 额外内容
     nav_social: 社交
     section_photos: 照片

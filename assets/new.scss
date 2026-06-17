@@ -1881,6 +1881,22 @@ open-heart:not(:defined) {
   font-feature-settings: "ss03" 1;
 }
 
+.bio-now {
+  margin: 0;
+
+  frontmost-badge {
+    --frontmost-icon-size: 1.5em;
+    --frontmost-icon-radius: 6px;
+    margin: 0 0.35em 0 0;
+    transform: translateY(-0.12em);
+
+    &::part(name),
+    &::part(meta) {
+      display: none;
+    }
+  }
+}
+
 .share-button {
   border: 0;
   padding: 0;
