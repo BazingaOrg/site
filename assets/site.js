@@ -1,6 +1,7 @@
 import { trackUmami } from './umami.js'
 import { initSakuraFall } from './sakura-fall.js'
 import { initStarField } from './star-field.js'
+import { syncWeather } from './weather.js'
 
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
 
@@ -23,49 +24,23 @@ if ('share' in navigator) {
   }
 }
 
-function shouldEnableSakura() {
-  const enabledToken = getComputedStyle(document.documentElement)
-    .getPropertyValue('--sakuraEnabled')
-    .trim()
-
-  return enabledToken === '1'
-}
-
-function syncSakuraByTheme() {
-  if (shouldEnableSakura()) {
+function syncDefaultEffectsByDay(isDay) {
+  if (Number(isDay) === 1) {
     initSakuraFall()
+    window.__starFieldMounted?.destroy()
+    window.__starFieldMounted = null
     return
   }
 
   window.__sakuraFallMounted?.destroy()
   window.__sakuraFallMounted = null
+  initStarField()
 }
 
-function shouldEnableStarField() {
-  const enabledToken = getComputedStyle(document.documentElement)
-    .getPropertyValue('--starFieldEnabled')
-    .trim()
-
-  return enabledToken === '1'
-}
-
-function syncStarFieldByTheme() {
-  if (shouldEnableStarField()) {
-    initStarField()
-    return
-  }
-
-  window.__starFieldMounted?.destroy()
-  window.__starFieldMounted = null
-}
-
-syncSakuraByTheme()
-syncStarFieldByTheme()
-
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  syncSakuraByTheme()
-  syncStarFieldByTheme()
-})
+syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
+window.setInterval(() => {
+  syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
+}, 15 * 60 * 1000)
 
 function normalizePath(pathname) {
   if (!pathname || pathname === '') return '/'
