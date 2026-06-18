@@ -193,7 +193,7 @@ body::after {
   }
 
   3% {
-    background: rgba(255, 255, 255, 0.56);
+    background: rgba(255, 255, 255, 0.28);
   }
 
   6% {
@@ -201,7 +201,7 @@ body::after {
   }
 
   10% {
-    background: rgba(255, 255, 255, 0.34);
+    background: rgba(255, 255, 255, 0.16);
   }
 
   14%, 100% {
@@ -905,24 +905,89 @@ time.monospace {
   }
 }
 
-.photos {
-  display: flex;
-  gap: 1em;
-  flex-wrap: nowrap;
-  overflow: auto;
-  align-items: center;
+.photo-carousel {
+  display: block;
+  position: relative;
+  height: 200px;
   margin-bottom: 1em;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: transparent;
+  color: inherit;
+  text-decoration: none;
+  touch-action: pan-y;
+  outline-offset: 3px;
+}
 
-  .image-link {
-    flex-shrink: 0;
+.photo-carousel-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;
+}
+
+.photo-carousel-stage img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 313px);
+  max-height: 176px;
+  margin-top: 0;
+  border-radius: 4px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(0.78);
+  transform-origin: 50% 70%;
+  transition-property: opacity, transform;
+  transition-duration: 520ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.photo-carousel-stage img.is-active {
+  opacity: 1;
+  z-index: 5;
+  transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(1);
+}
+
+.photo-carousel-stage img.is-prev,
+.photo-carousel-stage img.is-next {
+  opacity: 0.54;
+  z-index: 4;
+}
+
+.photo-carousel-stage img.is-prev {
+  transform: translate3d(-50%, -50%, 0) translate3d(-18%, 4px, 0) rotate(-5deg) scale(0.9);
+}
+
+.photo-carousel-stage img.is-next {
+  transform: translate3d(-50%, -50%, 0) translate3d(18%, 4px, 0) rotate(5deg) scale(0.9);
+}
+
+.photo-carousel-stage img.is-far-prev,
+.photo-carousel-stage img.is-far-next {
+  opacity: 0.24;
+  z-index: 3;
+}
+
+.photo-carousel-stage img.is-far-prev {
+  transform: translate3d(-50%, -50%, 0) translate3d(-31%, 9px, 0) rotate(-8deg) scale(0.8);
+}
+
+.photo-carousel-stage img.is-far-next {
+  transform: translate3d(-50%, -50%, 0) translate3d(31%, 9px, 0) rotate(8deg) scale(0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-carousel-stage img {
+    transition: none;
   }
 
-  img {
-    background-color: var(--photoBackground);
-    height: 200px;
-    width: auto;
-    margin-top: 0;
-    object-fit: cover;
+  .photo-carousel-stage img:not(.is-active) {
+    opacity: 0;
   }
 }
 

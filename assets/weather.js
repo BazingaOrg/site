@@ -12,6 +12,7 @@ const CACHE_TTL_MS = 15 * 60 * 1000
 const STALE_LIMIT_MS = 60 * 60 * 1000
 const FETCH_TIMEOUT_MS = 8000
 const SUPPRESS_DEFAULT_CONDITIONS = new Set(['rain', 'snow', 'thunderstorm'])
+const DARK_MODE_MEDIA = window.matchMedia('(prefers-color-scheme: dark)')
 
 const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82])
 const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86])
@@ -22,6 +23,20 @@ let activeWeather = null
 let activeCondition = null
 let activeIsDay = null
 let inFlightWeather = null
+
+DARK_MODE_MEDIA.addEventListener('change', () => {
+  if (activeCondition !== 'thunderstorm') return
+
+  if (DARK_MODE_MEDIA.matches && !activeWeather?.lightning) {
+    activeWeather.lightning = initLightning()
+    return
+  }
+
+  if (!DARK_MODE_MEDIA.matches && activeWeather?.lightning) {
+    activeWeather.lightning.destroy()
+    delete activeWeather.lightning
+  }
+})
 
 export function weatherCodeToCondition(code) {
   const numericCode = Number(code)
@@ -183,7 +198,9 @@ function applyEffect(data, syncDefaultEffects) {
     activeWeather.snow = initSnow()
   } else if (condition === 'thunderstorm') {
     activeWeather.rain = initRain()
-    activeWeather.lightning = initLightning()
+    if (DARK_MODE_MEDIA.matches) {
+      activeWeather.lightning = initLightning()
+    }
   }
 
   if (condition === 'fog') {

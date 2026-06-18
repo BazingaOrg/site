@@ -1,3 +1,5 @@
+const LIGHTNING_INTERVAL_MS = [45000, 90000]
+
 function randomBetween(min, max) {
   return min + Math.random() * (max - min)
 }
@@ -57,7 +59,7 @@ export function initLightning() {
       if (cancelled) return
       if (!document.hidden) strike()
       scheduleStrike()
-    }, randomBetween(20000, 50000))
+    }, randomBetween(...LIGHTNING_INTERVAL_MS))
   }
 
   scheduleStrike()

@@ -78,32 +78,32 @@ lang: zh-CN
    data-umami-event-type="photos"
    data-umami-event-section="homepage"
    data-umami-event-lang="zh-CN">RSS</a>
-<div class="photos">
 {% assign photos = site.data.photos | sort: "uploaded" | reverse | slice: 0, 10 %}
 {% if photos.size > 0 %}
-{% for photo in photos %}
-  {% assign thumbnail = photo.variants.thumbnail %}
-  {% assign preview = photo.variants.preview %}
-  <a href="/photos#{{ photo.id }}" class="image-link"
-     data-umami-event="photo_click"
-     data-umami-event-location="homepage"
-     data-umami-event-photo-id="{{ photo.id }}"
-     data-umami-event-lang="zh-CN">
+<a href="/photos" class="photo-carousel" data-photo-carousel
+   aria-label="{{ site.data.i18n_copy.home['zh-CN'].section_photos }}"
+   data-umami-event="photo_click"
+   data-umami-event-location="homepage"
+   data-umami-event-lang="zh-CN">
+  <div class="photo-carousel-stage">
+  {% for photo in photos %}
+    {% assign thumbnail = photo.variants.thumbnail %}
+    {% assign preview = photo.variants.preview %}
     <img
       src="{{ thumbnail.src }}"
       srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-      sizes="200px"
-      width="{{ thumbnail.width }}"
-      height="{{ thumbnail.height }}"
+      sizes="(max-width: 26em) calc(100vw - 5em), 313px"
       alt="{{ photo.meta.alt }}"
-      loading="lazy"
-      decoding="async">
-  </a>
-{% endfor %}
+      loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+      decoding="async"
+      class="{% if forloop.first %}is-active{% endif %}"
+      data-photo-id="{{ photo.id }}">
+  {% endfor %}
+  </div>
+</a>
 {% else %}
   <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home['zh-CN'].empty_photos }}</em></p>
 {% endif %}
-</div>
 
 <hr class="hr">
 

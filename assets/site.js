@@ -1,6 +1,7 @@
 import { trackUmami } from './umami.js'
 import { initSakuraFall } from './sakura-fall.js'
 import { initStarField } from './star-field.js'
+import { initHomePhotoCarousel } from './home-photo-carousel.js'
 import { syncWeather } from './weather.js'
 
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
@@ -41,6 +42,7 @@ syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
 window.setInterval(() => {
   syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
 }, 15 * 60 * 1000)
+initHomePhotoCarousel()
 
 function normalizePath(pathname) {
   if (!pathname || pathname === '') return '/'
