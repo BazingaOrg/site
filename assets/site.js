@@ -1,4 +1,4 @@
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { initSakuraFall } from './sakura-fall.js'
 import { initStarField } from './star-field.js'
 import { initHomePhotoCarousel } from './home-photo-carousel.js'

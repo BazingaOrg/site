@@ -1,4 +1,4 @@
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 
 const trackingScript = document.querySelector('script[data-page-tracking]')
 

@@ -1,4 +1,5 @@
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
+
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
 
 function settime() {

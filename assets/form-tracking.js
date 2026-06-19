@@ -1,7 +1,7 @@
 // 表单交互追踪模块
 // 用于追踪写作表单中的用户行为和互动模式
 
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { createPrefixedId } from './id.js'
 
 /**

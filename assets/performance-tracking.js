@@ -1,7 +1,7 @@
 // 性能指标追踪模块
 // 追踪 Core Web Vitals 和其他关键性能指标
 
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { createPrefixedId } from './id.js'
 
 /**

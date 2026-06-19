@@ -1,7 +1,7 @@
 // 内容健康度评分系统
 // 基于用户行为数据和内容指标评估内容质量和参与度
 
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { createPrefixedId } from './id.js'
 
 /**

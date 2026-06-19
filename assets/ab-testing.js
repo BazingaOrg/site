@@ -1,7 +1,7 @@
 // A/B 测试框架
 // 基于用户细分和随机分配的客户端 A/B 测试系统
 
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { createPrefixedId } from './id.js'
 
 /**

@@ -1,7 +1,7 @@
 // 用户旅程分析模块
 // 追踪用户完整的访问路径、转化漏斗和行为模式
 
-import { trackUmami } from './umami.js'
+import { trackUmami } from './events.js'
 import { createPrefixedId } from './id.js'
 
 /**
