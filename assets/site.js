@@ -3,8 +3,37 @@ import { initSakuraFall } from './sakura-fall.js'
 import { initStarField } from './star-field.js'
 import { initHomePhotoCarousel } from './home-photo-carousel.js'
 import { syncWeather } from './weather.js'
+import { initBioPresence } from './bio-presence.js'
 
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
+
+// Surfaces the live weather as a short clause on the location line, e.g.
+// "Lives in Hangzhou, Zhejiang — raining now." Stays quiet when the sky is
+// clear and degrades to the plain location line without JS.
+function updateLocationWeather(condition) {
+  const el = document.querySelector('.bio-location')
+  if (!el) return
+
+  if (!el.dataset.baseText) el.dataset.baseText = el.textContent.trim()
+  const base = el.dataset.baseText
+
+  const key = condition ? `weather${condition.charAt(0).toUpperCase()}${condition.slice(1)}` : ''
+  const phrase = key ? el.dataset[key] : ''
+
+  if (!phrase) {
+    el.textContent = base
+    return
+  }
+
+  el.textContent = isChineseInterface
+    ? `${base.replace(/[。.]\s*$/, '')}，${phrase}。`
+    : `${base.replace(/[.。]\s*$/, '')} — ${phrase}.`
+}
+
+function refreshWeather() {
+  return syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
+    .then(data => updateLocationWeather(data?.condition))
+}
 
 if ('share' in navigator) {
   for (const shareButton of document.querySelectorAll('[data-share-url]')) {
@@ -38,11 +67,10 @@ function syncDefaultEffectsByDay(isDay) {
   initStarField()
 }
 
-syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
-window.setInterval(() => {
-  syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
-}, 15 * 60 * 1000)
+refreshWeather()
+window.setInterval(refreshWeather, 15 * 60 * 1000)
 initHomePhotoCarousel()
+initBioPresence()
 
 function normalizePath(pathname) {
   if (!pathname || pathname === '') return '/'

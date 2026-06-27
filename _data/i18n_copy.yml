@@ -2,7 +2,15 @@ home:
   en-US:
     bio_intro: Just a Chinese Random Guy into AI :).
     bio_location: Lives in Hangzhou, Zhejiang.
-    bio_time: is up at {time}
+    bio_time: "· {time}"
+    bio_now_active: in focus
+    bio_now_offline: away
+    bio_tip_offline: Away
+    bio_weather:
+      rain: raining now
+      snow: snowing now
+      thunderstorm: storms rolling through
+      fog: wrapped in fog
     nav_additional: Additional content
     nav_social: Social
     section_photos: Photos
@@ -20,7 +28,15 @@ home:
   zh-CN:
     bio_intro: 一个觉得AI很好玩的普通人 :)。
     bio_location: 生活在浙江杭州。
-    bio_time: 在跑，现在 {time}
+    bio_time: "· {time}"
+    bio_now_active: 使用中
+    bio_now_offline: 暂时离开
+    bio_tip_offline: 离开
+    bio_weather:
+      rain: 正下着雨
+      snow: 正下着雪
+      thunderstorm: 雷雨阵阵
+      fog: 雾蒙蒙的
     nav_additional: 额外内容
     nav_social: 社交
     section_photos: 照片

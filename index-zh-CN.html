@@ -9,11 +9,16 @@ lang: zh-CN
 <p>
   {{ site.data.i18n_copy.home['zh-CN'].bio_intro }}
 </p>
-<p>
+<p class="bio-location"
+   data-weather-rain="{{ site.data.i18n_copy.home['zh-CN'].bio_weather.rain }}"
+   data-weather-snow="{{ site.data.i18n_copy.home['zh-CN'].bio_weather.snow }}"
+   data-weather-thunderstorm="{{ site.data.i18n_copy.home['zh-CN'].bio_weather.thunderstorm }}"
+   data-weather-fog="{{ site.data.i18n_copy.home['zh-CN'].bio_weather.fog }}">
   {{ site.data.i18n_copy.home['zh-CN'].bio_location }}
 </p>
 <p class="bio-now">
-  <frontmost-badge user="bazinga" endpoint="https://ima.bazinga.ink"></frontmost-badge><span class="time" data-timestamp-text="{{ site.data.i18n_copy.home['zh-CN'].bio_time }}"></span>。
+  <frontmost-badge user="bazinga" endpoint="https://ima.bazinga.ink"
+    data-tip-offline="{{ site.data.i18n_copy.home['zh-CN'].bio_tip_offline }}"></frontmost-badge><span class="bio-now-state" data-state-active="{{ site.data.i18n_copy.home['zh-CN'].bio_now_active }}" data-state-offline="{{ site.data.i18n_copy.home['zh-CN'].bio_now_offline }}"></span><span class="time" data-timestamp-text="{{ site.data.i18n_copy.home['zh-CN'].bio_time }}"></span>。
 </p>
 
 <br />
