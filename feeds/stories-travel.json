@@ -17,11 +17,11 @@ type: "Travel"
   "items": [{% for story in stories %}{% if stories.first != story %},{% endif %}
     {
       "id": "{{ story.id }}",
-      "date_published": "{{ story.uploaded | date_to_xmlschema }}", {% assign date_expired = story.uploaded | date: "%s" | plus: 86400 | date_to_xmlschema %}
+      "date_published": "{{ story.uploaded | date_to_xmlschema }}", {% assign date_expired = story.uploaded | date: "%s" | plus: 86400 | date_to_xmlschema %}{% assign story_cover = story.variants[0] | replace: '/images/photos/', '/images/photos/variants/' | replace_first: '.jpeg', '-large.webp' | replace_first: '.jpg', '-large.webp' %}
 
       "tags": [{% for tag in story.meta.tags %}"{{ tag }}"{% if tag != story.meta.tags.last %}, {% endif %}{% endfor %}],
 
-      "content_html": "{% if story.playback %}<video src='{{ story.meta.url }}' controls></video>{{ story.meta.title }}{% else %}<img src='{{ story.variants[0] }}' alt='{{ story.meta.alt }}'>{% endif %}",
+      "content_html": "{% if story.playback %}<video src='{{ story.meta.url }}' controls></video>{{ story.meta.title }}{% else %}<img src='{{ story_cover }}' alt='{{ story.meta.alt }}'>{% endif %}",
 
       "title": "{{ story.uploaded | date: "%Y/%m/%d" }}",
       "summary": "{% if story.meta.caption == "" %}N/A{% else %}{{ story.meta.caption }}{% endif %} ({{ story.meta.alt }})",
@@ -29,8 +29,8 @@ type: "Travel"
       "authors": [{"name": "Bazinga", "url": "https://site.bazinga.ink"}],
       "url": "{% if story.meta.story_url %}{{ site.url }}{{ story.meta.story_url }}?story={{ story.id }}{% else %}{{ site.url }}/stories/{{ story.id }}{% endif %}",
       "_open_stories": {
-        "mime_type": "{% if story.meta.filetype %}{{ story.meta.filetype }}{% else %}image/jpeg{% endif %}",
-        "url": "{% if story.playback %}{{ story.meta.url }}{% else %}{{ story.variants[0] }}{% endif %}",{% if story.meta.alt %}
+        "mime_type": "{% if story.meta.filetype %}{{ story.meta.filetype }}{% else %}image/webp{% endif %}",
+        "url": "{% if story.playback %}{{ story.meta.url }}{% else %}{{ story_cover }}{% endif %}",{% if story.meta.alt %}
 
         "alt": "{{ story.meta.alt }}",{% endif %}{% if story.meta.caption %}
         "caption": "{{ story.meta.caption }}",{% endif %}{% if story.meta.title %}
