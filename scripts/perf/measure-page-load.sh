@@ -50,7 +50,8 @@ for spec in "${page_specs[@]}"; do
 
   html_bytes="$(wc -c <"$page_file" | tr -d ' ')"
   gzip_bytes="$(gzip -c "$page_file" | wc -c | tr -d ' ')"
-  direct_module_count="$(rg -c '<script type="module" src=' "$page_file")"
+  direct_module_count="$(rg -c '<script type="module" src=' "$page_file" || true)"
+  direct_module_count="${direct_module_count:-0}"
   direct_assets="$(rg -o '<script type="module" src="/assets/[^"]+"' "$page_file" | sed -E 's/.*src="([^"]+)"/\1/' || true)"
 
   direct_asset_count=0
@@ -68,7 +69,8 @@ for spec in "${page_specs[@]}"; do
   fi
 
   deferred_asset_count="$(rg -o '/assets/[a-z0-9-]+\.js' "$page_file" | sort -u | wc -l | tr -d ' ')"
-  font_preconnect_count="$(rg -c 'rel="preconnect".*fonts\.(googleapis|gstatic)\.com' "$page_file")"
+  font_preconnect_count="$(rg -c 'rel="preconnect".*fonts\.(googleapis|gstatic)\.com' "$page_file" || true)"
+  font_preconnect_count="${font_preconnect_count:-0}"
   default_image_bytes=0
   overlay_image_bytes=0
   original_image_bytes=0
