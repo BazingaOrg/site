@@ -1,7 +1,7 @@
 const FAR_LAYER = {
   name: 'far',
-  desktopCount: 100,
-  mobileCount: 48,
+  desktopCount: 160,
+  mobileCount: 70,
   size: [0.8, 1.2],
   opacity: [0.45, 0.7],
   twinkle: false
@@ -9,22 +9,22 @@ const FAR_LAYER = {
 
 const MID_LAYER = {
   name: 'mid',
-  desktopCount: 40,
-  mobileCount: 20,
+  desktopCount: 60,
+  mobileCount: 30,
   size: [1.3, 2],
   opacity: [0.55, 0.85],
   twinkle: true,
-  twinkleDuration: [2.4, 5.2]
+  twinkleDuration: [2.0, 4.5]
 }
 
 const NEAR_LAYER = {
   name: 'near',
-  desktopCount: 10,
-  mobileCount: 5,
+  desktopCount: 15,
+  mobileCount: 8,
   size: [2.2, 3],
   opacity: [0.8, 1],
   twinkle: true,
-  twinkleDuration: [5, 8.5],
+  twinkleDuration: [4, 7],
   glow: true
 }
 
@@ -48,17 +48,36 @@ const LEO_CONSTELLATION = {
 }
 
 const COLOR_PALETTE = [
-  { weight: 0.7, color: 'rgb(255, 255, 255)' },
-  { weight: 0.18, color: 'rgb(255, 245, 230)' },
-  { weight: 0.1, color: 'rgb(228, 236, 255)' },
-  { weight: 0.02, color: 'rgb(255, 215, 195)' }
+  { weight: 0.5, color: 'rgb(255, 255, 255)' },
+  { weight: 0.16, color: 'rgb(255, 245, 230)' },
+  { weight: 0.18, color: 'rgb(214, 226, 255)' },
+  { weight: 0.08, color: 'rgb(183, 203, 255)' },
+  { weight: 0.05, color: 'rgb(255, 224, 196)' },
+  { weight: 0.03, color: 'rgb(255, 198, 170)' }
 ]
 
-const SHOOTER_INTERVAL = [22000, 55000]
-const SHOOTER_DURATION = [0.9, 1.4]
-const SHOOTER_ANGLE = [148, 162]
-const SHOOTER_LENGTH = [70, 130]
-const SHOOTER_TRAVEL = [320, 480]
+// Stars that make up the unresolved star clouds of the Milky Way band.
+const GALAXY_LAYER = {
+  name: 'galaxy',
+  desktopCount: 260,
+  mobileCount: 120,
+  size: [0.5, 1.4],
+  opacity: [0.28, 0.66],
+  twinkle: false
+}
+
+// The band sweeps top → bottom, drifting slightly right (like the reference sky).
+const GALAXY_BAND = {
+  topX: 56,
+  bottomX: 66,
+  spread: 11
+}
+
+const SHOOTER_INTERVAL = [16000, 40000]
+const SHOOTER_DURATION = [1.2, 2.2]
+const SHOOTER_ANGLE = [145, 165]
+const SHOOTER_LENGTH = [220, 380]
+const SHOOTER_TRAVEL = [800, 1300]
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min)
@@ -122,6 +141,47 @@ function spawnLayer(container, layer, reducedMotion) {
     fragment.appendChild(createStar(layer, reducedMotion))
   }
   container.appendChild(fragment)
+}
+
+// Rough normal distribution (sum of uniforms) for clustering toward the band axis.
+function gaussianUnit() {
+  return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5
+}
+
+function createGalaxyStar(layer) {
+  const star = document.createElement('span')
+  star.className = `star-field-star star-field-star--${layer.name}`
+
+  const verticalFraction = Math.random()
+  const centerX = GALAXY_BAND.topX + (GALAXY_BAND.bottomX - GALAXY_BAND.topX) * verticalFraction
+  const x = centerX + gaussianUnit() * GALAXY_BAND.spread
+
+  const size = randomFromRange(layer.size).toFixed(2)
+  const opacity = randomFromRange(layer.opacity).toFixed(2)
+
+  star.style.setProperty('--star-x', `${x.toFixed(2)}%`)
+  star.style.setProperty('--star-y', `${(verticalFraction * 100).toFixed(2)}%`)
+  star.style.setProperty('--star-size', `${size}px`)
+  star.style.setProperty('--star-color', pickColor())
+  star.style.setProperty('--star-base-opacity', opacity)
+
+  return star
+}
+
+function spawnGalaxyStars(container, layer) {
+  const count = isMobileViewport() ? layer.mobileCount : layer.desktopCount
+  const fragment = document.createDocumentFragment()
+  for (let index = 0; index < count; index += 1) {
+    fragment.appendChild(createGalaxyStar(layer))
+  }
+  container.appendChild(fragment)
+}
+
+function buildGalaxy(container) {
+  const band = document.createElement('div')
+  band.className = 'star-field-galaxy'
+  band.setAttribute('aria-hidden', 'true')
+  container.appendChild(band)
 }
 
 function buildConstellation(container, reducedMotion) {
@@ -208,6 +268,8 @@ export function initStarField() {
   layer.className = 'star-field-layer'
   layer.setAttribute('aria-hidden', 'true')
 
+  buildGalaxy(layer)
+  spawnGalaxyStars(layer, GALAXY_LAYER)
   spawnLayer(layer, FAR_LAYER, reducedMotion)
   spawnLayer(layer, MID_LAYER, reducedMotion)
   spawnLayer(layer, NEAR_LAYER, reducedMotion)
