@@ -43,9 +43,41 @@ Subset choice: only latin + latin-ext are downloaded, the ranges this site
 actually uses. Chinese text falls back to system fonts (these families have no
 CJK glyphs); Thai/Vietnamese/Arabic ranges are unused.
 
+## 3. On-demand JS module loading
+
+`site.js` is the single module entry on every page and statically imported the
+whole homepage toolkit, so every content page downloaded ~58 KB raw (~16 KB
+gzip) of JS — much of it homepage-only or out-of-season:
+
+- `home-photo-carousel.js` (7.2 KB) and `bio-presence.js` (3.6 KB) ran their
+  guard checks and no-op'd off the homepage, but still downloaded everywhere.
+- `weather.js` statically imported all four effect modules (rain/snow/fog/
+  lightning, ~13 KB), so a clear sky — the common case — still fetched them.
+- Both `sakura-fall.js` (14 KB, day) and `star-field.js` (9.4 KB, night)
+  loaded, though only one runs at a time.
+
+Converted these to dynamic `import()`:
+
+- Carousel and bio load only when their elements exist (homepage).
+- The day/night background loads only the active one.
+- Weather effects load only for the active condition (in `weather.js`).
+
+Approximate raw / gzip saved on first load:
+
+| Page (night, clear sky) | Skipped now | Saved |
+| --- | --- | --- |
+| Content page (notes/post/photos) | sakura, carousel, bio, all 4 effects | ~37 KB / ~11 KB |
+| Homepage | sakura, all 4 effects | ~27 KB / ~10 KB |
+
+Behavior is unchanged: the weather-driven site-wide background still appears,
+and effects still mount when their condition is active — verified by forcing
+`rain`/`clear` conditions via the `siteWeather` cache.
+
 ## Measurement note
 
 `npm run perf:measure` aborted under `set -euo pipefail` once preconnects hit
 zero, because `rg -c` exits non-zero on no matches. Hardened those counts with
 `|| true` + a `0` default so the report keeps generating on a clean,
-fully-optimized page.
+fully-optimized page. (Note: this static-HTML report counts direct `<script>`
+references, so it does not reflect the dynamic-import savings above, which live
+in the module dependency graph.)

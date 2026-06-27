@@ -1,7 +1,11 @@
-import { initRain } from './weather/rain.js'
-import { initSnow } from './weather/snow.js'
-import { initFog } from './weather/fog.js'
-import { initLightning } from './weather/lightning.js'
+// Effect modules are imported on demand so a clear sky (the common case)
+// downloads none of them, and each page only fetches the effect it shows.
+const EFFECT_LOADERS = {
+  rain: () => import('./weather/rain.js').then(module => module.initRain),
+  snow: () => import('./weather/snow.js').then(module => module.initSnow),
+  fog: () => import('./weather/fog.js').then(module => module.initFog),
+  lightning: () => import('./weather/lightning.js').then(module => module.initLightning)
+}
 
 const WEATHER_ENDPOINT = 'https://api.open-meteo.com/v1/forecast'
   + '?latitude=30.27&longitude=120.16'
@@ -24,11 +28,15 @@ let activeCondition = null
 let activeIsDay = null
 let inFlightWeather = null
 
-DARK_MODE_MEDIA.addEventListener('change', () => {
+DARK_MODE_MEDIA.addEventListener('change', async () => {
   if (activeCondition !== 'thunderstorm') return
 
-  if (DARK_MODE_MEDIA.matches && !activeWeather?.lightning) {
-    activeWeather.lightning = initLightning()
+  if (DARK_MODE_MEDIA.matches && activeWeather && !activeWeather.lightning) {
+    const initLightning = await EFFECT_LOADERS.lightning()
+    // State can shift while the module loads; re-check before mounting.
+    if (activeCondition === 'thunderstorm' && DARK_MODE_MEDIA.matches && activeWeather && !activeWeather.lightning) {
+      activeWeather.lightning = initLightning()
+    }
     return
   }
 
@@ -158,7 +166,7 @@ function destroyAllWeather() {
   activeWeather = null
 }
 
-function applyEffect(data, syncDefaultEffects) {
+async function applyEffect(data, syncDefaultEffects) {
   const condition = data?.condition || 'clear'
   const isDay = Number(data?.isDay) === 1 ? 1 : 0
   const suppressDefaults = SUPPRESS_DEFAULT_CONDITIONS.has(condition)
@@ -190,28 +198,36 @@ function applyEffect(data, syncDefaultEffects) {
     syncDefaultEffects?.(isDay)
   }
 
-  activeWeather = {}
+  const effects = {}
+  activeWeather = effects
 
   if (condition === 'rain') {
-    activeWeather.rain = initRain()
+    const initRain = await EFFECT_LOADERS.rain()
+    effects.rain = initRain()
   } else if (condition === 'snow') {
-    activeWeather.snow = initSnow()
+    const initSnow = await EFFECT_LOADERS.snow()
+    effects.snow = initSnow()
   } else if (condition === 'thunderstorm') {
-    activeWeather.rain = initRain()
+    const initRain = await EFFECT_LOADERS.rain()
+    effects.rain = initRain()
     if (DARK_MODE_MEDIA.matches) {
-      activeWeather.lightning = initLightning()
+      const initLightning = await EFFECT_LOADERS.lightning()
+      effects.lightning = initLightning()
     }
-  }
-
-  if (condition === 'fog') {
-    activeWeather.fog = initFog()
+  } else if (condition === 'fog') {
+    const initFog = await EFFECT_LOADERS.fog()
+    effects.fog = initFog()
   }
 }
 
 export async function syncWeather({ syncDefaultEffects } = {}) {
   try {
     const data = await getWeatherData()
-    applyEffect(data, syncDefaultEffects)
+    // Don't block the returned data (used for the location-line text) on the
+    // effect modules loading; let them mount in the background.
+    applyEffect(data, syncDefaultEffects).catch(error => {
+      console.warn('[weather] Failed to apply weather effect.', error)
+    })
     return data
   } catch (error) {
     console.warn('[weather] Failed to apply weather effect.', error)

@@ -1,9 +1,8 @@
 import { trackUmami } from './events.js'
-import { initSakuraFall } from './sakura-fall.js'
-import { initStarField } from './star-field.js'
-import { initHomePhotoCarousel } from './home-photo-carousel.js'
 import { syncWeather } from './weather.js'
-import { initBioPresence } from './bio-presence.js'
+
+// Decorative background, carousel and bio modules are loaded on demand so
+// content pages don't pay for homepage-only or out-of-season code.
 
 const isChineseInterface = document.documentElement.lang?.startsWith('zh')
 
@@ -54,14 +53,16 @@ if ('share' in navigator) {
   }
 }
 
-function syncDefaultEffectsByDay(isDay) {
+async function syncDefaultEffectsByDay(isDay) {
   if (Number(isDay) === 1) {
-    initSakuraFall()
+    const { initSakuraFall } = await import('./sakura-fall.js')
     window.__starFieldMounted?.destroy()
     window.__starFieldMounted = null
+    initSakuraFall()
     return
   }
 
+  const { initStarField } = await import('./star-field.js')
   window.__sakuraFallMounted?.destroy()
   window.__sakuraFallMounted = null
   initStarField()
@@ -69,8 +70,14 @@ function syncDefaultEffectsByDay(isDay) {
 
 refreshWeather()
 window.setInterval(refreshWeather, 15 * 60 * 1000)
-initHomePhotoCarousel()
-initBioPresence()
+
+if (document.querySelector('[data-photo-carousel]')) {
+  import('./home-photo-carousel.js').then(({ initHomePhotoCarousel }) => initHomePhotoCarousel())
+}
+
+if (document.querySelector('.bio-now')) {
+  import('./bio-presence.js').then(({ initBioPresence }) => initBioPresence())
+}
 
 function normalizePath(pathname) {
   if (!pathname || pathname === '') return '/'
