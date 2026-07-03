@@ -80,15 +80,22 @@
 2. 在 `:root` 增加动效 token：`--ease-out-spring`、`--duration-slide` 等，新轮播率先使用，后续动效逐步迁移。
 3. 删除 `--sakuraEnabled` / `--starFieldEnabled` 死变量；给背景各层加 z-index 注释说明层级契约。
 
-## 4. 实施步骤
+## 4. 实施步骤与状态
 
-| 步骤 | 内容 | 产出 |
-|---|---|---|
-| 1 | 输出本规划文档 | docs/optimization-plan.md |
-| 2 | 轮播重写（JS + SCSS + 两份首页结构） | 新交互上线 |
-| 3 | 背景编排器 `background-effects.js`；`weather.js` 瘦身；`site.js` 接线 | 决策矩阵生效 |
-| 4 | 全局统一小修（内联样式、死变量、token） | 一致性 |
-| 5 | 本地 Jekyll 构建 + 浏览器验证（浅/深色、模拟各天气、触摸/键盘/reduced-motion） | 验证记录 |
+> 2026-07-03 全部完成并推送 `main`，对应提交见「提交」列。
+
+| 步骤 | 内容 | 状态 | 提交 |
+|---|---|---|---|
+| 1 | 输出本规划文档 | ✅ 完成 | `cf61d3c` docs(plan) |
+| 2 | 轮播重写（JS + SCSS + 两份首页结构） | ✅ 完成 | `98a9ac0` feat(home-photo-carousel) |
+| 3 | 背景编排器 `background-effects.js`；`weather.js` 瘦身；`site.js` 接线 | ✅ 完成 | `c0d2e89` refactor(background-effects) |
+| 4 | 全局统一小修（内联样式、死变量、token） | ✅ 完成 | 并入 `98a9ac0` |
+| 5 | 本地 Jekyll 构建 + 浏览器验证（浅/深色、模拟各天气、触摸/键盘） | ✅ 完成 | 结果见第 5 节 |
+
+**尚未完成 / 待办：**
+
+1. **线上部署后回归**：本轮验证均在本地 Jekyll 环境完成，Vercel 部署后建议快速过一遍第 5 节清单里的轮播交互与天气文案。
+2. 第 6 节的可选优化项（追踪脚本体积审计、AVIF、季节星座），本轮明确不做，留待后续按需启动。
 
 ## 5. 验证清单
 
@@ -97,11 +104,11 @@
 - [x] 深色模式 = 星空，浅色模式 = 樱花，与 `is_day` 解耦
 - [x] 伪造天气缓存验证：rain → 仅雨 + 文案「正下着雨」；fog → 星空 + 雾纱叠加；thunderstorm + 深色 → 雨 + 闪电；clear + 浅色 → 樱花
 - [x] 深浅色切换即时重算：通过直接调用 `syncBackgroundEffects` 验证矩阵；真实浏览器走 matchMedia change 事件 + 页面重新可见时的兜底检查（预览工具的 CDP 模拟不派发 change 事件，无法端到端复现，属工具限制）
-- [ ] `prefers-reduced-motion`：代码路径沿用原有模式（无自动播放、切换退化为淡入淡出），预览工具无法模拟该媒体查询，建议真机抽查
+- [x] `prefers-reduced-motion`：轮播无自动播放且切换退化为淡入淡出；樱花/雨雪/闪电停止动画；星空停止闪烁并取消/恢复流星计时（2026-07-03 补充自动化验证）
 - [x] zh-CN 首页与英文首页行为一致（375px 移动视口下亦验证）
 
-## 6. 后续可选（本轮不做）
+## 6. 后续可选（2026-07-03 补充完成）
 
-- 追踪脚本体积审计（`content-health-scoring.js` 900 行等，均已 idle 注入，不阻塞）
-- 轮播图片改用 `<picture>` + AVIF
-- 星空按月份切换当季星座
+- [x] 追踪脚本体积审计：新增 `npm run perf:audit-tracking`，报告写入 `docs/perf/tracking-scripts.json`；当前 tracking 脚本合计 132,124 B raw / 36,759 B gzip，除 `page-tracking.js` 外均为 production idle-deferred 或页面条件加载。
+- [x] 轮播 / 照片页图片改用 `<picture>` + AVIF：生成器为 thumbnail / preview / large 同步输出 WebP fallback 与 AVIF source，首页轮播和 `/photos/` 页面优先提供 AVIF。
+- [x] 星空按月份切换当季星座：春 Leo、夏 Cygnus、秋 Pegasus、冬 Orion，沿用现有星座 SVG 样式和 reduced-motion 降级。

@@ -17,6 +17,9 @@ permalink: /photos/
 {% assign thumbnail = photo.variants.thumbnail %}
 {% assign preview = photo.variants.preview %}
 {% assign large = photo.variants.large %}
+{% assign thumbnail_avif = thumbnail.avif %}
+{% assign preview_avif = preview.avif %}
+{% assign large_avif = large.avif %}
 <figure id="{{ photo.id }}" class="figure-{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}">
   <a href="{{ large.src }}" class="image-link"
      data-umami-event="photo_full_view"
@@ -26,17 +29,29 @@ permalink: /photos/
      data-photo-original-src="{{ original.src }}"
      data-photo-thumbnail-src="{{ thumbnail.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
-    <img
-      src="{{ preview.src }}"
-      srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px"
-      width="{{ preview.width }}"
-      height="{{ preview.height }}"
-      alt="{{ photo.meta.alt }}"
-      title="{{ photo.meta.alt }}"
-      loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-      {% if forloop.first %}fetchpriority="high"{% endif %}
-      decoding="async">
+    <picture>
+      {% if thumbnail_avif and preview_avif and large_avif %}
+      <source
+        type="image/avif"
+        srcset="{{ thumbnail_avif.src }} {{ thumbnail_avif.width }}w, {{ preview_avif.src }} {{ preview_avif.width }}w, {{ large_avif.src }} {{ large_avif.width }}w"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
+      {% endif %}
+      <source
+        type="image/webp"
+        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
+      <img
+        src="{{ preview.src }}"
+        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px"
+        width="{{ preview.width }}"
+        height="{{ preview.height }}"
+        alt="{{ photo.meta.alt }}"
+        title="{{ photo.meta.alt }}"
+        loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+        {% if forloop.first %}fetchpriority="high"{% endif %}
+        decoding="async">
+    </picture>
   </a>
   <figcaption>
     <div class="desc photo-metadata">

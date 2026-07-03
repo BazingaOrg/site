@@ -10,9 +10,9 @@ const photosDataPath = path.join(repoRoot, '_data', 'photos.json')
 const variantsDirectory = path.join(repoRoot, 'images', 'photos', 'variants')
 
 const derivativeSpecs = [
-  { key: 'thumbnail', width: 360, quality: 74 },
-  { key: 'preview', width: 960, quality: 78 },
-  { key: 'large', width: 2160, quality: 82 }
+  { key: 'thumbnail', width: 360, webpQuality: 74, avifQuality: 48 },
+  { key: 'preview', width: 960, webpQuality: 78, avifQuality: 52 },
+  { key: 'large', width: 2160, webpQuality: 82, avifQuality: 56 }
 ]
 
 /**
@@ -47,25 +47,43 @@ async function main() {
     const baseName = path.basename(originalSource, path.extname(originalSource)).toLowerCase()
 
     for (const spec of derivativeSpecs) {
-      const outputFileName = `${baseName}-${spec.key}.webp`
-      const outputAbsolutePath = path.join(variantsDirectory, outputFileName)
-      const outputPublicPath = `/images/photos/variants/${outputFileName}`
-      const info = await sharp(originalAbsolutePath, { failOn: 'none' })
-        .resize({
-          width: Math.min(spec.width, originalWidth),
-          withoutEnlargement: true
-        })
+      const resizeOptions = {
+        width: Math.min(spec.width, originalWidth),
+        withoutEnlargement: true
+      }
+      const webpFileName = `${baseName}-${spec.key}.webp`
+      const webpAbsolutePath = path.join(variantsDirectory, webpFileName)
+      const webpPublicPath = `/images/photos/variants/${webpFileName}`
+      const webpInfo = await sharp(originalAbsolutePath, { failOn: 'none' })
+        .resize(resizeOptions)
         .webp({
-          quality: spec.quality,
+          quality: spec.webpQuality,
           effort: 5
         })
-        .toFile(outputAbsolutePath)
+        .toFile(webpAbsolutePath)
+
+      const avifFileName = `${baseName}-${spec.key}.avif`
+      const avifAbsolutePath = path.join(variantsDirectory, avifFileName)
+      const avifPublicPath = `/images/photos/variants/${avifFileName}`
+      const avifInfo = await sharp(originalAbsolutePath, { failOn: 'none' })
+        .resize(resizeOptions)
+        .avif({
+          quality: spec.avifQuality,
+          effort: 6
+        })
+        .toFile(avifAbsolutePath)
 
       generatedVariants[spec.key] = {
-        src: outputPublicPath,
-        width: info.width,
-        height: info.height,
-        type: 'image/webp'
+        src: webpPublicPath,
+        width: webpInfo.width,
+        height: webpInfo.height,
+        type: 'image/webp',
+        avif: {
+          src: avifPublicPath,
+          width: avifInfo.width,
+          height: avifInfo.height,
+          type: 'image/avif'
+        }
       }
     }
 

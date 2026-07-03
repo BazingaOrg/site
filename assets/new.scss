@@ -1029,6 +1029,10 @@ time.monospace {
   inset: 0;
 }
 
+.photo-carousel-stage picture {
+  display: contents;
+}
+
 .photo-carousel-stage img {
   position: absolute;
   top: 50%;
@@ -1211,6 +1215,10 @@ figure {
   margin: 1em 0 3em;
   content-visibility: auto;
   contain-intrinsic-size: auto 760px;
+
+  picture {
+    display: block;
+  }
 
   img {
     margin: 0 auto;

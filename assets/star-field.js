@@ -28,23 +28,73 @@ const NEAR_LAYER = {
   glow: true
 }
 
-const LEO_CONSTELLATION = {
-  viewBox: '0 0 100 80',
-  stars: [
-    { x: 35, y: 65, size: 3.4, name: 'Regulus' },
-    { x: 35, y: 55, size: 2.2, name: 'eta Leo' },
-    { x: 30, y: 45, size: 2.8, name: 'Algieba' },
-    { x: 28, y: 35, size: 2.2, name: 'Adhafera' },
-    { x: 33, y: 28, size: 2.0, name: 'Ras Elased Bor.' },
-    { x: 40, y: 25, size: 2.2, name: 'Ras Elased Aus.' },
-    { x: 60, y: 65, size: 2.4, name: 'Chertan' },
-    { x: 65, y: 50, size: 2.6, name: 'Zosma' },
-    { x: 90, y: 55, size: 2.8, name: 'Denebola' }
-  ],
-  lines: [
-    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5],
-    [0, 6], [2, 7], [6, 7], [6, 8], [7, 8]
-  ]
+const CONSTELLATIONS = {
+  spring: {
+    label: 'Leo',
+    viewBox: '0 0 100 80',
+    stars: [
+      { x: 35, y: 65, size: 3.4, name: 'Regulus' },
+      { x: 35, y: 55, size: 2.2, name: 'eta Leo' },
+      { x: 30, y: 45, size: 2.8, name: 'Algieba' },
+      { x: 28, y: 35, size: 2.2, name: 'Adhafera' },
+      { x: 33, y: 28, size: 2.0, name: 'Ras Elased Bor.' },
+      { x: 40, y: 25, size: 2.2, name: 'Ras Elased Aus.' },
+      { x: 60, y: 65, size: 2.4, name: 'Chertan' },
+      { x: 65, y: 50, size: 2.6, name: 'Zosma' },
+      { x: 90, y: 55, size: 2.8, name: 'Denebola' }
+    ],
+    lines: [
+      [0, 1], [1, 2], [2, 3], [3, 4], [4, 5],
+      [0, 6], [2, 7], [6, 7], [6, 8], [7, 8]
+    ]
+  },
+  summer: {
+    label: 'Cygnus',
+    viewBox: '0 0 100 80',
+    stars: [
+      { x: 52, y: 12, size: 3.3, name: 'Deneb' },
+      { x: 50, y: 30, size: 2.4, name: 'Sadr' },
+      { x: 49, y: 48, size: 2.1, name: 'eta Cyg' },
+      { x: 48, y: 66, size: 2.6, name: 'Albireo' },
+      { x: 22, y: 32, size: 2.4, name: 'Gienah' },
+      { x: 78, y: 30, size: 2.3, name: 'delta Cyg' }
+    ],
+    lines: [
+      [0, 1], [1, 2], [2, 3], [4, 1], [1, 5]
+    ]
+  },
+  autumn: {
+    label: 'Pegasus',
+    viewBox: '0 0 100 80',
+    stars: [
+      { x: 24, y: 22, size: 2.8, name: 'Scheat' },
+      { x: 70, y: 22, size: 2.9, name: 'Alpheratz' },
+      { x: 72, y: 58, size: 2.7, name: 'Algenib' },
+      { x: 26, y: 58, size: 2.8, name: 'Markab' },
+      { x: 12, y: 42, size: 2.0, name: 'Matar' },
+      { x: 46, y: 68, size: 2.1, name: 'Homam' }
+    ],
+    lines: [
+      [0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [3, 5]
+    ]
+  },
+  winter: {
+    label: 'Orion',
+    viewBox: '0 0 100 80',
+    stars: [
+      { x: 28, y: 14, size: 3.4, name: 'Betelgeuse' },
+      { x: 70, y: 18, size: 2.8, name: 'Bellatrix' },
+      { x: 39, y: 40, size: 2.2, name: 'Alnitak' },
+      { x: 50, y: 42, size: 2.4, name: 'Alnilam' },
+      { x: 61, y: 44, size: 2.2, name: 'Mintaka' },
+      { x: 24, y: 66, size: 2.9, name: 'Saiph' },
+      { x: 76, y: 68, size: 3.2, name: 'Rigel' }
+    ],
+    lines: [
+      [0, 1], [0, 2], [1, 4], [2, 3], [3, 4],
+      [2, 5], [4, 6], [5, 6]
+    ]
+  }
 }
 
 const COLOR_PALETTE = [
@@ -91,8 +141,16 @@ function isMobileViewport() {
   return window.matchMedia('(max-width: 768px)').matches
 }
 
-function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+function getSeasonKey(date = new Date()) {
+  const month = date.getMonth()
+  if (month >= 2 && month <= 4) return 'spring'
+  if (month >= 5 && month <= 7) return 'summer'
+  if (month >= 8 && month <= 10) return 'autumn'
+  return 'winter'
+}
+
+function getCurrentConstellation() {
+  return CONSTELLATIONS[getSeasonKey()] || CONSTELLATIONS.spring
 }
 
 function pickColor() {
@@ -185,16 +243,18 @@ function buildGalaxy(container) {
 }
 
 function buildConstellation(container, reducedMotion) {
+  const constellation = getCurrentConstellation()
   const NS = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(NS, 'svg')
   svg.setAttribute('class', 'star-field-constellation')
-  svg.setAttribute('viewBox', LEO_CONSTELLATION.viewBox)
+  svg.setAttribute('viewBox', constellation.viewBox)
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
-  svg.setAttribute('aria-label', 'Leo constellation')
+  svg.setAttribute('aria-label', `${constellation.label} constellation`)
+  svg.dataset.constellation = constellation.label.toLowerCase()
 
-  LEO_CONSTELLATION.lines.forEach(([aIdx, bIdx], lineIdx) => {
-    const a = LEO_CONSTELLATION.stars[aIdx]
-    const b = LEO_CONSTELLATION.stars[bIdx]
+  constellation.lines.forEach(([aIdx, bIdx], lineIdx) => {
+    const a = constellation.stars[aIdx]
+    const b = constellation.stars[bIdx]
     const line = document.createElementNS(NS, 'line')
     line.setAttribute('x1', a.x)
     line.setAttribute('y1', a.y)
@@ -208,7 +268,7 @@ function buildConstellation(container, reducedMotion) {
     svg.appendChild(line)
   })
 
-  LEO_CONSTELLATION.stars.forEach((star, starIdx) => {
+  constellation.stars.forEach((star, starIdx) => {
     const circle = document.createElementNS(NS, 'circle')
     circle.setAttribute('cx', star.x)
     circle.setAttribute('cy', star.y)
@@ -250,9 +310,13 @@ function spawnShooter(container) {
 }
 
 function scheduleShooter(container, state) {
+  if (state.cancelled || state.reducedMotionMedia.matches || state.shooterTimer !== null) return
+
   const delay = randomBetween(...SHOOTER_INTERVAL)
   state.shooterTimer = window.setTimeout(() => {
+    state.shooterTimer = null
     if (state.cancelled) return
+    if (state.reducedMotionMedia.matches) return
     if (!document.hidden) {
       spawnShooter(container)
     }
@@ -260,10 +324,21 @@ function scheduleShooter(container, state) {
   }, delay)
 }
 
+function clearShooterTimer(state) {
+  if (state.shooterTimer === null) return
+  window.clearTimeout(state.shooterTimer)
+  state.shooterTimer = null
+}
+
+function removeShooters(container) {
+  container.querySelectorAll('.star-field-shooter').forEach(shooter => shooter.remove())
+}
+
 export function initStarField() {
   if (window.__starFieldMounted) return window.__starFieldMounted
 
-  const reducedMotion = prefersReducedMotion()
+  const reducedMotionMedia = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const reducedMotion = reducedMotionMedia.matches
   const layer = document.createElement('div')
   layer.className = 'star-field-layer'
   layer.setAttribute('aria-hidden', 'true')
@@ -277,19 +352,28 @@ export function initStarField() {
 
   document.body.appendChild(layer)
 
-  const state = { shooterTimer: null, cancelled: false }
+  const state = { shooterTimer: null, cancelled: false, reducedMotionMedia }
+  function handleReducedMotionChange(event) {
+    if (event.matches) {
+      clearShooterTimer(state)
+      removeShooters(layer)
+      return
+    }
+
+    scheduleShooter(layer, state)
+  }
+
   if (!reducedMotion) {
     scheduleShooter(layer, state)
   }
+  reducedMotionMedia.addEventListener('change', handleReducedMotionChange)
 
   const mounted = {
     layer,
     destroy() {
       state.cancelled = true
-      if (state.shooterTimer) {
-        window.clearTimeout(state.shooterTimer)
-        state.shooterTimer = null
-      }
+      clearShooterTimer(state)
+      reducedMotionMedia.removeEventListener('change', handleReducedMotionChange)
       layer.remove()
       if (window.__starFieldMounted === mounted) {
         window.__starFieldMounted = null

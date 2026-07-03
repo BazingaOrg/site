@@ -13,19 +13,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0978-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -64,19 +82,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0981-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -115,19 +151,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf0994-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -166,19 +220,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1011-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -217,19 +289,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1024-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -268,19 +358,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1034-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -319,19 +427,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1043-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -370,19 +496,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1044-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -421,19 +565,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1045-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -472,19 +634,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1065-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -523,19 +703,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1069-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -574,19 +772,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1078-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -625,19 +841,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1084-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -676,19 +910,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1113-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -727,19 +979,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1133-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {
@@ -778,19 +1048,37 @@
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-thumbnail.webp",
         "width": 360,
         "height": 203,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-thumbnail.avif",
+          "width": 360,
+          "height": 203,
+          "type": "image/avif"
+        }
       },
       "preview": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-preview.webp",
         "width": 960,
         "height": 541,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-preview.avif",
+          "width": 960,
+          "height": 541,
+          "type": "image/avif"
+        }
       },
       "large": {
         "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-large.webp",
         "width": 2160,
         "height": 1218,
-        "type": "image/webp"
+        "type": "image/webp",
+        "avif": {
+          "src": "/images/photos/variants/2026-04-19-huangshan-dscf1151-large.avif",
+          "width": 2160,
+          "height": 1218,
+          "type": "image/avif"
+        }
       }
     },
     "meta": {

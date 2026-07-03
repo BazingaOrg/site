@@ -32,9 +32,11 @@ export function initHomePhotoCarousel() {
 
   let timerId = null
   let dots = []
+  const controls = []
   let touchStartX = 0
   let touchStartY = 0
   let touchStartTime = 0
+  let swipeClickSuppressTimer = null
   let dragging = false
 
   // --- layout ---------------------------------------------------------------
@@ -68,6 +70,7 @@ export function initHomePhotoCarousel() {
         restartAutoplay()
       })
       root.appendChild(button)
+      controls.push(button)
     }
 
     const dotsContainer = document.createElement('div')
@@ -87,6 +90,7 @@ export function initHomePhotoCarousel() {
       return dot
     })
     root.appendChild(dotsContainer)
+    controls.push(dotsContainer)
   }
 
   function syncDots() {
@@ -180,6 +184,21 @@ export function initHomePhotoCarousel() {
     timerId = null
   }
 
+  function clearSwipeClickSuppressTimer() {
+    if (swipeClickSuppressTimer === null) return
+    window.clearTimeout(swipeClickSuppressTimer)
+    swipeClickSuppressTimer = null
+  }
+
+  function suppressNextClick() {
+    root.dataset.swiping = '1'
+    clearSwipeClickSuppressTimer()
+    swipeClickSuppressTimer = window.setTimeout(() => {
+      delete root.dataset.swiping
+      swipeClickSuppressTimer = null
+    }, 700)
+  }
+
   function scheduleAutoplay(delay = SLIDE_INTERVAL_MS) {
     clearTimer()
     if (reducedMotionMedia.matches || document.hidden) return
@@ -266,7 +285,7 @@ export function initHomePhotoCarousel() {
     const velocity = Math.abs(deltaX) / elapsed
 
     if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX || velocity >= SWIPE_VELOCITY_PX_MS) {
-      root.dataset.swiping = '1'
+      suppressNextClick()
       goTo(activeIndex + (deltaX < 0 ? 1 : -1))
     }
 
@@ -278,6 +297,7 @@ export function initHomePhotoCarousel() {
   function handleClick(event) {
     if (root.dataset.swiping !== '1') return
     event.preventDefault()
+    clearSwipeClickSuppressTimer()
     delete root.dataset.swiping
   }
 
@@ -286,6 +306,11 @@ export function initHomePhotoCarousel() {
     event.preventDefault()
     goTo(activeIndex + (event.key === 'ArrowLeft' ? -1 : 1))
     restartAutoplay()
+  }
+
+  function handleFocusOut(event) {
+    if (event.relatedTarget && root.contains(event.relatedTarget)) return
+    scheduleAutoplay()
   }
 
   function handleVisibilityChange() {
@@ -312,7 +337,7 @@ export function initHomePhotoCarousel() {
   root.addEventListener('pointerenter', handlePointerEnter)
   root.addEventListener('pointerleave', handlePointerLeave)
   root.addEventListener('focusin', pauseAutoplay)
-  root.addEventListener('focusout', () => scheduleAutoplay())
+  root.addEventListener('focusout', handleFocusOut)
   root.addEventListener('keydown', handleKeydown)
   link.addEventListener('touchstart', handleTouchStart, { passive: true })
   link.addEventListener('touchmove', handleTouchMove, { passive: true })
@@ -327,9 +352,12 @@ export function initHomePhotoCarousel() {
   return {
     destroy() {
       clearTimer()
+      clearSwipeClickSuppressTimer()
       resizeObserver?.disconnect()
       root.removeEventListener('pointerenter', handlePointerEnter)
       root.removeEventListener('pointerleave', handlePointerLeave)
+      root.removeEventListener('focusin', pauseAutoplay)
+      root.removeEventListener('focusout', handleFocusOut)
       root.removeEventListener('keydown', handleKeydown)
       link.removeEventListener('touchstart', handleTouchStart)
       link.removeEventListener('touchmove', handleTouchMove)
@@ -338,6 +366,12 @@ export function initHomePhotoCarousel() {
       link.removeEventListener('click', handleClick)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       reducedMotionMedia.removeEventListener('change', handleReducedMotionChange)
+      controls.forEach(control => control.remove())
+      root.style.removeProperty('--carousel-w')
+      root.style.removeProperty('--drag')
+      delete root.dataset.dragging
+      delete root.dataset.paused
+      delete root.dataset.swiping
     }
   }
 }

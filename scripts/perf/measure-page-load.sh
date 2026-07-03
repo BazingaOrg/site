@@ -21,10 +21,16 @@ rows_json="[]"
 sum_photo_variant_bytes() {
   local variant_key="$1"
   local limit="${2:-0}"
+  local source_format="${3:-fallback}"
   local jq_filter='. | sort_by(.uploaded) | reverse'
 
   if [[ "$limit" != "0" ]]; then
     jq_filter="${jq_filter} | .[0:${limit}]"
+  fi
+
+  local src_filter=".variants.${variant_key}.src // empty"
+  if [[ "$source_format" == "avif" ]]; then
+    src_filter=".variants.${variant_key}.avif.src // .variants.${variant_key}.src // empty"
   fi
 
   local total_bytes=0
@@ -35,7 +41,7 @@ sum_photo_variant_bytes() {
       asset_bytes="$(wc -c <"$local_asset_file" | tr -d ' ')"
       total_bytes=$((total_bytes + asset_bytes))
     fi
-  done < <(jq -r "${jq_filter} | .[] | .variants.${variant_key}.src // empty" _data/photos.json)
+  done < <(jq -r "${jq_filter} | .[] | ${src_filter}" _data/photos.json)
 
   echo "$total_bytes"
 }
@@ -75,9 +81,9 @@ for spec in "${page_specs[@]}"; do
   overlay_image_bytes=0
   original_image_bytes=0
   if [[ "$page_key" == "home" ]]; then
-    default_image_bytes="$(sum_photo_variant_bytes thumbnail 10)"
+    default_image_bytes="$(sum_photo_variant_bytes thumbnail 10 avif)"
   elif [[ "$page_key" == "photos" ]]; then
-    default_image_bytes="$(sum_photo_variant_bytes preview)"
+    default_image_bytes="$(sum_photo_variant_bytes preview 0 avif)"
     overlay_image_bytes="$(sum_photo_variant_bytes large)"
     original_image_bytes="$(sum_photo_variant_bytes original)"
   fi

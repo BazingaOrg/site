@@ -13,6 +13,7 @@
     "test": "npm run test:quick",
     "test:quick": "npm run check:all && JEKYLL_ENV=production bundle exec jekyll build",
     "test:full": "npm run test:quick && npm run perf:measure",
+    "perf:audit-tracking": "bash scripts/perf/audit-tracking-scripts.sh docs/perf/tracking-scripts.json",
     "perf:measure": "bash scripts/perf/measure-page-load.sh docs/perf/latest.json",
     "perf:compare": "bash scripts/perf/compare-page-metrics.sh docs/perf/before.json docs/perf/latest.json"
   },

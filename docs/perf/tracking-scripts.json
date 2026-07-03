@@ -1,0 +1,82 @@
+{
+  "generated_at": "2026-07-03T14:11:28Z",
+  "source": "scripts/perf/audit-tracking-scripts.sh",
+  "totals": {
+    "raw_bytes": 132124,
+    "gzip_bytes": 36759
+  },
+  "scripts": [
+    {
+      "file": "assets/page-tracking.js",
+      "load_policy": "direct",
+      "scope": "production only",
+      "raw_bytes": 1290,
+      "gzip_bytes": 529,
+      "line_count": 52
+    },
+    {
+      "file": "assets/journey-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 22256,
+      "gzip_bytes": 5878,
+      "line_count": 793
+    },
+    {
+      "file": "assets/content-journey-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 10303,
+      "gzip_bytes": 3195,
+      "line_count": 312
+    },
+    {
+      "file": "assets/content-health-scoring.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 28305,
+      "gzip_bytes": 7299,
+      "line_count": 907
+    },
+    {
+      "file": "assets/ab-testing.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 21165,
+      "gzip_bytes": 6175,
+      "line_count": 767
+    },
+    {
+      "file": "assets/server-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 10674,
+      "gzip_bytes": 3414,
+      "line_count": 423
+    },
+    {
+      "file": "assets/performance-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "production default",
+      "raw_bytes": 19751,
+      "gzip_bytes": 5102,
+      "line_count": 644
+    },
+    {
+      "file": "assets/form-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "write-note page only",
+      "raw_bytes": 14564,
+      "gzip_bytes": 3623,
+      "line_count": 476
+    },
+    {
+      "file": "assets/photo-journey-tracking.js",
+      "load_policy": "idle-deferred",
+      "scope": "photos page only",
+      "raw_bytes": 3816,
+      "gzip_bytes": 1544,
+      "line_count": 123
+    }
+  ]
+}
