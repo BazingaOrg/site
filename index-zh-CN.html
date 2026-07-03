@@ -40,7 +40,7 @@ lang: zh-CN
      data-umami-event="nav_click"
      data-umami-event-section="profession" 
      data-umami-event-link="cv"
-     onclick="return false;" rel="me" style="pointer-events: none; color: #999; cursor: default;">CV</a><hr class="inline-hr">
+     onclick="return false;" rel="me" class="disabled-link">CV</a><hr class="inline-hr">
   <a href="https://github.com/bazingaOrg" rel="me"
      data-umami-event="social_click"
      data-umami-event-platform="github"
@@ -85,29 +85,31 @@ lang: zh-CN
    data-umami-event-lang="zh-CN">RSS</a>
 {% assign photos = site.data.photos | sort: "uploaded" | reverse | slice: 0, 10 %}
 {% if photos.size > 0 %}
-<a href="/photos" class="photo-carousel" data-photo-carousel
-   aria-label="{{ site.data.i18n_copy.home['zh-CN'].section_photos }}"
-   data-umami-event="photo_click"
-   data-umami-event-location="homepage"
-   data-umami-event-lang="zh-CN">
-  <div class="photo-carousel-stage">
-  {% for photo in photos %}
-    {% assign thumbnail = photo.variants.thumbnail %}
-    {% assign preview = photo.variants.preview %}
-    <img
-      src="{{ thumbnail.src }}"
-      srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-      sizes="(max-width: 26em) calc(100vw - 5em), 313px"
-      alt="{{ photo.meta.alt }}"
-      loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-      decoding="async"
-      class="{% if forloop.first %}is-active{% endif %}"
-      data-photo-id="{{ photo.id }}">
-  {% endfor %}
-  </div>
-</a>
+<div class="photo-carousel" data-photo-carousel>
+  <a href="/photos" class="photo-carousel-link"
+     aria-label="{{ site.data.i18n_copy.home['zh-CN'].section_photos }}"
+     data-umami-event="photo_click"
+     data-umami-event-location="homepage"
+     data-umami-event-lang="zh-CN">
+    <div class="photo-carousel-stage">
+    {% for photo in photos %}
+      {% assign thumbnail = photo.variants.thumbnail %}
+      {% assign preview = photo.variants.preview %}
+      <img
+        src="{{ thumbnail.src }}"
+        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
+        sizes="(max-width: 26em) calc(100vw - 5em), 420px"
+        alt="{{ photo.meta.alt }}"
+        loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+        decoding="async"
+        class="{% if forloop.first %}is-active{% endif %}"
+        data-photo-id="{{ photo.id }}">
+    {% endfor %}
+    </div>
+  </a>
+</div>
 {% else %}
-  <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home['zh-CN'].empty_photos }}</em></p>
+  <p class="empty-hint">{{ site.data.i18n_copy.home['zh-CN'].empty_photos }}</p>
 {% endif %}
 
 <hr class="hr">
@@ -135,7 +137,7 @@ lang: zh-CN
   <div class="note-tags">{% for tag in note.tags %}<span class="note-tag" data-tag="{{ tag }}">{{ tag }}</span>{% endfor %}</div>
 </div>
 {% else %}
-  <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home['zh-CN'].empty_notes }}</em></p>
+  <p class="empty-hint">{{ site.data.i18n_copy.home['zh-CN'].empty_notes }}</p>
 {% endif %}
 
 <hr class="hr">
@@ -158,5 +160,5 @@ lang: zh-CN
 {% endfor %}
 </ul>
 {% else %}
-  <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home['zh-CN'].empty_posts }}</em></p>
+  <p class="empty-hint">{{ site.data.i18n_copy.home['zh-CN'].empty_posts }}</p>
 {% endif %}

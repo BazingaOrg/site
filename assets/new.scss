@@ -49,8 +49,6 @@ html { font-size: 100%; font: -apple-system-body; }
 
 :root {
   --backgroundColor: #FDFEFB;
-  --sakuraEnabled: 1;
-  --starFieldEnabled: 0;
   --pageBackgroundOverlay: rgba(0, 0, 0, 0);
   --pageBackgroundBlur: 0px;
   --pageBackgroundSize: cover;
@@ -78,13 +76,17 @@ html { font-size: 100%; font: -apple-system-body; }
 
   --sansserif: 'Anuphan', system-ui, sans-serif;
   --monospace: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  // Shared motion tokens — new interactive pieces should use these instead of
+  // hard-coding their own curves.
+  --ease-out-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-slide: 520ms;
+  --duration-fade: 240ms;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --backgroundColor: #08090b;
-    --sakuraEnabled: 0;
-    --starFieldEnabled: 1;
     --pageBackgroundOverlay: rgba(11, 12, 13, 0.38);
     --pageBackgroundBlur: 0.5px;
     --pageBackgroundPosition: center top;
@@ -158,6 +160,10 @@ body::after {
   }
 }
 
+// Fixed decorative layer contract (mounted by assets/background-effects.js):
+//   z 0 — weather canvases + star field, behind the content column (z 1)
+//   z 2 — sakura petals (intentionally drift in front of content) and the
+//         lightning flash; both are pointer-events: none.
 .sakura-fall-layer {
   position: fixed;
   inset: 0;
@@ -495,6 +501,19 @@ a, u {
 
 .hidden-link {
   text-decoration: none;
+}
+
+// Placeholder link that is visible but not yet actionable (e.g. CV).
+.disabled-link {
+  pointer-events: none;
+  color: var(--mutedTextColor);
+  cursor: default;
+}
+
+// Muted italic hint for empty sections ("no photos yet" etc.).
+.empty-hint {
+  font-style: italic;
+  opacity: 0.65;
 }
 
 ::selection {
@@ -982,14 +1001,23 @@ time.monospace {
   }
 }
 
+// Homepage photo carousel — a direction-aware slide track. The active photo
+// sits centered; prev/next wait just outside the stage and slide in/out along
+// the axis of the gesture. Controls (arrows + dots) are injected by JS as
+// siblings of the link so no interactive element nests inside the <a>.
 .photo-carousel {
+  position: relative;
+  margin-bottom: 1em;
+  --carousel-gap: 24px;
+  --carousel-interval: 4500ms;
+}
+
+.photo-carousel-link {
   display: block;
   position: relative;
   height: 200px;
-  margin-bottom: 1em;
   overflow: hidden;
-  border-radius: 4px;
-  background-color: transparent;
+  border-radius: 8px;
   color: inherit;
   text-decoration: none;
   touch-action: pan-y;
@@ -999,139 +1027,183 @@ time.monospace {
 .photo-carousel-stage {
   position: absolute;
   inset: 0;
-  // Parallax (--stage-mx/my) and touch rubber-band (--stage-drag) ride together.
-  transform: translate(
-    calc(var(--stage-mx, 0) * 7px + var(--stage-drag, 0px)),
-    calc(var(--stage-my, 0) * 5px)
-  );
-  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-// During a touch drag the pile must track the finger with no lag.
-.photo-carousel[data-dragging] .photo-carousel-stage,
-.photo-carousel[data-dragging] .photo-carousel-stage img {
-  transition: none;
 }
 
 .photo-carousel-stage img {
   position: absolute;
   top: 50%;
-  left: 0;
+  left: 50%;
   width: auto;
   height: auto;
-  max-width: min(100%, 300px);
+  max-width: min(100% - 12px, 420px);
   max-height: 168px;
-  margin-top: 0;
+  margin: 0; // cancel the global content-img spacing; centering is transform-based
   border: 5px solid var(--photoFrameColor);
   background: var(--photoFrameColor);
   border-radius: 3px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.10), 0 12px 24px rgba(0, 0, 0, 0.14);
   object-fit: contain;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  --stack-x: 0px;
-  --stack-y: 0px;
-  --stack-scale: 0.92;
-  transform: translateY(-50%)
-    translate(var(--stack-x), var(--stack-y))
-    scale(var(--stack-scale));
-  transform-origin: left center;
-  transition-property: opacity, transform;
-  transition-duration: 560ms;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  // --slide-x parks a slide offstage; --drag (set on the root while the
+  // finger is down) rides on top so the whole row tracks the gesture 1:1.
+  --slide-x: 0px;
+  transform: translate(-50%, -50%) translateX(calc(var(--slide-x) + var(--drag, 0px)));
+  transition:
+    transform var(--duration-slide) var(--ease-out-spring),
+    opacity var(--duration-fade) ease,
+    visibility 0s var(--duration-fade);
+  will-change: transform, opacity;
 }
 
 .photo-carousel-stage img.is-active {
   opacity: 1;
-  z-index: 5;
-  --stack-x: 0px;
-  --stack-y: 0px;
-  --stack-scale: 1;
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.12), 0 16px 30px rgba(0, 0, 0, 0.18);
+  visibility: visible;
+  z-index: 2;
+  transition:
+    transform var(--duration-slide) var(--ease-out-spring),
+    opacity var(--duration-fade) ease;
 }
 
 .photo-carousel-stage img.is-prev,
 .photo-carousel-stage img.is-next {
-  z-index: 4;
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
 }
 
 .photo-carousel-stage img.is-prev {
-  opacity: 0.5;
-  --stack-x: 6px;
-  --stack-y: 6px;
-  --stack-scale: 0.97;
+  --slide-x: calc(-1 * var(--carousel-w, 100vw) - var(--carousel-gap));
 }
 
 .photo-carousel-stage img.is-next {
-  opacity: 0.5;
-  --stack-x: 6px;
-  --stack-y: -6px;
-  --stack-scale: 0.97;
+  --slide-x: calc(var(--carousel-w, 100vw) + var(--carousel-gap));
 }
 
-.photo-carousel-stage img.is-far-prev,
-.photo-carousel-stage img.is-far-next {
+// Applied for one frame when a slide is repositioned to a new waiting spot,
+// so it teleports instead of gliding across the visible stage.
+.photo-carousel-stage img.is-snap {
+  transition: none;
+}
+
+.photo-carousel[data-dragging] .photo-carousel-stage img {
+  transition: none;
+}
+
+.photo-carousel-arrow {
+  position: absolute;
+  top: 100px; // stage height / 2
+  transform: translateY(-50%);
   z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--backgroundColor) 72%, transparent);
+  color: var(--secondaryTextColor);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity var(--duration-fade) ease, background-color var(--duration-fade) ease;
 }
 
-.photo-carousel-stage img.is-far-prev {
-  opacity: 0.25;
-  --stack-x: 12px;
-  --stack-y: 12px;
-  --stack-scale: 0.94;
+.photo-carousel-arrow svg {
+  display: block;
 }
 
-.photo-carousel-stage img.is-far-next {
-  opacity: 0.25;
-  --stack-x: 12px;
-  --stack-y: -12px;
-  --stack-scale: 0.94;
+.photo-carousel-arrow--prev { left: 10px; }
+.photo-carousel-arrow--next { right: 10px; }
+
+.photo-carousel-arrow:focus-visible {
+  opacity: 1;
+}
+
+.photo-carousel-arrow:hover {
+  background: color-mix(in srgb, var(--backgroundColor) 92%, transparent);
 }
 
 @media (hover: hover) {
-  .photo-carousel:hover .photo-carousel-stage img.is-active {
-    --stack-y: -3px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.14), 0 22px 38px rgba(0, 0, 0, 0.2);
-  }
-
-  .photo-carousel:hover .photo-carousel-stage img.is-prev {
-    --stack-x: 8px;
-    --stack-y: 8px;
-    opacity: 0.6;
-  }
-
-  .photo-carousel:hover .photo-carousel-stage img.is-next {
-    --stack-x: 8px;
-    --stack-y: -8px;
-    opacity: 0.6;
-  }
-
-  .photo-carousel:hover .photo-carousel-stage img.is-far-prev {
-    --stack-x: 16px;
-    --stack-y: 16px;
-    opacity: 0.35;
-  }
-
-  .photo-carousel:hover .photo-carousel-stage img.is-far-next {
-    --stack-x: 16px;
-    --stack-y: -16px;
-    opacity: 0.35;
+  .photo-carousel:hover .photo-carousel-arrow {
+    opacity: 1;
   }
 }
 
+@media (hover: none) {
+  // Touch users swipe; arrows would only get in the way of the link.
+  .photo-carousel-arrow {
+    display: none;
+  }
+}
+
+.photo-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 0.7em;
+}
+
+.photo-carousel-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mutedTextColor) 38%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+  transition: width var(--duration-fade) var(--ease-out-spring), background-color var(--duration-fade) ease;
+}
+
+.photo-carousel-dot[aria-current='true'] {
+  width: 22px;
+  background: color-mix(in srgb, var(--mutedTextColor) 30%, transparent);
+}
+
+// Autoplay progress fill inside the active dot. The JS restarts the
+// animation whenever the autoplay timer (re)starts, so both stay in step.
+.photo-carousel-dot[aria-current='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--mutedTextColor);
+  transform: translateX(-100%);
+}
+
+.photo-carousel-dot.is-running::after {
+  animation: photo-carousel-dot-progress var(--carousel-interval) linear forwards;
+}
+
+.photo-carousel[data-paused] .photo-carousel-dot::after {
+  animation-play-state: paused;
+}
+
+@keyframes photo-carousel-dot-progress {
+  to { transform: translateX(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .photo-carousel-stage {
-    transform: none;
-    transition: none;
-  }
-
+  // Slide travel becomes a plain crossfade and the autoplay progress is
+  // meaningless (autoplay is off), so pin everything in place.
   .photo-carousel-stage img {
-    transition: none;
+    --slide-x: 0px !important;
+    transition: opacity var(--duration-fade) ease, visibility 0s var(--duration-fade);
   }
 
-  .photo-carousel-stage img:not(.is-active) {
+  .photo-carousel-stage img.is-prev,
+  .photo-carousel-stage img.is-next {
     opacity: 0;
+    visibility: hidden;
+  }
+
+  .photo-carousel-dot.is-running::after {
+    animation: none;
   }
 }
 

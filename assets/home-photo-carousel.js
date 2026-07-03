@@ -1,7 +1,15 @@
+// Homepage photo carousel — direction-aware slide track.
+//
+// Model: the active photo is centered; its neighbours wait just outside the
+// stage (positioned via --slide-x in CSS). Advancing slides the row along the
+// gesture axis, so motion always tells you which way you went. Controls
+// (arrows + dots with an autoplay progress fill) are injected here so the
+// no-JS fallback stays a plain link showing the first photo.
+
 const SLIDE_INTERVAL_MS = 4500
 const SWIPE_THRESHOLD_PX = 40
-const SWIPE_PAUSE_AFTER_MS = 1000
-const POSITION_CLASSES = ['is-active', 'is-prev', 'is-next', 'is-far-prev', 'is-far-next']
+const SWIPE_VELOCITY_PX_MS = 0.5
+const INTERACTION_PAUSE_MS = 4500
 
 function normalizeIndex(index, length) {
   return ((index % length) + length) % length
@@ -11,57 +19,160 @@ export function initHomePhotoCarousel() {
   const root = document.querySelector('[data-photo-carousel]')
   if (!root) return null
 
-  const slides = Array.from(root.querySelectorAll('.photo-carousel-stage img'))
-  if (slides.length === 0) return null
-
+  const link = root.querySelector('.photo-carousel-link')
   const stage = root.querySelector('.photo-carousel-stage')
+  const slides = stage ? Array.from(stage.querySelectorAll('img')) : []
+  if (!link || slides.length === 0) return null
 
-  let activeIndex = slides.findIndex(slide => slide.classList.contains('is-active'))
-  if (activeIndex < 0) activeIndex = 0
-  syncSlidePositions()
-
+  let activeIndex = Math.max(slides.findIndex(slide => slide.classList.contains('is-active')), 0)
   if (slides.length < 2) return null
 
+  const isChineseInterface = document.documentElement.lang?.startsWith('zh')
   const reducedMotionMedia = window.matchMedia('(prefers-reduced-motion: reduce)')
+
   let timerId = null
-  let pausedUntil = 0
+  let dots = []
   let touchStartX = 0
   let touchStartY = 0
+  let touchStartTime = 0
   let dragging = false
 
-  function syncSlidePositions() {
-    slides.forEach((slide, index) => {
-      slide.classList.remove(...POSITION_CLASSES)
+  // --- layout ---------------------------------------------------------------
 
-      if (index === activeIndex) {
-        slide.classList.add('is-active')
-        return
-      }
+  function syncStageWidth() {
+    root.style.setProperty('--carousel-w', `${link.clientWidth}px`)
+  }
 
-      const previousIndex = normalizeIndex(activeIndex - 1, slides.length)
-      const nextIndex = normalizeIndex(activeIndex + 1, slides.length)
-      const farPreviousIndex = normalizeIndex(activeIndex - 2, slides.length)
-      const farNextIndex = normalizeIndex(activeIndex + 2, slides.length)
+  const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(syncStageWidth) : null
+  resizeObserver?.observe(link)
+  syncStageWidth()
 
-      if (index === previousIndex) {
-        slide.classList.add('is-prev')
-      } else if (index === nextIndex) {
-        slide.classList.add('is-next')
-      } else if (slides.length > 3 && index === farPreviousIndex) {
-        slide.classList.add('is-far-prev')
-      } else if (slides.length > 3 && index === farNextIndex) {
-        slide.classList.add('is-far-next')
+  // --- controls ---------------------------------------------------------------
+
+  function arrowSvg(direction) {
+    const points = direction === 'prev' ? '9.5,3.5 5,8 9.5,12.5' : '6.5,3.5 11,8 6.5,12.5'
+    return `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="${points}"></polyline></svg>`
+  }
+
+  function buildControls() {
+    for (const direction of ['prev', 'next']) {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.className = `photo-carousel-arrow photo-carousel-arrow--${direction}`
+      button.setAttribute('aria-label', direction === 'prev'
+        ? (isChineseInterface ? '上一张照片' : 'Previous photo')
+        : (isChineseInterface ? '下一张照片' : 'Next photo'))
+      button.innerHTML = arrowSvg(direction)
+      button.addEventListener('click', () => {
+        goTo(activeIndex + (direction === 'prev' ? -1 : 1))
+        restartAutoplay()
+      })
+      root.appendChild(button)
+    }
+
+    const dotsContainer = document.createElement('div')
+    dotsContainer.className = 'photo-carousel-dots'
+    dots = slides.map((slide, index) => {
+      const dot = document.createElement('button')
+      dot.type = 'button'
+      dot.className = 'photo-carousel-dot'
+      dot.setAttribute('aria-label', isChineseInterface
+        ? `第 ${index + 1} 张，共 ${slides.length} 张`
+        : `Photo ${index + 1} of ${slides.length}`)
+      dot.addEventListener('click', () => {
+        goTo(index)
+        restartAutoplay()
+      })
+      dotsContainer.appendChild(dot)
+      return dot
+    })
+    root.appendChild(dotsContainer)
+  }
+
+  function syncDots() {
+    dots.forEach((dot, index) => {
+      const isCurrent = index === activeIndex
+      if (isCurrent) {
+        dot.setAttribute('aria-current', 'true')
+      } else {
+        dot.removeAttribute('aria-current')
+        dot.classList.remove('is-running')
       }
     })
   }
 
-  function showSlide(nextIndex) {
-    const target = normalizeIndex(nextIndex, slides.length)
+  function restartDotProgress() {
+    const dot = dots[activeIndex]
+    if (!dot) return
+    dot.classList.remove('is-running')
+    void dot.offsetWidth // restart the CSS animation from zero
+    dot.classList.add('is-running')
+  }
+
+  function stopDotProgress() {
+    dots[activeIndex]?.classList.remove('is-running')
+  }
+
+  // --- slide positioning ------------------------------------------------------
+
+  function snapTo(slide, className) {
+    slide.classList.add('is-snap')
+    slide.classList.remove('is-active', 'is-prev', 'is-next')
+    if (className) slide.classList.add(className)
+    void slide.offsetWidth
+    slide.classList.remove('is-snap')
+  }
+
+  function syncSlidePositions() {
+    const previousIndex = normalizeIndex(activeIndex - 1, slides.length)
+    const nextIndex = normalizeIndex(activeIndex + 1, slides.length)
+
+    slides.forEach((slide, index) => {
+      if (index === activeIndex) {
+        slide.classList.add('is-active')
+        slide.classList.remove('is-prev', 'is-next')
+      } else if (index === previousIndex) {
+        // A newly recruited neighbour teleports to its waiting spot; a slide
+        // that is animating out (was active) keeps its transition.
+        if (!slide.classList.contains('is-active') && !slide.classList.contains('is-prev')) {
+          snapTo(slide, 'is-prev')
+        } else {
+          slide.classList.remove('is-active', 'is-next')
+          slide.classList.add('is-prev')
+        }
+      } else if (index === nextIndex) {
+        if (!slide.classList.contains('is-active') && !slide.classList.contains('is-next')) {
+          snapTo(slide, 'is-next')
+        } else {
+          slide.classList.remove('is-active', 'is-prev')
+          slide.classList.add('is-next')
+        }
+      } else {
+        slide.classList.remove('is-active', 'is-prev', 'is-next')
+      }
+    })
+  }
+
+  function goTo(index) {
+    const target = normalizeIndex(index, slides.length)
     if (target === activeIndex) return
+
+    // For non-adjacent jumps (dot clicks), pre-position the target on the
+    // side matching the shortest travel direction so it slides in naturally.
+    const forwardDistance = normalizeIndex(target - activeIndex, slides.length)
+    const goingForward = forwardDistance <= slides.length / 2
+    const isAdjacent = forwardDistance === 1 || forwardDistance === slides.length - 1
+    const targetSlide = slides[target]
+    if (!isAdjacent) {
+      snapTo(targetSlide, goingForward ? 'is-next' : 'is-prev')
+    }
 
     activeIndex = target
     syncSlidePositions()
+    syncDots()
   }
+
+  // --- autoplay ---------------------------------------------------------------
 
   function clearTimer() {
     if (timerId === null) return
@@ -69,41 +180,46 @@ export function initHomePhotoCarousel() {
     timerId = null
   }
 
-  function schedule() {
+  function scheduleAutoplay(delay = SLIDE_INTERVAL_MS) {
     clearTimer()
-    if (reducedMotionMedia.matches) return
-    timerId = window.setTimeout(advance, SLIDE_INTERVAL_MS)
+    if (reducedMotionMedia.matches || document.hidden) return
+    delete root.dataset.paused
+    timerId = window.setTimeout(() => {
+      goTo(activeIndex + 1)
+      scheduleAutoplay()
+    }, delay)
+    if (delay === SLIDE_INTERVAL_MS) restartDotProgress()
   }
 
-  function advance() {
-    if (document.hidden || Date.now() < pausedUntil) {
-      schedule()
-      return
-    }
-
-    showSlide(activeIndex + 1)
-    schedule()
-  }
-
-  function pauseIndefinitely() {
-    pausedUntil = Infinity
+  function pauseAutoplay() {
     clearTimer()
+    root.dataset.paused = '1'
   }
+
+  // After a deliberate interaction, hold a beat before autoplay resumes.
+  function restartAutoplay() {
+    pauseAutoplay()
+    scheduleAutoplay(INTERACTION_PAUSE_MS)
+    restartDotProgress()
+    delete root.dataset.paused
+  }
+
+  // --- pointer / touch ----------------------------------------------------------
 
   function handlePointerEnter(event) {
     if (event.pointerType === 'touch') return
-    pauseIndefinitely()
+    pauseAutoplay()
   }
 
-  function resume() {
-    pausedUntil = 0
-    schedule()
+  function handlePointerLeave(event) {
+    if (event.pointerType === 'touch') return
+    scheduleAutoplay()
   }
 
   function endDrag() {
     dragging = false
     delete root.dataset.dragging
-    stage.style.removeProperty('--stage-drag')
+    root.style.removeProperty('--drag')
   }
 
   function handleTouchStart(event) {
@@ -111,6 +227,7 @@ export function initHomePhotoCarousel() {
     if (!touch) return
     touchStartX = touch.clientX
     touchStartY = touch.clientY
+    touchStartTime = event.timeStamp
     dragging = false
     delete root.dataset.swiping
   }
@@ -127,11 +244,11 @@ export function initHomePhotoCarousel() {
       if (Math.abs(deltaX) < 8 || Math.abs(deltaX) <= Math.abs(deltaY)) return
       dragging = true
       root.dataset.dragging = '1'
-      pauseIndefinitely()
+      pauseAutoplay()
     }
 
-    // Damped rubber-band: the pile follows the finger without fully chasing it.
-    stage.style.setProperty('--stage-drag', `${deltaX * 0.35}px`)
+    if (reducedMotionMedia.matches) return
+    root.style.setProperty('--drag', `${deltaX}px`)
   }
 
   function handleTouchEnd(event) {
@@ -139,104 +256,86 @@ export function initHomePhotoCarousel() {
     endDrag()
 
     const touch = event.changedTouches[0]
-    if (!touch) {
-      if (wasDragging) resume()
+    if (!touch || !wasDragging) {
+      if (wasDragging) scheduleAutoplay()
       return
     }
 
     const deltaX = touch.clientX - touchStartX
-    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX) {
+    const elapsed = Math.max(event.timeStamp - touchStartTime, 1)
+    const velocity = Math.abs(deltaX) / elapsed
+
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX || velocity >= SWIPE_VELOCITY_PX_MS) {
       root.dataset.swiping = '1'
-      showSlide(activeIndex + (deltaX < 0 ? 1 : -1))
+      goTo(activeIndex + (deltaX < 0 ? 1 : -1))
     }
 
-    pausedUntil = Date.now() + SWIPE_PAUSE_AFTER_MS
-    schedule()
+    scheduleAutoplay(INTERACTION_PAUSE_MS)
+    restartDotProgress()
   }
 
-  function handlePointerMove(event) {
-    if (event.pointerType === 'touch' || reducedMotionMedia.matches) return
-    const rect = root.getBoundingClientRect()
-    if (!rect.width || !rect.height) return
-    const mx = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width) * 2 - 1))
-    const my = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height) * 2 - 1))
-    stage.style.setProperty('--stage-mx', mx.toFixed(3))
-    stage.style.setProperty('--stage-my', my.toFixed(3))
-  }
-
-  function resetParallax() {
-    stage.style.setProperty('--stage-mx', '0')
-    stage.style.setProperty('--stage-my', '0')
-  }
-
-  function handlePointerLeave() {
-    resetParallax()
-    resume()
-  }
-
-  function handleKeydown(event) {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-    event.preventDefault()
-    showSlide(activeIndex + (event.key === 'ArrowLeft' ? -1 : 1))
-    pausedUntil = Date.now() + SWIPE_PAUSE_AFTER_MS
-    schedule()
-  }
-
+  // A swipe that changed slides must not also follow the link.
   function handleClick(event) {
     if (root.dataset.swiping !== '1') return
     event.preventDefault()
     delete root.dataset.swiping
   }
 
+  function handleKeydown(event) {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    goTo(activeIndex + (event.key === 'ArrowLeft' ? -1 : 1))
+    restartAutoplay()
+  }
+
   function handleVisibilityChange() {
     if (document.hidden) {
-      clearTimer()
+      pauseAutoplay()
       return
     }
-
-    schedule()
+    scheduleAutoplay()
   }
 
   function handleReducedMotionChange(event) {
     if (event.matches) {
-      clearTimer()
-      showSlide(0)
+      pauseAutoplay()
+      stopDotProgress()
       return
     }
-
-    schedule()
+    scheduleAutoplay()
   }
 
+  buildControls()
+  syncSlidePositions()
+  syncDots()
+
   root.addEventListener('pointerenter', handlePointerEnter)
-  root.addEventListener('pointermove', handlePointerMove)
   root.addEventListener('pointerleave', handlePointerLeave)
-  root.addEventListener('focusin', pauseIndefinitely)
-  root.addEventListener('focusout', resume)
+  root.addEventListener('focusin', pauseAutoplay)
+  root.addEventListener('focusout', () => scheduleAutoplay())
   root.addEventListener('keydown', handleKeydown)
-  root.addEventListener('touchstart', handleTouchStart, { passive: true })
-  root.addEventListener('touchmove', handleTouchMove, { passive: true })
-  root.addEventListener('touchend', handleTouchEnd)
-  root.addEventListener('touchcancel', endDrag)
-  root.addEventListener('click', handleClick)
+  link.addEventListener('touchstart', handleTouchStart, { passive: true })
+  link.addEventListener('touchmove', handleTouchMove, { passive: true })
+  link.addEventListener('touchend', handleTouchEnd)
+  link.addEventListener('touchcancel', endDrag)
+  link.addEventListener('click', handleClick)
   document.addEventListener('visibilitychange', handleVisibilityChange)
   reducedMotionMedia.addEventListener('change', handleReducedMotionChange)
 
-  schedule()
+  scheduleAutoplay()
 
   return {
     destroy() {
       clearTimer()
+      resizeObserver?.disconnect()
       root.removeEventListener('pointerenter', handlePointerEnter)
-      root.removeEventListener('pointermove', handlePointerMove)
       root.removeEventListener('pointerleave', handlePointerLeave)
-      root.removeEventListener('focusin', pauseIndefinitely)
-      root.removeEventListener('focusout', resume)
       root.removeEventListener('keydown', handleKeydown)
-      root.removeEventListener('touchstart', handleTouchStart)
-      root.removeEventListener('touchmove', handleTouchMove)
-      root.removeEventListener('touchend', handleTouchEnd)
-      root.removeEventListener('touchcancel', endDrag)
-      root.removeEventListener('click', handleClick)
+      link.removeEventListener('touchstart', handleTouchStart)
+      link.removeEventListener('touchmove', handleTouchMove)
+      link.removeEventListener('touchend', handleTouchEnd)
+      link.removeEventListener('touchcancel', endDrag)
+      link.removeEventListener('click', handleClick)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       reducedMotionMedia.removeEventListener('change', handleReducedMotionChange)
     }
