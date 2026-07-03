@@ -1,5 +1,6 @@
 import { trackUmami } from './events.js'
-import { syncWeather } from './weather.js'
+import { getWeather } from './weather.js'
+import { syncBackgroundEffects } from './background-effects.js'
 
 // Decorative background, carousel and bio modules are loaded on demand so
 // content pages don't pay for homepage-only or out-of-season code.
@@ -30,8 +31,11 @@ function updateLocationWeather(condition) {
 }
 
 function refreshWeather() {
-  return syncWeather({ syncDefaultEffects: syncDefaultEffectsByDay })
-    .then(data => updateLocationWeather(data?.condition))
+  return getWeather().then(data => {
+    const condition = data?.condition || 'clear'
+    syncBackgroundEffects(condition)
+    updateLocationWeather(condition)
+  })
 }
 
 if ('share' in navigator) {
@@ -51,21 +55,6 @@ if ('share' in navigator) {
       })
     })
   }
-}
-
-async function syncDefaultEffectsByDay(isDay) {
-  if (Number(isDay) === 1) {
-    const { initSakuraFall } = await import('./sakura-fall.js')
-    window.__starFieldMounted?.destroy()
-    window.__starFieldMounted = null
-    initSakuraFall()
-    return
-  }
-
-  const { initStarField } = await import('./star-field.js')
-  window.__sakuraFallMounted?.destroy()
-  window.__sakuraFallMounted = null
-  initStarField()
 }
 
 refreshWeather()
