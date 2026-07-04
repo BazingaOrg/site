@@ -102,16 +102,16 @@ lang: zh-CN
         <source
           type="image/avif"
           srcset="{{ thumbnail_avif.src }} {{ thumbnail_avif.width }}w, {{ preview_avif.src }} {{ preview_avif.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 420px">
+          sizes="(max-width: 26em) calc(100vw - 5em), 320px">
         {% endif %}
         <source
           type="image/webp"
           srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 420px">
+          sizes="(max-width: 26em) calc(100vw - 5em), 320px">
         <img
           src="{{ thumbnail.src }}"
           srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 420px"
+          sizes="(max-width: 26em) calc(100vw - 5em), 320px"
           alt="{{ photo.meta.alt }}"
           loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
           decoding="async"
