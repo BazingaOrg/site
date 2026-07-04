@@ -11,14 +11,13 @@ This page is frequently updated. Only websites that are being actively updated a
 ---
 
 {% if site.data.blogroll and site.data.blogroll.size > 0 %}
-{% assign links = site.data.blogroll | sort: "title" %}
-{%- for item in links %}
+{%- comment -%} File order IS addition order (entries are appended), matching the copy above and feeds/blogroll.xml. {%- endcomment -%}
+{%- for item in site.data.blogroll %}
 ## [{{ item.title }}]({{ item.url }}) <code class="smol">({{ item.lang }})</code>
 {{ item.description }}
 {%- endfor %}
 {% else %}
 <div class="empty-state">
-  <p><em>No blogs are currently listed in the blogroll.</em></p>
-  <p class="smol">The blogroll is being updated. Check back later!</p>
+  <p><em>Nothing here yet.</em></p>
 </div>
 {% endif %}

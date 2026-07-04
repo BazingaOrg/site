@@ -7,9 +7,10 @@ permalink: /blogroll.xml
   <channel>
     <title>@Bazinga's blogroll</title>
     <description>Links to other people's great blogs/websites.</description>
+    {% comment %} File order IS addition order; sort:"added_at" compared RFC-2822 strings lexically ("Fri…" < "Thu…") and could misorder. Reversed = newest additions first, per RSS convention. {% endcomment %}
     {% if site.data.blogroll and site.data.blogroll.size > 0 %}
-    {% assign blogs = site.data.blogroll | sort: "added_at"  %}
-    <lastBuildDate>{{ blogs.last.added_at | date_to_rfc822 }}</lastBuildDate>
+    {% assign blogs = site.data.blogroll | reverse %}
+    <lastBuildDate>{{ blogs.first.added_at | date_to_rfc822 }}</lastBuildDate>
     {% endif %}
     <atom:link href="{{ site.url }}{{ page.permalink }}" rel="self" type="application/rss+xml" />
     <link>{{ site.url }}{{ page.permalink }}</link>
