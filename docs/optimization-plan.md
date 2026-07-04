@@ -113,3 +113,16 @@
 - [x] 追踪脚本体积审计：新增 `npm run perf:audit-tracking`，报告写入 `docs/perf/tracking-scripts.json`；当前 tracking 脚本合计 132,124 B raw / 36,759 B gzip，除 `page-tracking.js` 外均为 production idle-deferred 或页面条件加载。
 - [x] 轮播 / 照片页图片改用 `<picture>` + AVIF：生成器为 thumbnail / preview / large 同步输出 WebP fallback 与 AVIF source，首页轮播和 `/photos/` 页面优先提供 AVIF。
 - [x] 星空按月份切换当季星座：春 Leo、夏 Cygnus、秋 Pegasus、冬 Orion，沿用现有星座 SVG 样式和 reduced-motion 降级。
+
+## 7. Code review 与修复（2026-07-04）
+
+对 `0f1f899..HEAD` 做了 8 角度多 Agent 审查：26 个候选 → 20 项验证存活（19 CONFIRMED / 1 PLAUSIBLE / 0 误报）。前 10 项（按严重度）已全部修复：
+
+1. 背景编排器改为「先并行 import、成功后再拆旧层」，失败不再留空白背景；页面重新可见时无条件重放幂等矩阵（顺带修复模块串行加载）。
+2. 轮播悬停/焦点暂停改为显式状态并在计时器触发时复查，交互不再覆盖暂停；focusout 增加 `document.hasFocus()` 守卫。
+3. perf 报告新增 `image_src_basis` 字段，compare 在 webp/avif 口径不一致时显式警告（此前 23KB「优化」实为口径切换）。
+4. 甩动检测改用手势末段 120ms 窗口速度 + 16px 最小位移；reduce-motion 开启时回到第一张；恰好 2 张照片时邻居按行进方向停靠；点击抑制回归「click 消费 + 1500ms 兜底」；4500ms 常量收敛为单一来源（JS 写入 `--carousel-interval`）；首页 `sizes` 回调至 320px。
+
+同批完成轮播布局调整：照片与章节标题左对齐，箭头从图面浮层移到照片下方的 `‹ 圆点 ›` 控制行（解决左对齐后箭头超出栏宽的问题，触屏端也获得可见控件）。
+
+**遗留（已确认、低严重度，未修）**：两份首页轮播块抽取为 `_includes` partial；AVIF 编码管线与 WebP 去重并改为对称 schema + 增量跳过；audit 脚本与 measure 脚本共享报告脚手架；全站 6 份手写 reduced-motion 监听收敛为公共 helper；touchmove 写 `--drag` 可加 rAF 节流；氛围层 window 全局与 overlays map 统一注册表；`weather.js` 的 `isDay` 死数据管线（保留系有意，见第 1 节）。
