@@ -1,6 +1,6 @@
 home:
   en-US:
-    bio_intro: Just a Chinese Random Guy into AI :).
+    bio_intro: Just a random Chinese guy into AI :)
     bio_location: Lives in Hangzhou, Zhejiang.
     bio_time: "· {time}"
     bio_now_active: in focus
@@ -9,7 +9,7 @@ home:
     bio_weather:
       rain: raining now
       snow: snowing now
-      thunderstorm: storms rolling through
+      thunderstorm: thunder rolling through
       fog: wrapped in fog
     nav_additional: Additional content
     nav_social: Social
@@ -20,13 +20,13 @@ home:
     section_notes: Notes
     section_notes_all: Recent notes
     section_notes_write: Write
-    section_posts: Recent posts
+    section_posts: Posts
     empty_photos: No photos yet.
     empty_stories: No stories yet.
     empty_notes: No notes yet.
     empty_posts: No posts yet.
   zh-CN:
-    bio_intro: 一个觉得AI很好玩的普通人 :)。
+    bio_intro: 一个觉得 AI 很好玩的普通人 :)
     bio_location: 生活在浙江杭州。
     bio_time: "· {time}"
     bio_now_active: 使用中
@@ -46,7 +46,7 @@ home:
     section_notes: 随笔
     section_notes_all: 近期随笔
     section_notes_write: 写一条
-    section_posts: 文章
+    section_posts: 长文
     empty_photos: 还没有照片。
     empty_stories: 还没有故事。
     empty_notes: 还没有随笔。
@@ -65,7 +65,7 @@ list_pages:
     stories_title: Stories
     caption_expand: Expand
     caption_collapse: Collapse
-    camera_details: Photo details
+    camera_details: Camera details
     stories_empty: No stories yet.
   zh-CN:
     notes_title: 近期随笔
@@ -79,7 +79,7 @@ list_pages:
     stories_title: 故事
     caption_expand: 展开
     caption_collapse: 收起
-    camera_details: 相片细节
+    camera_details: 拍摄参数
     stories_empty: 还没有故事。
 
 layout:
@@ -89,6 +89,7 @@ layout:
     like_prompt_page: Like this page? Let me know.
     liked_on: Liked.
     liked_off: Sure.
+    liked_thanks: (Thanks!)
     footer_banner_alt: Banner assets.
     footer_rss_alt: Valid RSS feeds available.
   zh-CN:
@@ -96,7 +97,8 @@ layout:
     like_prompt_note: 这条随笔还行吗？点个喜欢告诉我。
     like_prompt_page: 这个页面还行吗？点个喜欢告诉我。
     liked_on: 收到喜欢。
-    liked_off: 可以。
+    liked_off: 好呀。
+    liked_thanks: （谢啦）
     footer_banner_alt: 站点横幅素材。
     footer_rss_alt: 可用的 RSS 订阅。
 
@@ -117,8 +119,8 @@ terminology:
   zh-CN:
     note_singular: 随笔
     note_plural: 随笔
-    post_singular: 文章
-    post_plural: 文章
+    post_singular: 长文
+    post_plural: 长文
     photo_singular: 照片
     photo_plural: 照片
     access_key: 访问密钥

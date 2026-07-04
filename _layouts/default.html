@@ -296,7 +296,7 @@
                     </g>
                   </svg>
                 </span>
-                <span class="ai-summary-heading monospace">AI summary</span>
+                <span class="ai-summary-heading monospace">{% if lang == 'zh-CN' %}AI 摘要{% else %}AI summary{% endif %}</span>
               </span>
             </summary>
             <p class="ai-summary-copy">{{ page.ai_summary }}</p>
@@ -325,7 +325,7 @@
               {% endif %}
             </div>
             &gt;<open-heart class="text-open-heart" href="https://site.bazinga.ink/like?id={{ page.url }}" emoji="❤️" aria-labelledby="like-prompt">
-              <span class="on">{{ layout_copy.liked_on }}<br>(Thanks!)</span><span class="off">{{ layout_copy.liked_off }} <kbd>⏎</kbd></span>
+              <span class="on">{{ layout_copy.liked_on }}<br>{{ layout_copy.liked_thanks }}</span><span class="off">{{ layout_copy.liked_off }} <kbd>⏎</kbd></span>
             </open-heart>
           </div>
         </div>

@@ -314,11 +314,11 @@ function initWriteEntryControl() {
   createWriteEntryController({
     entryId: 'post-write-entry',
     storageKey: 'show-post-entry',
-    headingTexts: ['Recent posts', '文章'],
-    activeTitle: isChineseInterface ? '隐藏文章入口' : 'hide post entry',
-    inactiveTitle: isChineseInterface ? '激活文章入口' : 'activate post entry',
-    activeMessage: isChineseInterface ? '文章入口已激活' : 'Post entry enabled',
-    inactiveMessage: isChineseInterface ? '文章入口已隐藏' : 'Post entry hidden',
+    headingTexts: ['Posts', '长文'],
+    activeTitle: isChineseInterface ? '隐藏长文入口' : 'hide post entry',
+    inactiveTitle: isChineseInterface ? '激活长文入口' : 'activate post entry',
+    activeMessage: isChineseInterface ? '长文入口已激活' : 'Post entry enabled',
+    inactiveMessage: isChineseInterface ? '长文入口已隐藏' : 'Post entry hidden',
     trackingEntry: 'posts'
   })
 
