@@ -105,9 +105,16 @@ export function initHomePhotoCarousel() {
       return dot
     })
 
-    controlsRow.appendChild(makeArrow('prev'))
+    // Dots anchor to the left edge (shared with the photo and headings),
+    // the paired arrows anchor to the right column edge — both ends of the
+    // row land on a real alignment line instead of floating.
+    const navGroup = document.createElement('div')
+    navGroup.className = 'photo-carousel-nav'
+    navGroup.appendChild(makeArrow('prev'))
+    navGroup.appendChild(makeArrow('next'))
+
     controlsRow.appendChild(dotsContainer)
-    controlsRow.appendChild(makeArrow('next'))
+    controlsRow.appendChild(navGroup)
     root.appendChild(controlsRow)
     controls.push(controlsRow)
   }

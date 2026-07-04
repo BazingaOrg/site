@@ -1096,14 +1096,22 @@ time.monospace {
   transition: none;
 }
 
-// `‹ dots ›` control row under the photo, left-aligned with it. Keeping the
-// arrows out of the stage means a left-aligned photo never needs a button
-// hanging outside the content column, and touch users get visible controls.
+// Control row under the photo: dots sit on the left alignment line (shared
+// with the photo and the section headings), the paired arrows sit on the
+// right column edge. Anchoring both ends keeps the short row from reading
+// as a floating fragment, and no button ever hangs outside the column.
 .photo-carousel-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 0.7em;
+}
+
+.photo-carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .photo-carousel-arrow {
