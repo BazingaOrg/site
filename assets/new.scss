@@ -1096,22 +1096,16 @@ time.monospace {
   transition: none;
 }
 
-// Control row under the photo: dots sit on the left alignment line (shared
-// with the photo and the section headings), the paired arrows sit on the
-// right column edge. Anchoring both ends keeps the short row from reading
-// as a floating fragment, and no button ever hangs outside the column.
+// Control row under the photo: an arrow at each end of the card — each on
+// the side it navigates toward — with the dots centered between them. The
+// equal-width arrows keep the dots truly centered, echoing the symmetry of
+// the full-bleed card above.
 .photo-carousel-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-top: 0.7em;
-}
-
-.photo-carousel-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .photo-carousel-arrow {

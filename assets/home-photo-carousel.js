@@ -105,16 +105,12 @@ export function initHomePhotoCarousel() {
       return dot
     })
 
-    // Dots anchor to the left edge (shared with the photo and headings),
-    // the paired arrows anchor to the right column edge — both ends of the
-    // row land on a real alignment line instead of floating.
-    const navGroup = document.createElement('div')
-    navGroup.className = 'photo-carousel-nav'
-    navGroup.appendChild(makeArrow('prev'))
-    navGroup.appendChild(makeArrow('next'))
-
+    // Arrows sit at the row's two ends — each on the side it navigates
+    // toward — with the dots centered between them. The full-bleed card
+    // above provides the symmetry this composition echoes.
+    controlsRow.appendChild(makeArrow('prev'))
     controlsRow.appendChild(dotsContainer)
-    controlsRow.appendChild(navGroup)
+    controlsRow.appendChild(makeArrow('next'))
     root.appendChild(controlsRow)
     controls.push(controlsRow)
   }
