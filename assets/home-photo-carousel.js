@@ -1,15 +1,22 @@
 // Homepage photo carousel — direction-aware slide track.
 //
-// Model: the active photo is centered; its neighbours wait just outside the
-// stage (positioned via --slide-x in CSS). Advancing slides the row along the
-// gesture axis, so motion always tells you which way you went. Controls
-// (arrows + dots with an autoplay progress fill) are injected here so the
-// no-JS fallback stays a plain link showing the first photo.
+// Model: the active photo sits flush left (aligned with the section
+// headings); its neighbours wait just outside the stage (positioned via
+// --slide-x in CSS). Advancing slides the row along the gesture axis, so
+// motion always tells you which way you went. Controls live in a compact
+// `‹ dots ›` row under the photo — injected here so the no-JS fallback
+// stays a plain link showing the first photo.
 
 const SLIDE_INTERVAL_MS = 4500
 const SWIPE_THRESHOLD_PX = 40
-const SWIPE_VELOCITY_PX_MS = 0.5
-const INTERACTION_PAUSE_MS = 4500
+// Flick detection uses the velocity of the last ~120ms of the gesture, so a
+// press-hold followed by a quick flick still pages, while slow long drags
+// rely on the distance threshold alone.
+const VELOCITY_WINDOW_MS = 120
+const SWIPE_VELOCITY_PX_MS = 0.25
+const SWIPE_FLICK_MIN_PX = 16
+const SWIPE_CLICK_BACKSTOP_MS = 1500
+const POSITION_CLASSES = ['is-active', 'is-prev', 'is-next']
 
 function normalizeIndex(index, length) {
   return ((index % length) + length) % length
@@ -33,11 +40,14 @@ export function initHomePhotoCarousel() {
   let timerId = null
   let dots = []
   const controls = []
+  let pointerOver = false
+  let focusWithin = false
+  let dragging = false
   let touchStartX = 0
   let touchStartY = 0
-  let touchStartTime = 0
+  let dragSign = 0
+  let moveSamples = []
   let swipeClickSuppressTimer = null
-  let dragging = false
 
   // --- layout ---------------------------------------------------------------
 
@@ -48,16 +58,22 @@ export function initHomePhotoCarousel() {
   const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(syncStageWidth) : null
   resizeObserver?.observe(link)
   syncStageWidth()
+  // Single source of truth for the autoplay interval: the dot-progress
+  // animation duration in CSS reads this variable.
+  root.style.setProperty('--carousel-interval', `${SLIDE_INTERVAL_MS}ms`)
 
   // --- controls ---------------------------------------------------------------
 
   function arrowSvg(direction) {
     const points = direction === 'prev' ? '9.5,3.5 5,8 9.5,12.5' : '6.5,3.5 11,8 6.5,12.5'
-    return `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="${points}"></polyline></svg>`
+    return `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="${points}"></polyline></svg>`
   }
 
   function buildControls() {
-    for (const direction of ['prev', 'next']) {
+    const controlsRow = document.createElement('div')
+    controlsRow.className = 'photo-carousel-controls'
+
+    const makeArrow = direction => {
       const button = document.createElement('button')
       button.type = 'button'
       button.className = `photo-carousel-arrow photo-carousel-arrow--${direction}`
@@ -67,10 +83,9 @@ export function initHomePhotoCarousel() {
       button.innerHTML = arrowSvg(direction)
       button.addEventListener('click', () => {
         goTo(activeIndex + (direction === 'prev' ? -1 : 1))
-        restartAutoplay()
+        scheduleAutoplay()
       })
-      root.appendChild(button)
-      controls.push(button)
+      return button
     }
 
     const dotsContainer = document.createElement('div')
@@ -84,13 +99,17 @@ export function initHomePhotoCarousel() {
         : `Photo ${index + 1} of ${slides.length}`)
       dot.addEventListener('click', () => {
         goTo(index)
-        restartAutoplay()
+        scheduleAutoplay()
       })
       dotsContainer.appendChild(dot)
       return dot
     })
-    root.appendChild(dotsContainer)
-    controls.push(dotsContainer)
+
+    controlsRow.appendChild(makeArrow('prev'))
+    controlsRow.appendChild(dotsContainer)
+    controlsRow.appendChild(makeArrow('next'))
+    root.appendChild(controlsRow)
+    controls.push(controlsRow)
   }
 
   function syncDots() {
@@ -121,39 +140,45 @@ export function initHomePhotoCarousel() {
 
   function snapTo(slide, className) {
     slide.classList.add('is-snap')
-    slide.classList.remove('is-active', 'is-prev', 'is-next')
+    slide.classList.remove(...POSITION_CLASSES)
     if (className) slide.classList.add(className)
     void slide.offsetWidth
     slide.classList.remove('is-snap')
   }
 
-  function syncSlidePositions() {
-    const previousIndex = normalizeIndex(activeIndex - 1, slides.length)
-    const nextIndex = normalizeIndex(activeIndex + 1, slides.length)
+  // With exactly two slides the single neighbour cannot sit on both sides;
+  // it parks on the side of the current/expected travel direction.
+  function slideRoles(direction) {
+    const roles = new Map([[activeIndex, 'is-active']])
+    if (slides.length === 2) {
+      roles.set(1 - activeIndex, direction < 0 ? 'is-next' : 'is-prev')
+    } else {
+      roles.set(normalizeIndex(activeIndex - 1, slides.length), 'is-prev')
+      roles.set(normalizeIndex(activeIndex + 1, slides.length), 'is-next')
+    }
+    return roles
+  }
+
+  function syncSlidePositions(direction = 1) {
+    const roles = slideRoles(direction)
 
     slides.forEach((slide, index) => {
-      if (index === activeIndex) {
-        slide.classList.add('is-active')
-        slide.classList.remove('is-prev', 'is-next')
-      } else if (index === previousIndex) {
-        // A newly recruited neighbour teleports to its waiting spot; a slide
-        // that is animating out (was active) keeps its transition.
-        if (!slide.classList.contains('is-active') && !slide.classList.contains('is-prev')) {
-          snapTo(slide, 'is-prev')
-        } else {
-          slide.classList.remove('is-active', 'is-next')
-          slide.classList.add('is-prev')
-        }
-      } else if (index === nextIndex) {
-        if (!slide.classList.contains('is-active') && !slide.classList.contains('is-next')) {
-          snapTo(slide, 'is-next')
-        } else {
-          slide.classList.remove('is-active', 'is-prev')
-          slide.classList.add('is-next')
-        }
-      } else {
-        slide.classList.remove('is-active', 'is-prev', 'is-next')
+      const role = roles.get(index)
+      if (!role) {
+        slide.classList.remove(...POSITION_CLASSES)
+        return
       }
+
+      // A newly recruited neighbour teleports to its waiting spot; a slide
+      // that is animating (was active or already in this role) keeps its
+      // transition.
+      if (role !== 'is-active' && !slide.classList.contains('is-active') && !slide.classList.contains(role)) {
+        snapTo(slide, role)
+        return
+      }
+
+      slide.classList.remove(...POSITION_CLASSES.filter(name => name !== role))
+      slide.classList.add(role)
     })
   }
 
@@ -161,18 +186,20 @@ export function initHomePhotoCarousel() {
     const target = normalizeIndex(index, slides.length)
     if (target === activeIndex) return
 
-    // For non-adjacent jumps (dot clicks), pre-position the target on the
-    // side matching the shortest travel direction so it slides in naturally.
+    // Pre-position the target on the side matching the travel direction so
+    // it slides in naturally: always for two slides (the neighbour may be
+    // parked on the wrong side), and for non-adjacent dot jumps.
     const forwardDistance = normalizeIndex(target - activeIndex, slides.length)
     const goingForward = forwardDistance <= slides.length / 2
     const isAdjacent = forwardDistance === 1 || forwardDistance === slides.length - 1
     const targetSlide = slides[target]
-    if (!isAdjacent) {
-      snapTo(targetSlide, goingForward ? 'is-next' : 'is-prev')
+    const targetWaitClass = goingForward ? 'is-next' : 'is-prev'
+    if ((slides.length === 2 || !isAdjacent) && !targetSlide.classList.contains(targetWaitClass)) {
+      snapTo(targetSlide, targetWaitClass)
     }
 
     activeIndex = target
-    syncSlidePositions()
+    syncSlidePositions(goingForward ? 1 : -1)
     syncDots()
   }
 
@@ -184,30 +211,32 @@ export function initHomePhotoCarousel() {
     timerId = null
   }
 
-  function clearSwipeClickSuppressTimer() {
-    if (swipeClickSuppressTimer === null) return
-    window.clearTimeout(swipeClickSuppressTimer)
-    swipeClickSuppressTimer = null
+  function canAutoplay() {
+    return !pointerOver && !focusWithin && !dragging
+      && !document.hidden && !reducedMotionMedia.matches
   }
 
-  function suppressNextClick() {
-    root.dataset.swiping = '1'
-    clearSwipeClickSuppressTimer()
-    swipeClickSuppressTimer = window.setTimeout(() => {
-      delete root.dataset.swiping
-      swipeClickSuppressTimer = null
-    }, 700)
-  }
-
-  function scheduleAutoplay(delay = SLIDE_INTERVAL_MS) {
+  function scheduleAutoplay() {
     clearTimer()
-    if (reducedMotionMedia.matches || document.hidden) return
+    if (!canAutoplay()) {
+      root.dataset.paused = '1'
+      return
+    }
     delete root.dataset.paused
-    timerId = window.setTimeout(() => {
-      goTo(activeIndex + 1)
-      scheduleAutoplay()
-    }, delay)
-    if (delay === SLIDE_INTERVAL_MS) restartDotProgress()
+    timerId = window.setTimeout(autoplayTick, SLIDE_INTERVAL_MS)
+    restartDotProgress()
+  }
+
+  // Re-check at fire time: an interaction may have re-armed the timer while
+  // the pointer or focus was still parked on the carousel.
+  function autoplayTick() {
+    timerId = null
+    if (!canAutoplay()) {
+      root.dataset.paused = '1'
+      return
+    }
+    goTo(activeIndex + 1)
+    scheduleAutoplay()
   }
 
   function pauseAutoplay() {
@@ -215,28 +244,55 @@ export function initHomePhotoCarousel() {
     root.dataset.paused = '1'
   }
 
-  // After a deliberate interaction, hold a beat before autoplay resumes.
-  function restartAutoplay() {
-    pauseAutoplay()
-    scheduleAutoplay(INTERACTION_PAUSE_MS)
-    restartDotProgress()
-    delete root.dataset.paused
-  }
-
   // --- pointer / touch ----------------------------------------------------------
 
   function handlePointerEnter(event) {
     if (event.pointerType === 'touch') return
+    pointerOver = true
     pauseAutoplay()
   }
 
   function handlePointerLeave(event) {
     if (event.pointerType === 'touch') return
+    pointerOver = false
     scheduleAutoplay()
+  }
+
+  function handleFocusIn() {
+    focusWithin = true
+    pauseAutoplay()
+  }
+
+  function handleFocusOut(event) {
+    if (event.relatedTarget && root.contains(event.relatedTarget)) return
+    // On window blur focusout fires with relatedTarget null while the
+    // element keeps focus; the pause must survive until focus really moves.
+    if (!document.hasFocus()) return
+    focusWithin = false
+    scheduleAutoplay()
+  }
+
+  function clearSwipeClickSuppressTimer() {
+    if (swipeClickSuppressTimer === null) return
+    window.clearTimeout(swipeClickSuppressTimer)
+    swipeClickSuppressTimer = null
+  }
+
+  // The synthetic click after a page-changing swipe must not follow the
+  // link. The click handler consumes the flag; the timer is only a backstop
+  // for browsers that never dispatch that click.
+  function suppressNextClick() {
+    root.dataset.swiping = '1'
+    clearSwipeClickSuppressTimer()
+    swipeClickSuppressTimer = window.setTimeout(() => {
+      delete root.dataset.swiping
+      swipeClickSuppressTimer = null
+    }, SWIPE_CLICK_BACKSTOP_MS)
   }
 
   function endDrag() {
     dragging = false
+    dragSign = 0
     delete root.dataset.dragging
     root.style.removeProperty('--drag')
   }
@@ -246,8 +302,10 @@ export function initHomePhotoCarousel() {
     if (!touch) return
     touchStartX = touch.clientX
     touchStartY = touch.clientY
-    touchStartTime = event.timeStamp
     dragging = false
+    dragSign = 0
+    moveSamples = [{ x: touch.clientX, t: event.timeStamp }]
+    clearSwipeClickSuppressTimer()
     delete root.dataset.swiping
   }
 
@@ -258,12 +316,25 @@ export function initHomePhotoCarousel() {
     const deltaX = touch.clientX - touchStartX
     const deltaY = touch.clientY - touchStartY
 
+    moveSamples.push({ x: touch.clientX, t: event.timeStamp })
+    while (moveSamples.length > 1 && moveSamples[0].t < event.timeStamp - VELOCITY_WINDOW_MS) {
+      moveSamples.shift()
+    }
+
     // Wait until the gesture is clearly horizontal so vertical scroll is untouched.
     if (!dragging) {
       if (Math.abs(deltaX) < 8 || Math.abs(deltaX) <= Math.abs(deltaY)) return
       dragging = true
       root.dataset.dragging = '1'
       pauseAutoplay()
+    }
+
+    // Two slides: keep the single neighbour parked on the side the drag is
+    // about to reveal, re-snapping if the drag direction flips.
+    const sign = Math.sign(deltaX)
+    if (slides.length === 2 && sign !== 0 && sign !== dragSign) {
+      dragSign = sign
+      snapTo(slides[1 - activeIndex], sign < 0 ? 'is-next' : 'is-prev')
     }
 
     if (reducedMotionMedia.matches) return
@@ -281,19 +352,22 @@ export function initHomePhotoCarousel() {
     }
 
     const deltaX = touch.clientX - touchStartX
-    const elapsed = Math.max(event.timeStamp - touchStartTime, 1)
-    const velocity = Math.abs(deltaX) / elapsed
+    const windowStart = moveSamples[0] || { x: touchStartX, t: event.timeStamp }
+    const recentDelta = touch.clientX - windowStart.x
+    const recentElapsed = Math.max(event.timeStamp - windowStart.t, 1)
+    const recentVelocity = Math.abs(recentDelta) / recentElapsed
+    const isFlick = Math.abs(recentDelta) >= SWIPE_FLICK_MIN_PX
+      && recentVelocity >= SWIPE_VELOCITY_PX_MS
+      && Math.sign(recentDelta) === Math.sign(deltaX)
 
-    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX || velocity >= SWIPE_VELOCITY_PX_MS) {
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX || isFlick) {
       suppressNextClick()
       goTo(activeIndex + (deltaX < 0 ? 1 : -1))
     }
 
-    scheduleAutoplay(INTERACTION_PAUSE_MS)
-    restartDotProgress()
+    scheduleAutoplay()
   }
 
-  // A swipe that changed slides must not also follow the link.
   function handleClick(event) {
     if (root.dataset.swiping !== '1') return
     event.preventDefault()
@@ -305,11 +379,6 @@ export function initHomePhotoCarousel() {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
     event.preventDefault()
     goTo(activeIndex + (event.key === 'ArrowLeft' ? -1 : 1))
-    restartAutoplay()
-  }
-
-  function handleFocusOut(event) {
-    if (event.relatedTarget && root.contains(event.relatedTarget)) return
     scheduleAutoplay()
   }
 
@@ -323,6 +392,9 @@ export function initHomePhotoCarousel() {
 
   function handleReducedMotionChange(event) {
     if (event.matches) {
+      // Return to the eagerly-loaded first photo so the frozen frame is
+      // deterministic and already decoded.
+      goTo(0)
       pauseAutoplay()
       stopDotProgress()
       return
@@ -336,7 +408,7 @@ export function initHomePhotoCarousel() {
 
   root.addEventListener('pointerenter', handlePointerEnter)
   root.addEventListener('pointerleave', handlePointerLeave)
-  root.addEventListener('focusin', pauseAutoplay)
+  root.addEventListener('focusin', handleFocusIn)
   root.addEventListener('focusout', handleFocusOut)
   root.addEventListener('keydown', handleKeydown)
   link.addEventListener('touchstart', handleTouchStart, { passive: true })
@@ -356,7 +428,7 @@ export function initHomePhotoCarousel() {
       resizeObserver?.disconnect()
       root.removeEventListener('pointerenter', handlePointerEnter)
       root.removeEventListener('pointerleave', handlePointerLeave)
-      root.removeEventListener('focusin', pauseAutoplay)
+      root.removeEventListener('focusin', handleFocusIn)
       root.removeEventListener('focusout', handleFocusOut)
       root.removeEventListener('keydown', handleKeydown)
       link.removeEventListener('touchstart', handleTouchStart)
@@ -368,6 +440,7 @@ export function initHomePhotoCarousel() {
       reducedMotionMedia.removeEventListener('change', handleReducedMotionChange)
       controls.forEach(control => control.remove())
       root.style.removeProperty('--carousel-w')
+      root.style.removeProperty('--carousel-interval')
       root.style.removeProperty('--drag')
       delete root.dataset.dragging
       delete root.dataset.paused
