@@ -14,7 +14,7 @@ Language: en-US, zh-CN
 /* TECHNOLOGY */
 Built with: Jekyll
 Styles: SCSS
-Hosting: GitHub Pages
+Hosting: Vercel
 
 /* META */
-Last updated: 2026-04-15
+Last updated: 2026-07-04
