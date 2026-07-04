@@ -132,11 +132,16 @@ for spec in "${page_specs[@]}"; do
   rows_json="$(jq --argjson row "$row_json" '. + [$row]' <<<"$rows_json")"
 done
 
+# image_src_basis records which encoded format the image-byte sums were taken
+# from, so compare-page-metrics.sh can refuse to pass off a methodology
+# change (webp → avif) as an optimization win. Reports without the field
+# predate AVIF and were measured on the webp basis.
 report_json="$(jq -n \
   --arg generated_at "$timestamp" \
   --arg source "JEKYLL_ENV=production bundle exec jekyll build" \
+  --arg image_src_basis "avif" \
   --argjson pages "$rows_json" \
-  '{generated_at: $generated_at, source: $source, pages: $pages}')"
+  '{generated_at: $generated_at, source: $source, image_src_basis: $image_src_basis, pages: $pages}')"
 
 echo "+--------+---------+------------+------------+----------------+-------------------+-----------------+----------------------+-----------------+---------------+------------------+"
 echo "|  Page  |  Route  |  HTML B    |  Gzip B    |  Direct Module |  Direct Asset JS  |  Direct JS B    |  Deferred Asset Ref  |  Default Img B  |  Overlay Img B |  Original Img B  |"

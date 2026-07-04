@@ -19,6 +19,17 @@ if [[ ! -f "$after_file" ]]; then
   exit 1
 fi
 
+# Reports without image_src_basis predate AVIF and were measured on webp.
+before_basis="$(jq -r '.image_src_basis // "webp"' "$before_file")"
+after_basis="$(jq -r '.image_src_basis // "webp"' "$after_file")"
+if [[ "$before_basis" != "$after_basis" ]]; then
+  echo "WARNING: image byte columns are NOT comparable — before was measured on" >&2
+  echo "         '$before_basis' variants, after on '$after_basis' variants." >&2
+  echo "         Img Δ below mixes a methodology change with real savings;" >&2
+  echo "         re-capture the baseline with the current script to compare." >&2
+  echo >&2
+fi
+
 echo "+--------+------------+------------+------------+------------+-------------------+-------------------+-----------------+-----------------+"
 echo "|  Page  |  HTML Δ B  |  Gzip Δ B  |  Module Δ  |  Asset Δ   |  Direct JS Δ B    |  Deferred Ref Δ   |  Default Img Δ  |  Overlay Img Δ  |"
 echo "+--------+------------+------------+------------+------------+-------------------+-------------------+-----------------+-----------------+"
