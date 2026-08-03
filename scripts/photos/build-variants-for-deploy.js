@@ -5,29 +5,25 @@ import sharp from 'sharp'
 
 /**
  * Afilmory-style deploy pipeline (no R2 write):
- *   download original from CDN/R2 → sharp WebP derivatives → write under
- *   images/photos/variants/ → rewrite _data/photos.json local paths → Jekyll copies into _site
+ *   download original from CDN/R2 → one list thumbnail WebP → images/photos/variants/
+ *   → rewrite _data/photos.json → Jekyll copies into _site
+ *
+ * Alignment with afilmory:
+ *   - one derivative (~720w) for lists / progressive placeholder
+ *   - full-size viewer uses CDN original (variants.large === original)
  *
  * Examples:
  *   npm run photos:build-variants -- --limit=3
  *   npm run photos:build-variants -- --album=20240803桌面
  *   npm run photos:build-variants -- --force
- *
- * Env (optional):
- *   PHOTOS_CDN=https://img.bazinga.ink
- *   CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN  (fallback download if CDN blocked)
- *   R2_BUCKET=bazinga-gallery
  */
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const repoRoot = path.resolve(__dirname, '..', '..')
 
-const DERIVATIVE_SPECS = [
-  { key: 'thumbnail', width: 360, webpQuality: 74 },
-  { key: 'preview', width: 960, webpQuality: 78 },
-  { key: 'large', width: 2160, webpQuality: 82 }
-]
+// Single list derivative (afilmory uses ~600px JPEG; we use WebP ~720 for density).
+const THUMB_SPEC = { key: 'thumb', width: 720, webpQuality: 78 }
 
 const VARIANTS_DIR = path.join(repoRoot, 'images', 'photos', 'variants')
 const VARIANTS_PUBLIC_PREFIX = '/images/photos/variants'
@@ -95,16 +91,16 @@ function safeVariantBase(photo) {
     .slice(0, 120) || 'photo'
 }
 
-function variantFileName(photo, sizeKey) {
-  return `${safeVariantBase(photo)}-${sizeKey}.webp`
+function thumbFileName(photo) {
+  return `${safeVariantBase(photo)}-thumb.webp`
 }
 
-function variantPublicPath(photo, sizeKey) {
-  return `${VARIANTS_PUBLIC_PREFIX}/${variantFileName(photo, sizeKey)}`
+function thumbPublicPath(photo) {
+  return `${VARIANTS_PUBLIC_PREFIX}/${thumbFileName(photo)}`
 }
 
-function variantAbsolutePath(photo, sizeKey) {
-  return path.join(VARIANTS_DIR, variantFileName(photo, sizeKey))
+function thumbAbsolutePath(photo) {
+  return path.join(VARIANTS_DIR, thumbFileName(photo))
 }
 
 function originalKey(photo) {
@@ -119,8 +115,8 @@ function originalSrc(photo, cdn) {
   return existing || null
 }
 
-function allVariantsOnDisk(photo) {
-  return DERIVATIVE_SPECS.every((spec) => existsSync(variantAbsolutePath(photo, spec.key)))
+function thumbOnDisk(photo) {
+  return existsSync(thumbAbsolutePath(photo))
 }
 
 async function mapPool(items, concurrency, worker) {
@@ -226,125 +222,112 @@ async function preflightDownload({ cdn, accountId, apiToken, bucket, preferApi, 
   }
 }
 
+function buildVariantRecord(src, width, height, type) {
+  return { src, width, height, type }
+}
+
 async function generateAndWrite(photo, imageBuffer) {
-  const rotated = sharp(imageBuffer, { failOn: 'none', limitInputPixels: false }).rotate()
-  const metadata = await rotated.metadata()
+  const metadata = await sharp(imageBuffer, { failOn: 'none', limitInputPixels: false }).rotate().metadata()
   const originalWidth = metadata.width
   const originalHeight = metadata.height
   if (!originalWidth || !originalHeight) {
     throw new Error('Unable to read image dimensions')
   }
 
-  const generated = {
-    original: {
-      width: originalWidth,
-      height: originalHeight,
-      type: metadata.format === 'jpeg' || metadata.format === 'jpg' ? 'image/jpeg' : `image/${metadata.format || 'jpeg'}`
-    },
-    derivatives: {}
-  }
+  const targetWidth = Math.min(THUMB_SPEC.width, originalWidth)
+  const { data, info } = await sharp(imageBuffer, { failOn: 'none', limitInputPixels: false })
+    .rotate()
+    .resize({ width: targetWidth, withoutEnlargement: true })
+    .webp({ quality: THUMB_SPEC.webpQuality, effort: 4 })
+    .toBuffer({ resolveWithObject: true })
 
-  for (const spec of DERIVATIVE_SPECS) {
-    const targetWidth = Math.min(spec.width, originalWidth)
-    const { data, info } = await sharp(imageBuffer, { failOn: 'none', limitInputPixels: false })
-      .rotate()
-      .resize({ width: targetWidth, withoutEnlargement: true })
-      .webp({ quality: spec.webpQuality, effort: 4 })
-      .toBuffer({ resolveWithObject: true })
+  writeFileSync(thumbAbsolutePath(photo), data)
 
-    const absolute = variantAbsolutePath(photo, spec.key)
-    writeFileSync(absolute, data)
-    generated.derivatives[spec.key] = {
-      src: variantPublicPath(photo, spec.key),
-      width: info.width,
-      height: info.height,
-      type: 'image/webp'
-    }
-  }
+  const thumb = buildVariantRecord(
+    thumbPublicPath(photo),
+    info.width,
+    info.height,
+    'image/webp'
+  )
 
   return {
     ratio: originalWidth / originalHeight,
-    ...generated
+    original: {
+      width: originalWidth,
+      height: originalHeight,
+      type:
+        metadata.format === 'jpeg' || metadata.format === 'jpg'
+          ? 'image/jpeg'
+          : `image/${metadata.format || 'jpeg'}`
+    },
+    thumb
   }
 }
 
 function applyToPhoto(photo, cdn, generated) {
   const key = originalKey(photo)
   const original = {
-    src: originalSrc(photo, cdn),
+    src: key ? publicCdnUrl(cdn, key) : originalSrc(photo, cdn),
     width: generated.original.width,
     height: generated.original.height,
     type: photo.variants?.original?.type || generated.original.type
   }
-  if (key) {
-    // keep CDN original even if something rewrote it earlier
-    original.src = publicCdnUrl(cdn, key)
-  }
 
+  // List uses thumbnail/preview; lightbox href uses large → CDN original (afilmory-style).
   return {
     ...photo,
     variants: {
       original,
-      ...generated.derivatives
+      thumbnail: generated.thumb,
+      preview: generated.thumb,
+      large: { ...original }
     },
     meta: {
       ...photo.meta,
       ratio: generated.ratio,
-      assetPolicy: photo.meta?.assetPolicy || 'r2-original-local-derivatives'
+      assetPolicy: photo.meta?.assetPolicy || 'r2-original-local-thumb'
     }
   }
 }
 
-function hydrateFromDisk(photo, cdn) {
-  if (!allVariantsOnDisk(photo)) return null
-  // Read dimensions from first available file via sharp metadata (cheap)
-  // Use preview as representative if present
-  return null // filled async below
-}
-
 async function hydrateFromDiskAsync(photo, cdn) {
-  if (!allVariantsOnDisk(photo)) return null
+  if (!thumbOnDisk(photo)) return null
   try {
-    const originalBufferMeta = {
-      width: photo.variants?.original?.width,
-      height: photo.variants?.original?.height,
-      type: photo.variants?.original?.type
+    const absolute = thumbAbsolutePath(photo)
+    const meta = await sharp(absolute).metadata()
+    const key = originalKey(photo)
+    const original = {
+      src: key ? publicCdnUrl(cdn, key) : originalSrc(photo, cdn),
+      width: photo.variants?.original?.width || meta.width,
+      height: photo.variants?.original?.height || meta.height,
+      type: photo.variants?.original?.type || 'image/jpeg'
     }
-    const derivatives = {}
-    for (const spec of DERIVATIVE_SPECS) {
-      const absolute = variantAbsolutePath(photo, spec.key)
-      const meta = await sharp(absolute).metadata()
-      derivatives[spec.key] = {
-        src: variantPublicPath(photo, spec.key),
-        width: meta.width,
-        height: meta.height,
-        type: 'image/webp'
-      }
-    }
-    const preview = derivatives.preview
+    const thumb = buildVariantRecord(
+      thumbPublicPath(photo),
+      meta.width,
+      meta.height,
+      'image/webp'
+    )
     const ratio =
       photo.meta?.ratio ||
-      (preview?.width && preview?.height ? preview.width / preview.height : null) ||
-      (originalBufferMeta.width && originalBufferMeta.height
-        ? originalBufferMeta.width / originalBufferMeta.height
-        : null)
+      (original.width && original.height
+        ? original.width / original.height
+        : meta.width && meta.height
+          ? meta.width / meta.height
+          : null)
 
-    const key = originalKey(photo)
     return {
       ...photo,
       variants: {
-        original: {
-          src: key ? publicCdnUrl(cdn, key) : originalSrc(photo, cdn),
-          width: originalBufferMeta.width || preview?.width,
-          height: originalBufferMeta.height || preview?.height,
-          type: originalBufferMeta.type || 'image/jpeg'
-        },
-        ...derivatives
+        original,
+        thumbnail: thumb,
+        preview: thumb,
+        large: { ...original }
       },
       meta: {
         ...photo.meta,
         ...(ratio ? { ratio } : {}),
-        assetPolicy: photo.meta?.assetPolicy || 'r2-original-local-derivatives'
+        assetPolicy: photo.meta?.assetPolicy || 'r2-original-local-thumb'
       }
     }
   } catch {
@@ -405,7 +388,7 @@ Options:
     `Build local variants (afilmory-style). total=${photos.length} selected=${list.length} concurrency=${options.concurrency}`
   )
 
-  const needsDownload = list.some((photo) => !(options.skipExisting && allVariantsOnDisk(photo)))
+  const needsDownload = list.some((photo) => !(options.skipExisting && thumbOnDisk(photo)))
   if (needsDownload) {
     await preflightDownload({
       cdn,
@@ -413,7 +396,7 @@ Options:
       apiToken,
       bucket,
       preferApi,
-      samplePhoto: list.find((photo) => !(options.skipExisting && allVariantsOnDisk(photo))) || list[0]
+      samplePhoto: list.find((photo) => !(options.skipExisting && thumbOnDisk(photo))) || list[0]
     })
   }
 
@@ -425,7 +408,7 @@ Options:
   await mapPool(list, options.concurrency, async (photo) => {
     const label = `${photo.meta?.album || '?'}/${photo.source?.filename || photo.id}`
     try {
-      if (options.skipExisting && allVariantsOnDisk(photo)) {
+      if (options.skipExisting && thumbOnDisk(photo)) {
         const hydrated = await hydrateFromDiskAsync(photo, cdn)
         if (hydrated) {
           byId.set(photo.id, hydrated)
@@ -446,19 +429,17 @@ Options:
       const generated = await generateAndWrite(photo, buffer)
       byId.set(photo.id, applyToPhoto(photo, cdn, generated))
       built += 1
-      console.log(
-        `  ok ${label} → preview ${generated.derivatives.preview.width}x${generated.derivatives.preview.height}`
-      )
+      console.log(`  ok ${label} → thumb ${generated.thumb.width}x${generated.thumb.height}`)
     } catch (error) {
       failed += 1
       console.error(`  fail ${label}: ${error.message || error}`)
     }
   })
 
-  // Hydrate any on-disk variants not touched this run (e.g. previous deploys / partial runs).
+  // Hydrate any on-disk thumbs not touched this run (e.g. previous deploys / partial runs).
   for (const photo of photos) {
     if (byId.get(photo.id) !== photo) continue
-    if (!allVariantsOnDisk(photo)) continue
+    if (!thumbOnDisk(photo)) continue
     const hydrated = await hydrateFromDiskAsync(photo, cdn)
     if (hydrated) {
       byId.set(photo.id, hydrated)

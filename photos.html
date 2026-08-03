@@ -47,13 +47,13 @@ permalink: /photos/
   {% assign figure_orientation = 'portrait' %}
 {% endif %}
 <figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %}>
-  <a href="{{ large.src | default: original.src }}" class="image-link"
+  <a href="{{ original.src }}" class="image-link"
      data-umami-event="photo_full_view"
      data-umami-event-photo-id="{{ photo.id }}"
      data-umami-event-location="photos_page"
      data-umami-event-ratio="{{ figure_orientation }}"
      data-photo-original-src="{{ original.src }}"
-     data-photo-thumbnail-src="{{ thumbnail.src | default: original.src }}"
+     data-photo-thumbnail-src="{{ thumbnail.src | default: preview.src | default: original.src }}"
      data-photo-preview-src="{{ preview.src | default: thumbnail.src | default: original.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
     <picture>

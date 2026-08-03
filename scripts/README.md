@@ -101,9 +101,10 @@ Without local derivatives, thumbnail/preview/large currently point at the origin
 
 ### Build derivatives for deploy (afilmory-style, recommended)
 
-No R2 **write** access. Downloads originals, writes WebP under
-`images/photos/variants/`, and rewrites `_data/photos.json` so list/overlay use
-local `/images/photos/variants/...` while `original` stays on the CDN.
+No R2 **write** access. Afilmory-aligned: downloads originals, writes **one**
+list thumbnail WebP (~720w) under `images/photos/variants/`, rewrites
+`_data/photos.json` so list/home use the local thumb while the lightbox loads
+the CDN **original**.
 
 **Vercel:** set env vars so the build uses **R2 API (Read)** — public CDN often returns **403** from build IPs:
 
