@@ -138,22 +138,92 @@ async function mapPool(items, concurrency, worker) {
   return results
 }
 
-async function downloadOriginal(photo, { cdn, accountId, apiToken, bucket }) {
+const CDN_FETCH_HEADERS = {
+  // Some CF bot rules block bare datacenter clients (e.g. Vercel build).
+  'User-Agent': 'Mozilla/5.0 (compatible; site-photos-build/1.0; +https://site.bazinga.ink)',
+  Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
+}
+
+async function downloadViaR2Api(key, { accountId, apiToken, bucket }) {
+  const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${encodeObjectPath(key)}`
+  const response = await fetch(apiUrl, {
+    headers: { Authorization: `Bearer ${apiToken}` }
+  })
+  return { response, label: `r2-api:${key}` }
+}
+
+async function downloadViaCdn(src) {
+  const response = await fetch(src, { headers: CDN_FETCH_HEADERS, redirect: 'follow' })
+  return { response, label: `cdn:${src}` }
+}
+
+/**
+ * Prefer authenticated R2 API on CI (CDN often returns 403 to Vercel IPs).
+ * Fall back to public CDN for local/dev without tokens.
+ */
+async function downloadOriginal(photo, { cdn, accountId, apiToken, bucket, preferApi }) {
   const src = originalSrc(photo, cdn)
   const key = originalKey(photo)
-  if (!src) throw new Error(`No original URL for ${photo.id}`)
+  if (!src && !key) throw new Error(`No original URL/key for ${photo.id}`)
 
-  let response = await fetch(src)
-  if (!response.ok && key && accountId && apiToken && bucket) {
-    const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${encodeObjectPath(key)}`
-    response = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiToken}` } })
+  const attempts = []
+  const canApi = Boolean(key && accountId && apiToken && bucket)
+
+  if (preferApi && canApi) {
+    attempts.push(() => downloadViaR2Api(key, { accountId, apiToken, bucket }))
+    if (src) attempts.push(() => downloadViaCdn(src))
+  } else {
+    if (src) attempts.push(() => downloadViaCdn(src))
+    if (canApi) attempts.push(() => downloadViaR2Api(key, { accountId, apiToken, bucket }))
   }
-  if (!response.ok) {
-    throw new Error(`Download failed ${response.status} for ${src}`)
+
+  const errors = []
+  for (const attempt of attempts) {
+    const { response, label } = await attempt()
+    if (response.ok) {
+      const buffer = Buffer.from(await response.arrayBuffer())
+      if (buffer.length < 32) {
+        errors.push(`${label}: body too small (${buffer.length})`)
+        continue
+      }
+      return buffer
+    }
+    const hint = response.headers.get('cf-mitigated') || response.headers.get('content-type') || ''
+    errors.push(`${label}: HTTP ${response.status}${hint ? ` (${hint})` : ''}`)
   }
-  const buffer = Buffer.from(await response.arrayBuffer())
-  if (buffer.length < 32) throw new Error(`Download too small for ${photo.id}`)
-  return buffer
+
+  const help = canApi
+    ? ''
+    : ' Set CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN (R2 Read) on Vercel — public CDN is often blocked (403) from build IPs.'
+  throw new Error(`Download failed for ${photo.id}. ${errors.join(' | ')}.${help}`)
+}
+
+async function preflightDownload({ cdn, accountId, apiToken, bucket, preferApi, samplePhoto }) {
+  if (!samplePhoto) return
+  console.log(
+    `Download mode: ${preferApi ? 'R2 API first (recommended for Vercel)' : 'CDN first'}; ` +
+      `apiCredentials=${Boolean(accountId && apiToken)}`
+  )
+  try {
+    const buffer = await downloadOriginal(samplePhoto, {
+      cdn,
+      accountId,
+      apiToken,
+      bucket,
+      preferApi
+    })
+    console.log(`Preflight download ok (${buffer.length} bytes) via configured source`)
+  } catch (error) {
+    throw new Error(
+      `Preflight download failed — aborting before processing 1500 photos.\n${error.message}\n\n` +
+        `Fix on Vercel → Project → Settings → Environment Variables:\n` +
+        `  CLOUDFLARE_ACCOUNT_ID=<account id>\n` +
+        `  CLOUDFLARE_API_TOKEN=<token with Account / Workers R2 Storage / Read>\n` +
+        `  R2_BUCKET=bazinga-gallery\n` +
+        `  PHOTOS_CDN=https://img.bazinga.ink\n` +
+        `Then redeploy.`
+    )
+  }
 }
 
 async function generateAndWrite(photo, imageBuffer) {
@@ -303,6 +373,13 @@ Options:
   const bucket = process.env.R2_BUCKET || 'bazinga-gallery'
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID
   const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CF_API_TOKEN
+  // CI/datacenter IPs often get CDN 403; use API first when credentials exist (or force via env).
+  const preferApi =
+    process.env.PHOTOS_DOWNLOAD_MODE === 'api' ||
+    process.env.PHOTOS_DOWNLOAD_MODE === 'r2' ||
+    process.env.VERCEL === '1' ||
+    process.env.CI === 'true' ||
+    Boolean(accountId && apiToken)
 
   if (!existsSync(dataPath)) {
     throw new Error(`Missing ${dataPath}. Run photos:sync-from-r2 first.`)
@@ -328,6 +405,18 @@ Options:
     `Build local variants (afilmory-style). total=${photos.length} selected=${list.length} concurrency=${options.concurrency}`
   )
 
+  const needsDownload = list.some((photo) => !(options.skipExisting && allVariantsOnDisk(photo)))
+  if (needsDownload) {
+    await preflightDownload({
+      cdn,
+      accountId,
+      apiToken,
+      bucket,
+      preferApi,
+      samplePhoto: list.find((photo) => !(options.skipExisting && allVariantsOnDisk(photo))) || list[0]
+    })
+  }
+
   const byId = new Map(photos.map((p) => [p.id, p]))
   let built = 0
   let reused = 0
@@ -347,7 +436,13 @@ Options:
       }
 
       process.stdout.write(`  build ${label}\n`)
-      const buffer = await downloadOriginal(photo, { cdn, accountId, apiToken, bucket })
+      const buffer = await downloadOriginal(photo, {
+        cdn,
+        accountId,
+        apiToken,
+        bucket,
+        preferApi
+      })
       const generated = await generateAndWrite(photo, buffer)
       byId.set(photo.id, applyToPhoto(photo, cdn, generated))
       built += 1

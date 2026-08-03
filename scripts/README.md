@@ -101,9 +101,16 @@ Without local derivatives, thumbnail/preview/large currently point at the origin
 
 ### Build derivatives for deploy (afilmory-style, recommended)
 
-No R2 write access. Downloads originals from `PHOTOS_CDN`, writes WebP under
+No R2 **write** access. Downloads originals, writes WebP under
 `images/photos/variants/`, and rewrites `_data/photos.json` so list/overlay use
 local `/images/photos/variants/...` while `original` stays on the CDN.
+
+**Vercel:** set env vars so the build uses **R2 API (Read)** — public CDN often returns **403** from build IPs:
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN` (Account → Workers R2 Storage → **Read**)
+- `R2_BUCKET=bazinga-gallery`
+- `PHOTOS_CDN=https://img.bazinga.ink`
 
 ```bash
 # Small sample
