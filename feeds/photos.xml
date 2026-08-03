@@ -19,8 +19,9 @@ permalink: /photos.xml
             <br><a href="https://site.bazinga.ink{% link _pages/like.html %}?id=photo-P{{ photo.id }}">❤️</a><br><small><a href="https://github.com/dddddddddzzzz/OpenHeart">(Backed by OpenHeart protocol)</a></small>
           {% endcapture %}
           {% capture content %}
-            <a href="{{ site.url }}{{ photo.variants.first }}">
-              <img src="{{ site.url }}{{ photo.variants.first }}" width="100%" alt="{{ photo.meta.alt }}"/>
+            {% assign feed_src = photo.variants.preview.src | default: photo.variants.original.src | default: photo.variants.large.src %}
+            <a href="{{ feed_src }}">
+              <img src="{{ feed_src }}" width="100%" alt="{{ photo.meta.alt }}"/>
             </a>
           {% endcapture %}
           {{ content | xml_escape }}{{ openheart | xml_escape }}

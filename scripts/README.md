@@ -7,6 +7,7 @@ This directory keeps project automation scripts with a consistent layout.
 - `check/`: validation and smoke-test scripts.
 - `perf/`: page-load metric collection and comparison scripts.
 - `photos/`: photo metadata maintenance scripts.
+  - `sync-from-r2.js`: list `photos/{album}/{file}` in R2 and write CDN URLs into `_data/photos.json`.
 - `vendor/`: third-party asset sync scripts.
 - `git-hooks/`: local git hook templates and installers.
 
@@ -55,6 +56,48 @@ bash scripts/perf/compare-page-metrics.sh docs/perf/before.json docs/perf/latest
 # Install local pre-push hook
 npm run hooks:install
 ```
+
+## Photos from Cloudflare R2
+
+Expected bucket layout:
+
+```text
+bazinga-gallery/
+  photos/
+    黄山/
+      DSCF0978.jpg
+    tokyo-2024/
+      img001.jpg
+```
+
+Public base URL: `https://img.bazinga.ink`
+
+### Auth
+
+Put in `.env` (see `.env.example`):
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN` (Account API token with **R2 read**)
+- optional: `R2_BUCKET`, `PHOTOS_CDN`, `PHOTOS_PREFIX`
+
+Account ID: Cloudflare Dashboard → R2 → overview, or any bucket details page.
+
+### Usage
+
+```bash
+# List bucket and rewrite _data/photos.json
+npm run photos:sync-from-r2
+
+# Preview without writing
+npm run photos:sync-from-r2 -- --dry-run
+
+# Offline: one object key per line (when API token is unavailable)
+npm run photos:sync-from-r2 -- --from-list=tmp/r2-keys.txt
+```
+
+Re-running keeps existing `meta.caption` / custom `meta.alt` / `meta.location` when the same R2 key is still present.
+
+Without local derivatives, thumbnail/preview/large currently point at the original CDN URL. Templates tolerate missing widths. For faster gallery loads later, upload smaller variants and extend the sync script.
 
 ## Vendor scripts
 
