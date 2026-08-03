@@ -113,7 +113,10 @@ root: true
 <h2 class="normal-heading">{{ site.data.i18n_copy.home['en-US'].section_notes }}</h2><a href="/notes" class="styled-link{% unless note %} disabled{% endunless %}"
    data-umami-event="section_nav"
    data-umami-event-section="notes"
-   data-umami-event-action="view_all">{{ site.data.i18n_copy.home['en-US'].section_notes_all }}</a> <a href="/notes.xml" class="styled-link"
+   data-umami-event-action="view_all">{{ site.data.i18n_copy.home['en-US'].section_notes_all }}</a> <a href="/write-note" class="styled-link write-entry" id="write-entry"
+   data-umami-event="write_action"
+   data-umami-event-type="note"
+   data-umami-event-from="homepage">{{ site.data.i18n_copy.home['en-US'].section_notes_write }}</a> <a href="/notes.xml" class="styled-link"
    data-umami-event="rss_click"
    data-umami-event-type="notes"
    data-umami-event-section="homepage">RSS</a>
