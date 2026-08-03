@@ -74,43 +74,34 @@ root: true
    data-umami-event="rss_click"
    data-umami-event-type="photos"
    data-umami-event-section="homepage">RSS</a>
-{% assign photos = site.data.photos | sort: "uploaded" | reverse | slice: 0, 10 %}
+{% assign photos = site.data.photos | sort: "uploaded" | reverse | slice: 0, 12 %}
 {% if photos.size > 0 %}
-<div class="photo-carousel" data-photo-carousel>
-  <a href="/photos" class="photo-carousel-link"
-     aria-label="{{ site.data.i18n_copy.home['en-US'].section_photos }}"
-     data-umami-event="photo_click"
-     data-umami-event-location="homepage">
-    <div class="photo-carousel-stage">
-    {% for photo in photos %}
-      {% assign thumbnail = photo.variants.thumbnail %}
-      {% assign preview = photo.variants.preview %}
-      {% assign thumbnail_avif = thumbnail.avif %}
-      {% assign preview_avif = preview.avif %}
-      <picture>
-        {% if thumbnail_avif and preview_avif %}
-        <source
-          type="image/avif"
-          srcset="{{ thumbnail_avif.src }} {{ thumbnail_avif.width }}w, {{ preview_avif.src }} {{ preview_avif.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 633px">
-        {% endif %}
-        <source
-          type="image/webp"
-          srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 633px">
+<div class="photo-strip" data-photo-strip role="region" aria-label="{{ site.data.i18n_copy.home['en-US'].section_photos }}">
+  <ul class="photo-strip-track">
+  {% for photo in photos %}
+    {% assign original = photo.variants.original %}
+    {% assign thumbnail = photo.variants.thumbnail | default: original %}
+    {% assign preview = photo.variants.preview | default: thumbnail | default: original %}
+    {% assign display = preview | default: thumbnail | default: original %}
+    <li class="photo-strip-item">
+      <a href="/photos#{{ photo.id }}"
+         class="photo-strip-link"
+         data-umami-event="photo_click"
+         data-umami-event-location="homepage"
+         data-umami-event-photo-id="{{ photo.id }}">
         <img
-          src="{{ thumbnail.src }}"
-          srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-          sizes="(max-width: 26em) calc(100vw - 5em), 633px"
+          src="{{ display.src }}"
+          {% if display.width %}width="{{ display.width }}"{% endif %}
+          {% if display.height %}height="{{ display.height }}"{% endif %}
           alt="{{ photo.meta.alt }}"
           loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+          {% if forloop.first %}fetchpriority="high"{% endif %}
           decoding="async"
-          class="{% if forloop.first %}is-active{% endif %}"
           data-photo-id="{{ photo.id }}">
-      </picture>
-    {% endfor %}
-    </div>
-  </a>
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
 </div>
 {% else %}
   <p class="empty-hint">{{ site.data.i18n_copy.home['en-US'].empty_photos }}</p>

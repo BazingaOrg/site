@@ -1001,200 +1001,58 @@ time.monospace {
   }
 }
 
-// Homepage photo carousel — a direction-aware slide track. The active photo
-// sits centered; prev/next wait just outside the stage and slide in/out along
-// the axis of the gesture. Controls (arrows + dots) are injected by JS as
-// siblings of the link so no interactive element nests inside the <a>.
-.photo-carousel {
-  position: relative;
-  margin-bottom: 1em;
-  --carousel-gap: 24px;
-  // --carousel-interval is set by home-photo-carousel.js so the dot-progress
-  // duration always matches the JS autoplay interval (single source).
+// Homepage photos: horizontal strip of recent items only (see slice in index*.html).
+// Full library lives on /photos/. Images load with native lazy loading.
+.photo-strip {
+  margin: 0.35em 0 1.1em;
+  // Bleed slightly so scroll edge feels continuous with the column.
+  margin-right: -0.25rem;
 }
 
-// Full-bleed 16:9 window spanning the content column: the photo's edges ARE
-// the column's alignment lines, so the heading above and the controls below
-// all square up with it. 16:9 matches the photo library's native ratio;
-// other ratios center-crop inside the window (the full image lives on
-// /photos), so the card never changes size.
-.photo-carousel-link {
+.photo-strip-track {
+  list-style: none;
+  margin: 0;
+  padding: 0.15rem 0.25rem 0.55rem 0;
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.photo-strip-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  margin: 0;
+}
+
+.photo-strip-link {
   display: block;
-  position: relative;
-  aspect-ratio: 16 / 9;
+  width: min(14.5rem, 72vw);
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 8px;
   background: var(--photoBackground);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 18px rgba(0, 0, 0, 0.08);
   color: inherit;
   text-decoration: none;
-  touch-action: pan-y;
   outline-offset: 3px;
 }
 
-.photo-carousel-stage {
-  position: absolute;
-  inset: 0;
-}
-
-.photo-carousel-stage picture {
-  display: contents;
-}
-
-.photo-carousel-stage img {
-  position: absolute;
-  inset: 0;
+.photo-strip-link img {
   width: 100%;
   height: 100%;
-  margin: 0; // cancel the global content-img spacing
+  margin: 0;
   object-fit: cover;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  // --slide-x parks a slide offstage; --drag (set on the root while the
-  // finger is down) rides on top so the whole row tracks the gesture 1:1.
-  --slide-x: 0px;
-  transform: translateX(calc(var(--slide-x) + var(--drag, 0px)));
-  transition:
-    transform var(--duration-slide) var(--ease-out-spring),
-    opacity var(--duration-fade) ease,
-    visibility 0s var(--duration-fade);
-  will-change: transform, opacity;
-}
-
-.photo-carousel-stage img.is-active {
-  opacity: 1;
-  visibility: visible;
-  z-index: 2;
-  transition:
-    transform var(--duration-slide) var(--ease-out-spring),
-    opacity var(--duration-fade) ease;
-}
-
-.photo-carousel-stage img.is-prev,
-.photo-carousel-stage img.is-next {
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
-
-.photo-carousel-stage img.is-prev {
-  --slide-x: calc(-1 * var(--carousel-w, 100vw) - var(--carousel-gap));
-}
-
-.photo-carousel-stage img.is-next {
-  --slide-x: calc(var(--carousel-w, 100vw) + var(--carousel-gap));
-}
-
-// Applied for one frame when a slide is repositioned to a new waiting spot,
-// so it teleports instead of gliding across the visible stage.
-.photo-carousel-stage img.is-snap {
-  transition: none;
-}
-
-.photo-carousel[data-dragging] .photo-carousel-stage img {
-  transition: none;
-}
-
-// Control row under the photo: an arrow at each end of the card — each on
-// the side it navigates toward — with the dots centered between them. The
-// equal-width arrows keep the dots truly centered, echoing the symmetry of
-// the full-bleed card above.
-.photo-carousel-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 0.7em;
-}
-
-.photo-carousel-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--mutedTextColor);
-  cursor: pointer;
-  transition: color var(--duration-fade) ease, background-color var(--duration-fade) ease;
-}
-
-.photo-carousel-arrow svg {
   display: block;
 }
 
-.photo-carousel-arrow:hover {
-  color: var(--textColor);
-  background: color-mix(in srgb, var(--mutedTextColor) 16%, transparent);
-}
-
-.photo-carousel-dots {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.photo-carousel-dot {
-  position: relative;
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--mutedTextColor) 38%, transparent);
-  cursor: pointer;
-  overflow: hidden;
-  transition: width var(--duration-fade) var(--ease-out-spring), background-color var(--duration-fade) ease;
-}
-
-.photo-carousel-dot[aria-current='true'] {
-  width: 22px;
-  background: color-mix(in srgb, var(--mutedTextColor) 30%, transparent);
-}
-
-// Autoplay progress fill inside the active dot. The JS restarts the
-// animation whenever the autoplay timer (re)starts, so both stay in step.
-.photo-carousel-dot[aria-current='true']::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--mutedTextColor);
-  transform: translateX(-100%);
-}
-
-.photo-carousel-dot.is-running::after {
-  animation: photo-carousel-dot-progress var(--carousel-interval, 4500ms) linear forwards;
-}
-
-.photo-carousel[data-paused] .photo-carousel-dot::after {
-  animation-play-state: paused;
-}
-
-@keyframes photo-carousel-dot-progress {
-  to { transform: translateX(0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  // Slide travel becomes a plain crossfade and the autoplay progress is
-  // meaningless (autoplay is off), so pin everything in place.
-  .photo-carousel-stage img {
-    --slide-x: 0px !important;
-    transition: opacity var(--duration-fade) ease, visibility 0s var(--duration-fade);
-  }
-
-  .photo-carousel-stage img.is-prev,
-  .photo-carousel-stage img.is-next {
-    opacity: 0;
-    visibility: hidden;
-  }
-
-  .photo-carousel-dot.is-running::after {
-    animation: none;
+  .photo-strip-track {
+    scroll-snap-type: none;
   }
 }
 
@@ -1340,12 +1198,14 @@ figure {
 
 .photos-wrapper[data-layout="grid2fr"] {
   display: grid;
-  column-gap: 2.5em;
+  column-gap: 1.5em;
+  row-gap: 1.75em;
   grid-template-columns: repeat(2, 1fr);
   grid-auto-flow: dense;
+  text-align: left;
 
   figure {
-    margin-bottom: 0;
+    margin: 0;
     align-self: start;
   }
 
@@ -1353,13 +1213,18 @@ figure {
     max-height: none;
     height: auto;
     width: 100%;
-    object-fit: cover;
-    aspect-ratio: 4/3;
+    display: block;
+    object-fit: contain;
+  }
+
+  .photo-metadata {
+    justify-content: flex-start;
   }
 }
 
 .photos-wrapper[data-layout="grid2fr"] .image-link {
   width: 100%;
+  display: block;
 }
 
 .photo-metadata {

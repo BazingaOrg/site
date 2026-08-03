@@ -164,34 +164,91 @@
           }
         }
 
-        const setOverlayImage = (source, altText) => {
+        const setOverlayImage = (fullSource, altText, { placeholderSource = null } = {}) => {
           if (!photoOverlayImage) return
 
           overlayImageRequestToken += 1
           const requestToken = overlayImageRequestToken
+          const fullUrl = fullSource || ''
+          const placeholderUrl =
+            placeholderSource
+            && placeholderSource !== fullUrl
+              ? placeholderSource
+              : null
 
           setOverlayLoadingState(true)
           photoOverlayImage.classList.remove('is-entering')
           // restart animation for each photo switch
           void photoOverlayImage.offsetWidth
+          photoOverlayImage.alt = altText || ''
 
-          photoOverlayImage.onload = () => {
+          const markReady = () => {
             if (requestToken !== overlayImageRequestToken) return
             setOverlayLoadingState(false)
             photoOverlayImage.classList.add('is-entering')
           }
 
+          const loadFull = () => {
+            if (requestToken !== overlayImageRequestToken) return
+            if (!fullUrl) {
+              setOverlayLoadingState(false)
+              return
+            }
+
+            // Already showing the full asset (placeholder same as full).
+            if (photoOverlayImage.src === fullUrl || photoOverlayImage.getAttribute('src') === fullUrl) {
+              markReady()
+              return
+            }
+
+            const probe = new Image()
+            probe.decoding = 'async'
+            probe.onload = () => {
+              if (requestToken !== overlayImageRequestToken) return
+              photoOverlayImage.src = fullUrl
+              markReady()
+            }
+            probe.onerror = () => {
+              if (requestToken !== overlayImageRequestToken) return
+              // Keep placeholder if full resolution fails.
+              setOverlayLoadingState(false)
+            }
+            probe.src = fullUrl
+
+            if (probe.complete) {
+              probe.onload?.()
+            }
+          }
+
+          photoOverlayImage.onload = null
+          photoOverlayImage.onerror = null
+
+          if (placeholderUrl) {
+            photoOverlayImage.onload = () => {
+              if (requestToken !== overlayImageRequestToken) return
+              // Placeholder visible; still loading full in background.
+              photoOverlayImage.classList.add('is-entering')
+              loadFull()
+            }
+            photoOverlayImage.onerror = () => {
+              if (requestToken !== overlayImageRequestToken) return
+              loadFull()
+            }
+            photoOverlayImage.src = placeholderUrl
+            if (photoOverlayImage.complete) {
+              photoOverlayImage.onload?.()
+            }
+            return
+          }
+
+          photoOverlayImage.onload = markReady
           photoOverlayImage.onerror = () => {
             if (requestToken !== overlayImageRequestToken) return
             setOverlayLoadingState(false)
           }
-
-          photoOverlayImage.src = source
-          photoOverlayImage.alt = altText
-
+          photoOverlayImage.src = fullUrl
           if (photoOverlayImage.complete) {
-            setOverlayLoadingState(false)
-            photoOverlayImage.classList.add('is-entering')
+            markReady()
           }
         }
 
@@ -478,8 +535,14 @@
           if (!link || !photoOverlayImage || !photoOverlayPosition) return
 
           const image = link.querySelector('img')
+          const fullSource = link.href || link.dataset.photoOriginalSrc || image?.currentSrc || image?.src
+          const placeholderSource =
+            link.dataset.photoPreviewSrc
+            || link.dataset.photoThumbnailSrc
+            || image?.currentSrc
+            || image?.src
 
-          setOverlayImage(link.href, image?.alt || 'Photo')
+          setOverlayImage(fullSource, image?.alt || 'Photo', { placeholderSource })
           photoOverlayPosition.textContent = `${photoIndex + 1} / ${photoLinks.length}`
           currentPhotoIndex = photoIndex
           updateThumbnailActiveState(photoIndex)

@@ -14,38 +14,51 @@ permalink: /photos/
 {% if photos.size > 0 %}
 {% for photo in photos %}
 {% assign original = photo.variants.original %}
-{% assign thumbnail = photo.variants.thumbnail %}
-{% assign preview = photo.variants.preview %}
-{% assign large = photo.variants.large %}
+{% assign thumbnail = photo.variants.thumbnail | default: original %}
+{% assign preview = photo.variants.preview | default: thumbnail | default: original %}
+{% assign large = photo.variants.large | default: original %}
 {% assign thumbnail_avif = thumbnail.avif %}
 {% assign preview_avif = preview.avif %}
 {% assign large_avif = large.avif %}
-<figure id="{{ photo.id }}" class="figure-{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}">
-  <a href="{{ large.src }}" class="image-link"
+{% assign photo_ratio = photo.meta.ratio %}
+{% assign display = preview | default: thumbnail | default: original %}
+{% assign figure_orientation = 'unknown' %}
+{% if photo_ratio and photo_ratio > 1 %}
+  {% assign figure_orientation = 'landscape' %}
+{% elsif photo_ratio and photo_ratio <= 1 %}
+  {% assign figure_orientation = 'portrait' %}
+{% endif %}
+<figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %}>
+  <a href="{{ large.src | default: original.src }}" class="image-link"
      data-umami-event="photo_full_view"
      data-umami-event-photo-id="{{ photo.id }}"
      data-umami-event-location="photos_page"
-     data-umami-event-ratio="{% if photo.meta.ratio > 1 %}landscape{% else %}portrait{% endif %}"
+     data-umami-event-ratio="{{ figure_orientation }}"
      data-photo-original-src="{{ original.src }}"
-     data-photo-thumbnail-src="{{ thumbnail.src }}"
+     data-photo-thumbnail-src="{{ thumbnail.src | default: original.src }}"
+     data-photo-preview-src="{{ preview.src | default: thumbnail.src | default: original.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
     <picture>
-      {% if thumbnail_avif and preview_avif and large_avif %}
+      {% if thumbnail_avif and preview_avif and large_avif and thumbnail_avif.width and preview_avif.width and large_avif.width %}
       <source
         type="image/avif"
         srcset="{{ thumbnail_avif.src }} {{ thumbnail_avif.width }}w, {{ preview_avif.src }} {{ preview_avif.width }}w, {{ large_avif.src }} {{ large_avif.width }}w"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
       {% endif %}
+      {% if thumbnail.width and preview.width and large.width and thumbnail.src != large.src %}
       <source
-        type="image/webp"
+        type="{{ preview.type | default: 'image/webp' }}"
         srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
+      {% endif %}
       <img
-        src="{{ preview.src }}"
-        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
+        src="{{ display.src }}"
+        {% if thumbnail.width and preview.width and thumbnail.src != preview.src %}
+        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px"
-        width="{{ preview.width }}"
-        height="{{ preview.height }}"
+        {% endif %}
+        {% if display.width %}width="{{ display.width }}"{% endif %}
+        {% if display.height %}height="{{ display.height }}"{% endif %}
         alt="{{ photo.meta.alt }}"
         title="{{ photo.meta.alt }}"
         loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"

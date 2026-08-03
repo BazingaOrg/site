@@ -60,9 +60,7 @@ if ('share' in navigator) {
 refreshWeather()
 window.setInterval(refreshWeather, 15 * 60 * 1000)
 
-if (document.querySelector('[data-photo-carousel]')) {
-  import('./home-photo-carousel.js').then(({ initHomePhotoCarousel }) => initHomePhotoCarousel())
-}
+// Homepage photos use a CSS horizontal strip (recent N only); no carousel JS.
 
 if (document.querySelector('.bio-now')) {
   import('./bio-presence.js').then(({ initBioPresence }) => initBioPresence())
