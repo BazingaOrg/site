@@ -62,6 +62,7 @@ list_pages:
     notes_like: Like?
     notes_limit_hint: Only the most recent 200 notes are shown.
     photos_title: Photos
+    photos_albums: Albums
     stories_title: Stories
     caption_expand: Expand
     caption_collapse: Collapse
@@ -76,6 +77,7 @@ list_pages:
     notes_like: 喜欢吗？
     notes_limit_hint: 仅显示最近 200 条随笔。
     photos_title: 照片
+    photos_albums: 相册
     stories_title: 故事
     caption_expand: 展开
     caption_collapse: 收起

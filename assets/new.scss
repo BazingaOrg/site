@@ -1161,11 +1161,84 @@ figure {
   margin: 0 0 .5rem;
 }
 
+.photo-album-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  margin: 0 0 1.25rem;
+  padding: 0 0 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 12%, transparent);
+}
+
+.photo-album-nav-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 0.2em 0.55em;
+  border-radius: 999px;
+  font-size: 0.82em;
+  line-height: 1.4;
+  text-decoration: none;
+  color: var(--mutedTextColor);
+  background: color-mix(in srgb, var(--mutedTextColor) 10%, transparent);
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.photo-album-nav-link:hover,
+.photo-album-nav-link:focus-visible {
+  color: var(--textColor);
+  background: color-mix(in srgb, var(--mutedTextColor) 18%, transparent);
+}
+
+.photo-album-nav-count {
+  font-family: var(--monospace);
+  font-size: 0.9em;
+  opacity: 0.75;
+}
+
+.photo-album {
+  margin: 0 0 2.25rem;
+  scroll-margin-top: 1.25rem;
+}
+
+.photo-album-header {
+  margin: 0 0 0.85rem;
+  text-align: left;
+}
+
+.photo-album-title {
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.photo-album-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.8em;
+  color: var(--mutedTextColor);
+}
+
 .photos-wrapper {
   &:focus { outline: none; }
   scroll-behavior: smooth;
   clear: both;
   text-align: center;
+}
+
+// When the two-column layout is active, each album grid becomes a 2-col dense grid.
+.photos-wrapper[data-layout="grid2fr"] .photo-album-grid {
+  display: grid;
+  column-gap: 1.5em;
+  row-gap: 1.75em;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-flow: dense;
+  text-align: left;
+}
+
+.photos-wrapper[data-layout="grid2fr"] .photo-album-grid figure {
+  margin: 0;
+  align-self: start;
 }
 
 .photos-wrapper.is-layout-switching {
@@ -1196,20 +1269,11 @@ figure {
   border-radius:  4em;
 }
 
+// Two-column mode applies inside each album, not across whole page sections.
 .photos-wrapper[data-layout="grid2fr"] {
-  display: grid;
-  column-gap: 1.5em;
-  row-gap: 1.75em;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-flow: dense;
   text-align: left;
 
-  figure {
-    margin: 0;
-    align-self: start;
-  }
-
-  img {
+  .photo-album-grid img {
     max-height: none;
     height: auto;
     width: 100%;
@@ -1217,14 +1281,14 @@ figure {
     object-fit: contain;
   }
 
+  .photo-album-grid .image-link {
+    width: 100%;
+    display: block;
+  }
+
   .photo-metadata {
     justify-content: flex-start;
   }
-}
-
-.photos-wrapper[data-layout="grid2fr"] .image-link {
-  width: 100%;
-  display: block;
 }
 
 .photo-metadata {

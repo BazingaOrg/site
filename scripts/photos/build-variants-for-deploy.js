@@ -360,6 +360,17 @@ Options:
     }
   })
 
+  // Hydrate any on-disk variants not touched this run (e.g. previous deploys / partial runs).
+  for (const photo of photos) {
+    if (byId.get(photo.id) !== photo) continue
+    if (!allVariantsOnDisk(photo)) continue
+    const hydrated = await hydrateFromDiskAsync(photo, cdn)
+    if (hydrated) {
+      byId.set(photo.id, hydrated)
+      reused += 1
+    }
+  }
+
   // If --album/--limit, only merge processed; still rewrite full array from byId
   const nextPhotos = photos.map((p) => byId.get(p.id) || p)
   nextPhotos.sort((a, b) => {

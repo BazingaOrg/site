@@ -8,11 +8,29 @@ permalink: /photos/
 
 {% assign current_lang = page.lang | default: page.locale | default: site.lang | default: 'en-US' %}
 {% assign copy = site.data.i18n_copy.list_pages[current_lang] %}
+{% assign photos_sorted = site.data.photos | sort: "uploaded" | reverse %}
+{% assign photo_groups = photos_sorted | group_by_exp: "photo", "photo.meta.album" %}
+
+{% if photos_sorted.size > 0 %}
+<nav class="photo-album-nav" aria-label="{{ copy.photos_albums | default: 'Albums' }}">
+  {% for group in photo_groups %}
+  {% assign album_photos = group.items | sort: "uploaded" | reverse %}
+  <a class="photo-album-nav-link" href="#album-{{ forloop.index }}">{{ group.name }} <span class="photo-album-nav-count">{{ album_photos.size }}</span></a>
+  {% endfor %}
+</nav>
+{% endif %}
 
 <div class="photos-wrapper" id="photos">
-{% assign photos = site.data.photos | sort: "uploaded" | reverse %}
-{% if photos.size > 0 %}
-{% for photo in photos %}
+{% if photos_sorted.size > 0 %}
+{% for group in photo_groups %}
+{% assign album_photos = group.items | sort: "uploaded" | reverse %}
+<section class="photo-album" id="album-{{ forloop.index }}" data-album="{{ group.name | escape }}">
+  <header class="photo-album-header">
+    <h2 class="photo-album-title">{{ group.name }}</h2>
+    <p class="photo-album-meta monospace">{{ album_photos.size }} · {{ album_photos.first.uploaded | date: "%Y/%m/%d" }}{% if album_photos.size > 1 %} – {{ album_photos.last.uploaded | date: "%Y/%m/%d" }}{% endif %}</p>
+  </header>
+  <div class="photo-album-grid">
+{% for photo in album_photos %}
 {% assign original = photo.variants.original %}
 {% assign thumbnail = photo.variants.thumbnail | default: original %}
 {% assign preview = photo.variants.preview | default: thumbnail | default: original %}
@@ -61,8 +79,7 @@ permalink: /photos/
         {% if display.height %}height="{{ display.height }}"{% endif %}
         alt="{{ photo.meta.alt }}"
         title="{{ photo.meta.alt }}"
-        loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
-        {% if forloop.first %}fetchpriority="high"{% endif %}
+        loading="lazy"
         decoding="async">
     </picture>
   </a>
@@ -82,6 +99,9 @@ permalink: /photos/
     {% endif %}
   </figcaption>
 </figure>
+{% endfor %}
+  </div>
+</section>
 {% endfor %}
 {% else %}
   <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home[current_lang].empty_photos }}</em></p>

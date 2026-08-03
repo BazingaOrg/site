@@ -344,4 +344,7 @@ PHOTOS_PREFIX=photos/
   - 只读 CDN/R2 原图 → 本机 WebP → `images/photos/variants/`（gitignore）
   - 更新 `_data/photos.json` 本地路径；`original` 仍指向 CDN
   - 接入 `vercel.json` buildCommand；`installCommand` 含 `npm install`
-- 单相册实测：原图 → preview 960×540 本地文件，**无需 R2 写权限**  
+- 单相册实测：原图 → preview 960×540 本地文件，**无需 R2 写权限**
+- `/photos/` 按相册分组 + 顶部相册导航；两列布局作用于每个相册 grid
+- git 中 `photos.json` 保持 CDN 原图路径；本地/CI 跑 `photos:build-variants` 后写本地 preview 路径
+- 小样相册已生成 gitignored webp，复用跳过下载  
