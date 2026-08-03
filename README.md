@@ -32,16 +32,7 @@ cp .env.example .env.local
 GITHUB_TOKEN=your_github_token
 GITHUB_REPO=owner/repo
 WRITE_ACCESS_KEY=your_write_access_key
-LLM_API_KEY=your_kimi_api_key
-LLM_MODEL=kimi-k2.5
-LLM_BASE_URL=https://api.moonshot.cn/v1
 ```
-
-### Notes
-
-- `LLM_API_KEY` is only used by server-side API routes and the local Node script. It must never be exposed to browser code or committed into the repository.
-- `LLM_MODEL` should stay pinned in production. Update it manually only after checking summary quality on a few real posts.
-- `LLM_BASE_URL` is set up for the domestic Kimi OpenAI-compatible endpoint.
 
 ## License
 
