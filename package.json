@@ -5,6 +5,7 @@
     "photos:generate-variants": "node scripts/photos/generate-variants.js",
     "photos:sync-exif": "node scripts/photos/sync-exif.js",
     "photos:sync-from-r2": "node scripts/photos/sync-from-r2.js",
+    "photos:build-variants-from-r2": "node scripts/photos/build-variants-from-r2.js",
     "vendor:sync:open-heart": "bash scripts/vendor/sync-open-heart-element.sh",
     "vendor:sync": "npm run vendor:sync:open-heart",
     "check:terms": "bash scripts/check/check-terminology.sh",

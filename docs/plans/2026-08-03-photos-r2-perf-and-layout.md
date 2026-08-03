@@ -333,6 +333,13 @@ PHOTOS_PREFIX=photos/
 | 4 | 列表 fallback | preview → thumbnail → original；`data-photo-preview-src` |
 | 4b | 首页横滑 | 最近 **12** 张 `.photo-strip`；移除 carousel JS |
 
-未做（P1+）：`photos:build-variants-from-r2`、真尺寸、分页/相册。
+未做（P1+）：全量上传衍生图、分页/相册。
 
-验证：`JEKYLL_ENV=production bundle exec jekyll build` 通过；首页 12×`photo-strip-item`；photos 1504×`figure-unknown`。  
+验证：`JEKYLL_ENV=production bundle exec jekyll build` 通过；首页 12×`photo-strip-item`；photos 1504×`figure-unknown`。
+
+### 2026-08-03 — P1 脚本
+
+- 新增 `scripts/photos/build-variants-from-r2.js` + `npm run photos:build-variants-from-r2`
+- dry-run 验证相册 `20240803桌面`：4.5MB 原图 → preview ~32KB / large ~93KB
+- **实际上传**需要 R2 **写权限**（当前 API Token 为 Read-only，PUT 返回 403）
+- 用户需：API Token 改为 Workers R2 Storage → **Edit**，或配置 `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`  

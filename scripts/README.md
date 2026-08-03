@@ -97,7 +97,24 @@ npm run photos:sync-from-r2 -- --from-list=tmp/r2-keys.txt
 
 Re-running keeps existing `meta.caption` / custom `meta.alt` / `meta.location` when the same R2 key is still present.
 
-Without local derivatives, thumbnail/preview/large currently point at the original CDN URL. Templates tolerate missing widths. For faster gallery loads later, upload smaller variants and extend the sync script.
+Without local derivatives, thumbnail/preview/large currently point at the original CDN URL. Templates tolerate missing widths.
+
+### Build derivatives (thumbnail / preview / large)
+
+Requires **write** access to the bucket (API token R2 Edit, or S3 access keys).
+
+```bash
+# Process 1 small album (recommended first run)
+npm run photos:build-variants-from-r2 -- --album=20240803桌面
+
+# Dry-run: download + sharp only
+npm run photos:build-variants-from-r2 -- --dry-run --limit=2
+
+# Limited batch
+npm run photos:build-variants-from-r2 -- --limit=20 --concurrency=2
+```
+
+Writes WebP under `photos/{album}/variants/{name}-{thumbnail|preview|large}.webp` and updates `_data/photos.json` dimensions/ratio.
 
 ## Vendor scripts
 
