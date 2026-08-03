@@ -372,11 +372,6 @@
           '/assets/performance-tracking.js'
         ];
 
-        {% assign write_pages = "write-note" | split: "," %}
-        {% assign page_name = page.url | remove: "/" | remove: ".html" %}
-        {% if write_pages contains page_name %}
-        deferredScripts.push('/assets/form-tracking.js');
-        {% endif %}
         {% if page.type == "photos" %}
         deferredScripts.push('/assets/photo-journey-tracking.js');
         {% endif %}

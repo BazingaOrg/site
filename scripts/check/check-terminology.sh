@@ -10,7 +10,6 @@ TARGET_FILES=(
   "notes.html"
   "stories.html"
   "photos.html"
-  "write-note.html"
   "_layouts/default.html"
   "assets/root.js"
   "assets/site.js"

@@ -17,21 +17,6 @@ class ABTestManager {
 
     // 预定义的实验配置
     this.experimentConfigs = {
-      // 写作页面优化实验
-      'write_form_layout': {
-        name: 'Write Form Layout Optimization',
-        description: 'Test different form layouts to improve completion rate',
-        status: 'active',
-        variants: {
-          'control': { weight: 50, name: 'Original Layout' },
-          'compact': { weight: 25, name: 'Compact Layout' },
-          'wizard': { weight: 25, name: 'Wizard Layout' }
-        },
-        targetPages: ['/write-note/'],
-        goals: ['form_submission', 'write_submit_success'],
-        segments: ['desktop_user', 'mobile_user']
-      },
-
       // 主页内容展示实验
       'homepage_content_order': {
         name: 'Homepage Content Order',
@@ -262,10 +247,6 @@ class ABTestManager {
   applyVariant(experimentId, variant, config) {
     // 根据实验ID和变体应用相应的更改
     switch (experimentId) {
-      case 'write_form_layout':
-        this.applyWriteFormLayoutVariant(variant)
-        break
-
       case 'homepage_content_order':
         this.applyHomepageContentOrderVariant(variant)
         break
@@ -284,42 +265,6 @@ class ABTestManager {
 
     // 在DOM中标记当前变体
     document.body.setAttribute(`data-ab-${experimentId}`, variant)
-  }
-
-  /**
-   * 应用写作表单布局变体
-   */
-  applyWriteFormLayoutVariant(variant) {
-    const formContainer = document.querySelector('.write-note-container')
-    if (!formContainer) return
-
-    switch (variant) {
-      case 'compact':
-        formContainer.classList.add('ab-compact-layout')
-        // 可以添加内联样式或动态CSS
-        this.addCSS(`
-          .ab-compact-layout .form-field {
-            margin-bottom: 1rem !important;
-          }
-          .ab-compact-layout .field-label {
-            font-size: 0.9rem !important;
-          }
-          .ab-compact-layout .preview-section {
-            max-height: 300px !important;
-            overflow-y: auto !important;
-          }
-        `)
-        break
-
-      case 'wizard':
-        formContainer.classList.add('ab-wizard-layout')
-        this.initializeWizardLayout(formContainer)
-        break
-
-      default:
-        // control - 无更改
-        break
-    }
   }
 
   /**
@@ -406,37 +351,6 @@ class ABTestManager {
     const style = document.createElement('style')
     style.textContent = css
     document.head.appendChild(style)
-  }
-
-  /**
-   * 初始化向导布局
-   */
-  initializeWizardLayout(container) {
-    // 这里可以实现更复杂的向导逻辑
-    this.addCSS(`
-      .ab-wizard-layout .form-field:not(.wizard-active) {
-        display: none !important;
-      }
-      .wizard-navigation {
-        display: flex;
-        justify-content: space-between;
-        margin: 1rem 0;
-      }
-    `)
-
-    // 添加向导导航
-    const navigation = document.createElement('div')
-    navigation.className = 'wizard-navigation'
-    navigation.innerHTML = `
-      <button type="button" class="wizard-prev" disabled>上一步</button>
-      <span class="wizard-step">步骤 1 / 3</span>
-      <button type="button" class="wizard-next">下一步</button>
-    `
-
-    const form = container.querySelector('form')
-    if (form) {
-      form.appendChild(navigation)
-    }
   }
 
   /**

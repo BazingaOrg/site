@@ -13,9 +13,7 @@ This directory keeps project automation scripts with a consistent layout.
 
 ## Current publishing surface
 
-The only browser-based publishing entry still kept in this repo is `/write-note/`.
-
-The older `/write-post/` and `/upload-photo/` flows have been removed, so scripts and docs should not assume those pages still exist.
+Browser-based write/upload pages (`/write-note/`, `/write-post/`, `/upload-photo/`) have been removed. Notes and photos are managed outside the public site UI (for example git + R2 tooling).
 
 ## Current checks
 
