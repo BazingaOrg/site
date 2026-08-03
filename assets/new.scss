@@ -1432,8 +1432,10 @@ html.photo-overlay-open {
   height: 100dvh;
   z-index: 9999;
   background: rgba(0, 0, 0, 0.965);
+  // Four bands: top chrome / stage / caption / thumbnail strip.
+  // (Was auto 1fr auto — the 4th child thumbs row was clipped by overflow:hidden.)
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: .6rem;
   padding: 1rem 0;
   box-sizing: border-box;
@@ -1819,17 +1821,17 @@ html.photo-overlay-open {
 .photo-overlay-thumbs {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: .4rem;
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
-  padding: .1rem var(--overlay-side-padding);
+  min-height: 64px;
+  padding: .15rem var(--overlay-side-padding) .35rem;
   box-sizing: border-box;
   scroll-padding-inline: var(--overlay-side-padding);
-  scrollbar-width: thin;
-  transition: max-height 220ms ease, opacity 180ms ease, padding 180ms ease, transform 200ms cubic-bezier(.22, 1, .36, 1);
-  max-height: 84px;
+  transition: max-height 220ms ease, opacity 180ms ease, padding 180ms ease, min-height 180ms ease, transform 200ms cubic-bezier(.22, 1, .36, 1);
+  max-height: 88px;
   opacity: 1;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -1837,6 +1839,8 @@ html.photo-overlay-open {
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   pointer-events: auto;
+  flex-shrink: 0;
+  z-index: 2;
 }
 
 .photo-overlay-thumbs::-webkit-scrollbar {
@@ -1878,6 +1882,7 @@ html.photo-overlay-open {
 
 .photo-overlay.is-thumbs-collapsed .photo-overlay-thumbs {
   max-height: 0;
+  min-height: 0;
   opacity: 0;
   padding-top: 0;
   padding-bottom: 0;
