@@ -99,22 +99,27 @@ Re-running keeps existing `meta.caption` / custom `meta.alt` / `meta.location` w
 
 Without local derivatives, thumbnail/preview/large currently point at the original CDN URL. Templates tolerate missing widths.
 
-### Build derivatives (thumbnail / preview / large)
+### Build derivatives for deploy (afilmory-style, recommended)
 
-Requires **write** access to the bucket (API token R2 Edit, or S3 access keys).
+No R2 write access. Downloads originals from `PHOTOS_CDN`, writes WebP under
+`images/photos/variants/`, and rewrites `_data/photos.json` so list/overlay use
+local `/images/photos/variants/...` while `original` stays on the CDN.
 
 ```bash
-# Process 1 small album (recommended first run)
-npm run photos:build-variants-from-r2 -- --album=20240803桌面
+# Small sample
+npm run photos:build-variants -- --album=20240803桌面
 
-# Dry-run: download + sharp only
-npm run photos:build-variants-from-r2 -- --dry-run --limit=2
-
-# Limited batch
-npm run photos:build-variants-from-r2 -- --limit=20 --concurrency=2
+# Limited / full (also runs on Vercel via buildCommand)
+npm run photos:build-variants -- --limit=20
+npm run photos:build-variants
 ```
 
-Writes WebP under `photos/{album}/variants/{name}-{thumbnail|preview|large}.webp` and updates `_data/photos.json` dimensions/ratio.
+Variant files are gitignored; generate on each deploy (or locally before `jekyll serve`).
+
+### Legacy: upload derivatives back to R2
+
+`npm run photos:build-variants-from-r2` still exists if you prefer storing thumbs on R2
+(requires bucket write credentials).
 
 ## Vendor scripts
 

@@ -58588,19 +58588,27 @@
     "variants": {
       "original": {
         "src": "https://img.bazinga.ink/photos/20240803%E6%A1%8C%E9%9D%A2/P1050749.JPG",
+        "width": 4592,
+        "height": 2584,
         "type": "image/jpeg"
       },
       "thumbnail": {
-        "src": "https://img.bazinga.ink/photos/20240803%E6%A1%8C%E9%9D%A2/P1050749.JPG",
-        "type": "image/jpeg"
+        "src": "/images/photos/variants/photo-20240803-p1050749-8ca55c69-thumbnail.webp",
+        "width": 360,
+        "height": 203,
+        "type": "image/webp"
       },
       "preview": {
-        "src": "https://img.bazinga.ink/photos/20240803%E6%A1%8C%E9%9D%A2/P1050749.JPG",
-        "type": "image/jpeg"
+        "src": "/images/photos/variants/photo-20240803-p1050749-8ca55c69-preview.webp",
+        "width": 960,
+        "height": 540,
+        "type": "image/webp"
       },
       "large": {
-        "src": "https://img.bazinga.ink/photos/20240803%E6%A1%8C%E9%9D%A2/P1050749.JPG",
-        "type": "image/jpeg"
+        "src": "/images/photos/variants/photo-20240803-p1050749-8ca55c69-large.webp",
+        "width": 2160,
+        "height": 1215,
+        "type": "image/webp"
       }
     },
     "meta": {
@@ -58613,7 +58621,8 @@
       "hdrCandidate": false,
       "assetPolicy": "r2-original",
       "fallbackStrategy": "none",
-      "fallbackGenerated": false
+      "fallbackGenerated": false,
+      "ratio": 1.7770897832817338
     }
   },
   {

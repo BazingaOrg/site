@@ -339,7 +339,9 @@ PHOTOS_PREFIX=photos/
 
 ### 2026-08-03 — P1 脚本
 
-- 新增 `scripts/photos/build-variants-from-r2.js` + `npm run photos:build-variants-from-r2`
-- dry-run 验证相册 `20240803桌面`：4.5MB 原图 → preview ~32KB / large ~93KB
-- **实际上传**需要 R2 **写权限**（当前 API Token 为 Read-only，PUT 返回 403）
-- 用户需：API Token 改为 Workers R2 Storage → **Edit**，或配置 `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`  
+- 曾新增 `photos:build-variants-from-r2`（回写 R2，需写权限）
+- **改对齐 afilmory：** `photos:build-variants`（`build-variants-for-deploy.js`）
+  - 只读 CDN/R2 原图 → 本机 WebP → `images/photos/variants/`（gitignore）
+  - 更新 `_data/photos.json` 本地路径；`original` 仍指向 CDN
+  - 接入 `vercel.json` buildCommand；`installCommand` 含 `npm install`
+- 单相册实测：原图 → preview 960×540 本地文件，**无需 R2 写权限**  
