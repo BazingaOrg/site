@@ -13,10 +13,26 @@ permalink: /photos/
 
 {% if photos_sorted.size > 0 %}
 <nav class="photo-album-nav" aria-label="{{ copy.photos_albums | default: 'Albums' }}">
+  {% assign current_nav_year = '' %}
   {% for group in photo_groups %}
   {% assign album_photos = group.items | sort: "uploaded" | reverse %}
-  <a class="photo-album-nav-link" href="#album-{{ forloop.index }}">{{ group.name }} <span class="photo-album-nav-count">{{ album_photos.size }}</span></a>
+  {% assign nav_year = group.name | slice: 0, 4 %}
+  {% if nav_year != current_nav_year %}
+  {% if current_nav_year != '' %}
+    </div>
+  </div>
+  {% endif %}
+  {% assign current_nav_year = nav_year %}
+  <div class="photo-album-year" data-year="{{ nav_year }}">
+    <span class="photo-album-year-label">{{ nav_year }}</span>
+    <div class="photo-album-year-scroller" role="list">
+  {% endif %}
+      <a class="photo-album-nav-link" role="listitem" href="#album-{{ forloop.index }}" title="{{ group.name }}" data-album-raw="{{ group.name }}">{{ group.name }} <span class="photo-album-nav-count">{{ album_photos.size }}</span></a>
   {% endfor %}
+  {% if current_nav_year != '' %}
+    </div>
+  </div>
+  {% endif %}
 </nav>
 {% endif %}
 

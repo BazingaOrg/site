@@ -669,6 +669,8 @@
           }
         }
 
+        const TAP_MOVE_THRESHOLD = 10
+
         allPhotoLinks.forEach((link) => {
           const openFromLinkEvent = (event) => {
             event.preventDefault()
@@ -677,6 +679,16 @@
             const index = Math.max(0, links.indexOf(link))
             openOverlay(index, links)
           }
+
+          let linkTouchStartX = 0
+          let linkTouchStartY = 0
+
+          link.addEventListener('touchstart', (event) => {
+            const touch = event.changedTouches?.[0] || event.touches?.[0]
+            if (!touch) return
+            linkTouchStartX = touch.clientX
+            linkTouchStartY = touch.clientY
+          }, { passive: true })
 
           link.addEventListener('click', (event) => {
             if (justHandledTouch) {
@@ -688,9 +700,51 @@
           })
 
           link.addEventListener('touchend', (event) => {
+            const touch = event.changedTouches?.[0]
+            if (!touch) return
+
+            const dx = touch.clientX - linkTouchStartX
+            const dy = touch.clientY - linkTouchStartY
+            const moved = Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD
+
+            if (moved) {
+              // Ignore scroll gestures. Briefly swallow a possible synthetic click
+              // without leaving justHandledTouch stuck (which would block the next real tap).
+              justHandledTouch = true
+              window.setTimeout(() => {
+                justHandledTouch = false
+              }, 400)
+              return
+            }
+
             justHandledTouch = true
             openFromLinkEvent(event)
           }, { passive: false })
+        })
+
+        // Short labels for year-grouped album nav (full name stays in title + data-album-raw).
+        document.querySelectorAll('.photo-album-nav-link[data-album-raw]').forEach((navLink) => {
+          const raw = navLink.getAttribute('data-album-raw') || ''
+          const match = raw.match(/^(\d{4})(\d{2})(\d{2})(?:-(\d{4})(\d{2})(\d{2}))?-?(.*)$/)
+          if (!match) return
+
+          const [, , mm1, dd1, , mm2, dd2, placeRaw] = match
+          const place = (placeRaw || '').trim()
+          let shortLabel = `${mm1}/${dd1}`
+          if (mm2 && dd2) {
+            shortLabel += `–${mm2}/${dd2}`
+          }
+          if (place) {
+            shortLabel += ` · ${place}`
+          }
+
+          navLink.setAttribute('title', raw)
+          const countEl = navLink.querySelector('.photo-album-nav-count')
+          navLink.textContent = ''
+          navLink.append(document.createTextNode(shortLabel + (countEl ? ' ' : '')))
+          if (countEl) {
+            navLink.appendChild(countEl)
+          }
         })
 
         if (!fullscreenApiSupported && photoOverlayToggleFullscreen) {
