@@ -124,11 +124,6 @@ npm run photos:build-variants
 
 Variant files are gitignored; generate on each deploy (or locally before `jekyll serve`).
 
-### Legacy: upload derivatives back to R2
-
-`npm run photos:build-variants-from-r2` still exists if you prefer storing thumbs on R2
-(requires bucket write credentials).
-
 ## Vendor scripts
 
 - `vendor/sync-open-heart-element.sh`: download `open-heart-element` based on `_data/vendor_versions.json` and write to `assets/vendor/`.

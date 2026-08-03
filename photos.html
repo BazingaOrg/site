@@ -32,14 +32,8 @@ permalink: /photos/
   <div class="photo-album-grid">
 {% for photo in album_photos %}
 {% assign original = photo.variants.original %}
-{% assign thumbnail = photo.variants.thumbnail | default: original %}
-{% assign preview = photo.variants.preview | default: thumbnail | default: original %}
-{% assign large = photo.variants.large | default: original %}
-{% assign thumbnail_avif = thumbnail.avif %}
-{% assign preview_avif = preview.avif %}
-{% assign large_avif = large.avif %}
+{% assign list_image = photo.variants.preview | default: photo.variants.thumbnail | default: original %}
 {% assign photo_ratio = photo.meta.ratio %}
-{% assign display = preview | default: thumbnail | default: original %}
 {% assign figure_orientation = 'unknown' %}
 {% if photo_ratio and photo_ratio > 1 %}
   {% assign figure_orientation = 'landscape' %}
@@ -53,35 +47,17 @@ permalink: /photos/
      data-umami-event-location="photos_page"
      data-umami-event-ratio="{{ figure_orientation }}"
      data-photo-original-src="{{ original.src }}"
-     data-photo-thumbnail-src="{{ thumbnail.src | default: preview.src | default: original.src }}"
-     data-photo-preview-src="{{ preview.src | default: thumbnail.src | default: original.src }}"
+     data-photo-thumbnail-src="{{ list_image.src }}"
+     data-photo-preview-src="{{ list_image.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
-    <picture>
-      {% if thumbnail_avif and preview_avif and large_avif and thumbnail_avif.width and preview_avif.width and large_avif.width %}
-      <source
-        type="image/avif"
-        srcset="{{ thumbnail_avif.src }} {{ thumbnail_avif.width }}w, {{ preview_avif.src }} {{ preview_avif.width }}w, {{ large_avif.src }} {{ large_avif.width }}w"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
-      {% endif %}
-      {% if thumbnail.width and preview.width and large.width and thumbnail.src != large.src %}
-      <source
-        type="{{ preview.type | default: 'image/webp' }}"
-        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w, {{ large.src }} {{ large.width }}w"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px">
-      {% endif %}
-      <img
-        src="{{ display.src }}"
-        {% if thumbnail.width and preview.width and thumbnail.src != preview.src %}
-        srcset="{{ thumbnail.src }} {{ thumbnail.width }}w, {{ preview.src }} {{ preview.width }}w"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 92vw, 960px"
-        {% endif %}
-        {% if display.width %}width="{{ display.width }}"{% endif %}
-        {% if display.height %}height="{{ display.height }}"{% endif %}
-        alt="{{ photo.meta.alt }}"
-        title="{{ photo.meta.alt }}"
-        loading="lazy"
-        decoding="async">
-    </picture>
+    <img
+      src="{{ list_image.src }}"
+      {% if list_image.width %}width="{{ list_image.width }}"{% endif %}
+      {% if list_image.height %}height="{{ list_image.height }}"{% endif %}
+      alt="{{ photo.meta.alt }}"
+      title="{{ photo.meta.alt }}"
+      loading="lazy"
+      decoding="async">
   </a>
   <figcaption>
     <div class="desc photo-metadata">

@@ -1,7 +1,9 @@
         const photos = document.querySelector('#photos')
         let layoutTransitionTimer = null
         const checkedLayoutInput = document.querySelector('input[name="layout"]:checked')
-        const photoLinks = Array.from(document.querySelectorAll('#photos .image-link'))
+        // All gallery links (for click binding). Active strip/nav is album-scoped.
+        const allPhotoLinks = Array.from(document.querySelectorAll('#photos .image-link'))
+        let activePhotoLinks = allPhotoLinks
         const photoOverlay = document.querySelector('#photo-overlay')
         const photoOverlayImage = document.querySelector('#photo-overlay-image')
         const photoOverlayPosition = document.querySelector('#photo-overlay-position')
@@ -16,22 +18,26 @@
         const photoOverlayCaption = document.querySelector('#photo-overlay-caption')
         const photoOverlayCaptionContent = document.querySelector('#photo-overlay-caption-content')
         const photoOverlayExif = document.querySelector('#photo-overlay-exif')
-        const photoOverlayExifCameraRow = document.querySelector('#photo-overlay-exif-camera-row')
-        const photoOverlayExifLensRow = document.querySelector('#photo-overlay-exif-lens-row')
-        const photoOverlayExifSettingsRow = document.querySelector('#photo-overlay-exif-settings-row')
-        const photoOverlayExifCapturedAtRow = document.querySelector('#photo-overlay-exif-captured-at-row')
-        const photoOverlayExifFormatRow = document.querySelector('#photo-overlay-exif-format-row')
-        const photoOverlayExifRangeRow = document.querySelector('#photo-overlay-exif-range-row')
-        const photoOverlayExifDisplayRow = document.querySelector('#photo-overlay-exif-display-row')
-        const photoOverlayExifFallbackRow = document.querySelector('#photo-overlay-exif-fallback-row')
-        const photoOverlayExifCamera = document.querySelector('#photo-overlay-exif-camera')
-        const photoOverlayExifLens = document.querySelector('#photo-overlay-exif-lens')
-        const photoOverlayExifSettings = document.querySelector('#photo-overlay-exif-settings')
-        const photoOverlayExifCapturedAt = document.querySelector('#photo-overlay-exif-captured-at')
-        const photoOverlayExifFormat = document.querySelector('#photo-overlay-exif-format')
-        const photoOverlayExifRange = document.querySelector('#photo-overlay-exif-range')
-        const photoOverlayExifDisplay = document.querySelector('#photo-overlay-exif-display')
-        const photoOverlayExifFallback = document.querySelector('#photo-overlay-exif-fallback')
+        const photoOverlayExifRows = {
+          camera: document.querySelector('#photo-overlay-exif-camera-row'),
+          lens: document.querySelector('#photo-overlay-exif-lens-row'),
+          settings: document.querySelector('#photo-overlay-exif-settings-row'),
+          capturedAt: document.querySelector('#photo-overlay-exif-captured-at-row'),
+          format: document.querySelector('#photo-overlay-exif-format-row'),
+          range: document.querySelector('#photo-overlay-exif-range-row'),
+          display: document.querySelector('#photo-overlay-exif-display-row'),
+          fallback: document.querySelector('#photo-overlay-exif-fallback-row')
+        }
+        const photoOverlayExifValues = {
+          camera: document.querySelector('#photo-overlay-exif-camera'),
+          lens: document.querySelector('#photo-overlay-exif-lens'),
+          settings: document.querySelector('#photo-overlay-exif-settings'),
+          capturedAt: document.querySelector('#photo-overlay-exif-captured-at'),
+          format: document.querySelector('#photo-overlay-exif-format'),
+          range: document.querySelector('#photo-overlay-exif-range'),
+          display: document.querySelector('#photo-overlay-exif-display'),
+          fallback: document.querySelector('#photo-overlay-exif-fallback')
+        }
         const photoOverlayThumbs = document.querySelector('#photo-overlay-thumbs')
         let currentPhotoIndex = -1
         let touchStartX = 0
@@ -46,12 +52,19 @@
         let autoplayDuration = 4800
         let overlayVisibilityTimerId = null
         let exifVisibilityTimerId = null
+        let thumbsAlbumKey = null
 
         const fullscreenApiSupported = Boolean(
           document.fullscreenEnabled
           && photoOverlay?.requestFullscreen
           && document.exitFullscreen
         )
+
+        const albumLinksFor = (link) => {
+          const album = link?.closest?.('.photo-album')
+          if (!album) return allPhotoLinks
+          return Array.from(album.querySelectorAll('.image-link'))
+        }
 
         if (photos && checkedLayoutInput) {
           photos.dataset.layout = checkedLayoutInput.value
@@ -118,7 +131,7 @@
           if (!photoOverlayThumbs) return
 
           const fragment = document.createDocumentFragment()
-          photoLinks.forEach((link, index) => {
+          activePhotoLinks.forEach((link, index) => {
             const sourceImage = link.querySelector('img')
             const thumbnailButton = document.createElement('button')
             thumbnailButton.type = 'button'
@@ -317,7 +330,7 @@
         }
 
         const startAutoplay = () => {
-          if (!photoOverlay || photoOverlay.hidden || photoLinks.length < 2) return
+          if (!photoOverlay || photoOverlay.hidden || activePhotoLinks.length < 2) return
           scheduleAutoplayTick()
         }
 
@@ -486,52 +499,36 @@
 
           photoOverlayToggleExif.hidden = !hasExif
 
+          const setRow = (key, text, visible) => {
+            if (photoOverlayExifValues[key]) photoOverlayExifValues[key].textContent = text || ''
+            if (photoOverlayExifRows[key]) photoOverlayExifRows[key].hidden = !visible
+          }
+
           if (!hasExif) {
             photoOverlay.classList.remove('is-exif-open')
             photoOverlayToggleExif.setAttribute('aria-pressed', 'false')
             setOverlayExifVisibility(false)
-            photoOverlayExifCamera.textContent = ''
-            photoOverlayExifLens.textContent = ''
-            photoOverlayExifSettings.textContent = ''
-            photoOverlayExifCapturedAt.textContent = ''
-            photoOverlayExifFormat.textContent = ''
-            photoOverlayExifRange.textContent = ''
-            photoOverlayExifDisplay.textContent = ''
-            photoOverlayExifFallback.textContent = ''
-            photoOverlayExifCameraRow.hidden = true
-            photoOverlayExifLensRow.hidden = true
-            photoOverlayExifSettingsRow.hidden = true
-            photoOverlayExifCapturedAtRow.hidden = true
-            photoOverlayExifFormatRow.hidden = true
-            photoOverlayExifRangeRow.hidden = true
-            photoOverlayExifDisplayRow.hidden = true
-            photoOverlayExifFallbackRow.hidden = true
+            ;['camera', 'lens', 'settings', 'capturedAt', 'format', 'range', 'display', 'fallback'].forEach((key) => {
+              setRow(key, '', false)
+            })
             return
           }
 
-          photoOverlayExifCamera.textContent = exif?.camera || ''
-          photoOverlayExifLens.textContent = exif?.lens || ''
-          photoOverlayExifSettings.textContent = settings
-          photoOverlayExifCapturedAt.textContent = exif?.capturedAt || ''
-          photoOverlayExifFormat.textContent = sourceFormat
-          photoOverlayExifRange.textContent = dynamicRange
-          photoOverlayExifDisplay.textContent = displayState
-          photoOverlayExifFallback.textContent = fallbackState
-          photoOverlayExifCameraRow.hidden = !exif?.camera
-          photoOverlayExifLensRow.hidden = !exif?.lens
-          photoOverlayExifSettingsRow.hidden = !settings
-          photoOverlayExifCapturedAtRow.hidden = !exif?.capturedAt
-          photoOverlayExifFormatRow.hidden = !shouldShowFormat
-          photoOverlayExifRangeRow.hidden = !shouldShowRange
-          photoOverlayExifDisplayRow.hidden = !shouldShowDisplay
-          photoOverlayExifFallbackRow.hidden = !shouldShowFallback
+          setRow('camera', exif?.camera, Boolean(exif?.camera))
+          setRow('lens', exif?.lens, Boolean(exif?.lens))
+          setRow('settings', settings, Boolean(settings))
+          setRow('capturedAt', exif?.capturedAt, Boolean(exif?.capturedAt))
+          setRow('format', sourceFormat, shouldShowFormat)
+          setRow('range', dynamicRange, shouldShowRange)
+          setRow('display', displayState, shouldShowDisplay)
+          setRow('fallback', fallbackState, shouldShowFallback)
 
           const isExifOpen = photoOverlay.classList.contains('is-exif-open')
           setOverlayExifVisibility(isExifOpen)
         }
 
         const updateOverlay = (photoIndex, { resetAutoplay = true } = {}) => {
-          const link = photoLinks[photoIndex]
+          const link = activePhotoLinks[photoIndex]
           if (!link || !photoOverlayImage || !photoOverlayPosition) return
 
           const image = link.querySelector('img')
@@ -543,7 +540,7 @@
             || image?.src
 
           setOverlayImage(fullSource, image?.alt || 'Photo', { placeholderSource })
-          photoOverlayPosition.textContent = `${photoIndex + 1} / ${photoLinks.length}`
+          photoOverlayPosition.textContent = `${photoIndex + 1} / ${activePhotoLinks.length}`
           currentPhotoIndex = photoIndex
           updateThumbnailActiveState(photoIndex)
           renderOverlayCaption(link)
@@ -554,12 +551,24 @@
           }
         }
 
-        const openOverlay = (photoIndex) => {
+        const openOverlay = (photoIndex, links = activePhotoLinks) => {
           if (!photoOverlay) return
           if (overlayVisibilityTimerId) {
             window.clearTimeout(overlayVisibilityTimerId)
             overlayVisibilityTimerId = null
           }
+
+          activePhotoLinks = links?.length ? links : allPhotoLinks
+          const albumKey = activePhotoLinks[0]?.closest?.('.photo-album')?.dataset?.album || 'all'
+          if (albumKey !== thumbsAlbumKey) {
+            thumbsAlbumKey = albumKey
+            buildOverlayThumbnails()
+          }
+
+          if (photoOverlayToggleAutoplay) {
+            photoOverlayToggleAutoplay.hidden = activePhotoLinks.length < 2
+          }
+
           photoOverlay.classList.remove('is-closing')
           photoOverlay.classList.remove('is-exif-open')
           photoOverlayToggleExif?.setAttribute('aria-pressed', 'false')
@@ -612,18 +621,18 @@
             return
           }
 
-          if (wrap && photoLinks.length > 1) {
-            updateOverlay(photoLinks.length - 1, { resetAutoplay })
+          if (wrap && activePhotoLinks.length > 1) {
+            updateOverlay(activePhotoLinks.length - 1, { resetAutoplay })
           }
         }
 
         const goToNextPhoto = ({ wrap = false, resetAutoplay = true } = {}) => {
-          if (currentPhotoIndex < photoLinks.length - 1) {
+          if (currentPhotoIndex < activePhotoLinks.length - 1) {
             updateOverlay(currentPhotoIndex + 1, { resetAutoplay })
             return
           }
 
-          if (wrap && photoLinks.length > 1) {
+          if (wrap && activePhotoLinks.length > 1) {
             updateOverlay(0, { resetAutoplay })
           }
         }
@@ -660,11 +669,13 @@
           }
         }
 
-        photoLinks.forEach((link, index) => {
+        allPhotoLinks.forEach((link) => {
           const openFromLinkEvent = (event) => {
             event.preventDefault()
             event.stopPropagation()
-            openOverlay(index)
+            const links = albumLinksFor(link)
+            const index = Math.max(0, links.indexOf(link))
+            openOverlay(index, links)
           }
 
           link.addEventListener('click', (event) => {
@@ -682,14 +693,8 @@
           }, { passive: false })
         })
 
-        buildOverlayThumbnails()
-
         if (!fullscreenApiSupported && photoOverlayToggleFullscreen) {
           photoOverlayToggleFullscreen.hidden = true
-        }
-
-        if (photoLinks.length < 2 && photoOverlayToggleAutoplay) {
-          photoOverlayToggleAutoplay.hidden = true
         }
 
         photoOverlayClose?.addEventListener('click', closeOverlay)

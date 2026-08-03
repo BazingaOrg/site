@@ -1,7 +1,15 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
+import {
+  DEFAULT_BUCKET,
+  DEFAULT_CDN,
+  loadDotEnv,
+  normalizeCdn,
+  publicCdnUrl,
+  repoRoot,
+  sortPhotosNewestFirst
+} from './lib.mjs'
 
 /**
  * List objects under R2: photos/{album}/{filename}
@@ -10,17 +18,7 @@ import { createHash } from 'node:crypto'
  * Auth (pick one):
  *   1) CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN  (Account API token with R2 read)
  *   2) Local listing file via --from-list=path (one object key per line)
- *
- * Env (optional):
- *   R2_BUCKET=bazinga-gallery
- *   PHOTOS_CDN=https://img.bazinga.ink
- *   PHOTOS_PREFIX=photos/
- *   PHOTOS_DATA_PATH=_data/photos.json
  */
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const repoRoot = path.resolve(__dirname, '..', '..')
 
 const IMAGE_EXTENSIONS = new Set([
   '.jpg',
@@ -48,34 +46,14 @@ const MIME_BY_EXT = {
   '.heif': 'image/heif'
 }
 
-function loadDotEnv() {
-  const envPath = path.join(repoRoot, '.env')
-  if (!existsSync(envPath)) return
-  const text = readFileSync(envPath, 'utf8')
-  for (const rawLine of text.split('\n')) {
-    const line = rawLine.trim()
-    if (!line || line.startsWith('#')) continue
-    const eq = line.indexOf('=')
-    if (eq <= 0) continue
-    const key = line.slice(0, eq).trim()
-    let value = line.slice(eq + 1).trim()
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
-    }
-    if (process.env[key] === undefined) process.env[key] = value
-  }
-}
-
 function parseArgs(argv) {
   const options = {
     fromList: null,
     dryRun: false,
     prefix: null,
     bucket: null,
-    cdn: null
+    cdn: null,
+    help: false
   }
   for (const arg of argv) {
     if (arg === '--dry-run') options.dryRun = true
@@ -91,10 +69,6 @@ function parseArgs(argv) {
 function normalizePrefix(prefix) {
   if (!prefix) return 'photos/'
   return prefix.endsWith('/') ? prefix : `${prefix}/`
-}
-
-function normalizeCdn(cdn) {
-  return (cdn || 'https://img.bazinga.ink').replace(/\/$/, '')
 }
 
 function slugify(value) {
@@ -135,14 +109,6 @@ function parseAlbumObject(key, prefix) {
   if (!album || !filename || filename.startsWith('.')) return null
 
   return { album, filename, key }
-}
-
-function publicUrl(cdn, key) {
-  const encoded = key
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/')
-  return `${cdn}/${encoded}`
 }
 
 function mimeForKey(key) {
@@ -222,7 +188,7 @@ function buildPhotoRecord({ album, filename, key, lastModified, cdn, existing })
   const id =
     existing?.id ||
     `photo-${slugify(album)}-${slugify(path.parse(filename).name)}-${shortHash(idSeed)}`
-  const src = publicUrl(cdn, key)
+  const src = publicCdnUrl(cdn, key)
   const type = mimeForKey(key)
   const uploaded =
     existing?.uploaded ||
@@ -331,9 +297,9 @@ or:
     return
   }
 
-  const bucket = options.bucket || process.env.R2_BUCKET || 'bazinga-gallery'
+  const bucket = options.bucket || process.env.R2_BUCKET || DEFAULT_BUCKET
   const prefix = normalizePrefix(options.prefix || process.env.PHOTOS_PREFIX || 'photos/')
-  const cdn = normalizeCdn(options.cdn || process.env.PHOTOS_CDN || 'https://img.bazinga.ink')
+  const cdn = normalizeCdn(options.cdn || process.env.PHOTOS_CDN || DEFAULT_CDN)
   const dataPath = path.resolve(
     repoRoot,
     process.env.PHOTOS_DATA_PATH || path.join('_data', 'photos.json')
@@ -385,34 +351,23 @@ or:
     )
   }
 
-  photos.sort((a, b) => {
-    const ta = Date.parse(a.uploaded) || 0
-    const tb = Date.parse(b.uploaded) || 0
-    if (ta !== tb) return tb - ta
-    return a.id.localeCompare(b.id)
-  })
-
-  const albums = new Set(photos.map((p) => p.meta.album))
+  const sorted = sortPhotosNewestFirst(photos)
+  const albums = new Set(sorted.map((p) => p.meta.album))
   console.log(
-    `Matched ${photos.length} photos in ${albums.size} albums (skipped ${skipped.length} non-album keys)`
+    `Matched ${sorted.length} photos in ${albums.size} albums (skipped ${skipped.length} non-album keys)`
   )
-  if (skipped.length && skipped.length <= 20) {
-    for (const key of skipped) console.log(`  skip: ${key}`)
-  } else if (skipped.length > 20) {
-    for (const key of skipped.slice(0, 10)) console.log(`  skip: ${key}`)
-    console.log(`  … and ${skipped.length - 10} more`)
-  }
+  for (const key of skipped.slice(0, 10)) console.log(`  skip: ${key}`)
+  if (skipped.length > 10) console.log(`  … and ${skipped.length - 10} more`)
 
   if (options.dryRun) {
     console.log('Dry run only — photos.json not written')
-    console.log(JSON.stringify(photos.slice(0, 2), null, 2))
+    console.log(JSON.stringify(sorted.slice(0, 2), null, 2))
     return
   }
 
-  writeFileSync(dataPath, `${JSON.stringify(photos, null, 2)}\n`)
-  console.log(`Wrote ${photos.length} entries → ${path.relative(repoRoot, dataPath)}`)
+  writeFileSync(dataPath, `${JSON.stringify(sorted, null, 2)}\n`)
+  console.log(`Wrote ${sorted.length} entries → ${path.relative(repoRoot, dataPath)}`)
   console.log(`CDN base: ${cdn}`)
-  console.log('Note: without local variants, thumbnail/preview/large currently point at the original URL.')
 }
 
 main().catch((error) => {
