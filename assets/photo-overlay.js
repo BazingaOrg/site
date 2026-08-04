@@ -1,13 +1,61 @@
         const photos = document.querySelector('#photos')
-        // Single sticky site header (back + action icons).
         const photosSiteHeader = document.querySelector('body[data-page-type="photos"] > header')
-        let layoutTransitionTimer = null
         // Range: 0 = Auto, 1..6 → columns 3..8
         const columnsSlider = document.querySelector('#photo-columns')
         const columnsValueEl = document.querySelector('#photo-columns-value')
         const columnsOpenBtn = document.querySelector('#photo-columns-open')
         const columnsPanel = document.querySelector('#photo-columns-panel')
         const COLUMNS_STORAGE_KEY = 'photos-columns'
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+        // Search and lightbox share one layout-stable scroll lock. Freezing the
+        // body also prevents iOS Safari from scrolling the page behind a modal.
+        const scrollLockOwners = new Set()
+        let lockedScrollPosition = { x: 0, y: 0 }
+        let bodyLockSnapshot = null
+        let htmlOverflowSnapshot = ''
+
+        const lockPageScroll = (owner) => {
+          if (scrollLockOwners.has(owner)) return
+          scrollLockOwners.add(owner)
+          if (scrollLockOwners.size > 1) return
+
+          lockedScrollPosition = { x: window.scrollX, y: window.scrollY }
+          const bodyStyle = document.body.style
+          bodyLockSnapshot = {
+            position: bodyStyle.position,
+            top: bodyStyle.top,
+            left: bodyStyle.left,
+            width: bodyStyle.width,
+            boxSizing: bodyStyle.boxSizing,
+            overflow: bodyStyle.overflow,
+            paddingRight: bodyStyle.paddingRight
+          }
+          htmlOverflowSnapshot = document.documentElement.style.overflow
+
+          const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth)
+          const computedPaddingRight = Number.parseFloat(getComputedStyle(document.body).paddingRight) || 0
+          Object.assign(bodyStyle, {
+            position: 'fixed',
+            top: `-${lockedScrollPosition.y}px`,
+            left: `-${lockedScrollPosition.x}px`,
+            width: '100%',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            paddingRight: `${computedPaddingRight + scrollbarWidth}px`
+          })
+          document.documentElement.style.overflow = 'hidden'
+        }
+
+        const unlockPageScroll = (owner) => {
+          scrollLockOwners.delete(owner)
+          if (scrollLockOwners.size > 0 || !bodyLockSnapshot) return
+
+          Object.assign(document.body.style, bodyLockSnapshot)
+          document.documentElement.style.overflow = htmlOverflowSnapshot
+          bodyLockSnapshot = null
+          window.scrollTo(lockedScrollPosition.x, lockedScrollPosition.y)
+        }
 
         const syncPhotosStickyOffsets = () => {
           const headerH = photosSiteHeader
@@ -67,17 +115,14 @@
         let touchStartX = 0
         let touchEndX = 0
         let wheelSwitchLockedUntil = 0
-        let justHandledTouch = false
-        let autoCollapsedThumbsForExif = false
         let overlayImageRequestToken = 0
         let autoplayTimerId = null
         let autoplayAnimationFrameId = null
         let autoplayStartedAt = 0
         let autoplayDuration = 4800
         let overlayVisibilityTimerId = null
-        let exifVisibilityTimerId = null
         let thumbsAlbumKey = null
-        let searchDebounceTimer = null
+        let overlayTrigger = null
 
         const fullscreenApiSupported = Boolean(
           document.fullscreenEnabled
@@ -129,19 +174,11 @@
           }
         }
 
-        const applyPhotoColumns = (value, { animate = true } = {}) => {
+        const applyPhotoColumns = (value) => {
           if (!photos) return
           const next = ALLOWED_COLUMNS.has(value) ? value : 'auto'
           photos.dataset.columns = next
           syncColumnsSliderUi(next)
-          if (!animate) return
-          photos.classList.add('is-layout-switching')
-          if (layoutTransitionTimer) {
-            clearTimeout(layoutTransitionTimer)
-          }
-          layoutTransitionTimer = window.setTimeout(() => {
-            photos.classList.remove('is-layout-switching')
-          }, 220)
         }
 
         let storedColumns = null
@@ -151,7 +188,7 @@
           storedColumns = null
         }
         // Migrate legacy select values; default Auto
-        applyPhotoColumns(storedColumns || 'auto', { animate: false })
+        applyPhotoColumns(storedColumns || 'auto')
 
         // Initialize collapsible captions
         document.querySelectorAll('.caption-container').forEach(container => {
@@ -255,6 +292,7 @@
         const searchClear = document.querySelector('.photo-search-clear')
         const searchResults = document.querySelector('#photo-search-results')
         const searchStatus = document.querySelector('#photo-search-status')
+        let shouldRestoreSearchFocus = true
         const searchIndex = Array.from(document.querySelectorAll('#photos figure[data-photo-search]')).map((figure) => {
           const title = figure.dataset.photoTitle || figure.dataset.photoLabel || figure.id
           const subtitle = figure.dataset.photoSubtitle || ''
@@ -284,8 +322,10 @@
         }
 
         const setSearchScrollLock = (locked) => {
+          if (locked) lockPageScroll('search')
           document.documentElement.classList.toggle('photo-search-open', locked)
           document.body.classList.toggle('photo-search-open', locked)
+          if (!locked) unlockPageScroll('search')
         }
 
         const closeSearchDialog = () => {
@@ -293,13 +333,14 @@
             searchDialog.close()
           } else if (searchDialog?.hasAttribute('open')) {
             searchDialog.removeAttribute('open')
-            setSearchScrollLock(false)
           }
+          setSearchScrollLock(false)
         }
 
         const openSearchDialog = () => {
           setColumnsPanelOpen(false)
           if (!searchDialog) return
+          shouldRestoreSearchFocus = true
           if (typeof searchDialog.showModal === 'function') {
             if (!searchDialog.open) searchDialog.showModal()
           } else {
@@ -325,10 +366,14 @@
         window.addEventListener('touchmove', blockBackgroundScroll, { passive: false })
 
         const jumpToPhotoResult = (photoId) => {
+          shouldRestoreSearchFocus = false
           closeSearchDialog()
           const target = document.getElementById(photoId)
           if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            target.scrollIntoView({
+              behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+              block: 'start'
+            })
             if (typeof target.focus === 'function') {
               try {
                 target.setAttribute('tabindex', '-1')
@@ -370,8 +415,6 @@
           const fragment = document.createDocumentFragment()
           matches.forEach((item) => {
             const li = document.createElement('li')
-            li.setAttribute('role', 'option')
-
             const button = document.createElement('button')
             button.type = 'button'
             button.className = 'photo-search-result'
@@ -415,7 +458,11 @@
           searchResults.appendChild(fragment)
           searchResults.hidden = false
           const capped = matches.length >= 10
-          searchStatus.textContent = capped ? '10+' : String(matches.length)
+          const resultCount = capped ? '10+' : String(matches.length)
+          const resultLabel = !capped && matches.length === 1
+            ? (searchStatus.dataset.resultLabel || 'result')
+            : (searchStatus.dataset.resultsLabel || 'results')
+          searchStatus.textContent = `${resultCount} ${resultLabel}`
         }
 
         searchOpenBtn?.addEventListener('click', () => {
@@ -423,10 +470,7 @@
         })
 
         searchInput?.addEventListener('input', () => {
-          if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
-          searchDebounceTimer = window.setTimeout(() => {
-            runPhotoSearch(searchInput.value)
-          }, 150)
+          runPhotoSearch(searchInput.value)
         })
 
         searchClear?.addEventListener('click', () => {
@@ -437,11 +481,10 @@
         searchDialog?.addEventListener('close', () => {
           clearPhotoSearch()
           setSearchScrollLock(false)
+          if (shouldRestoreSearchFocus) {
+            searchOpenBtn?.focus({ preventScroll: true })
+          }
         })
-        searchDialog?.addEventListener('cancel', () => {
-          setSearchScrollLock(false)
-        })
-
         // / or Cmd/Ctrl+K opens search on photos page
         document.addEventListener('keydown', (event) => {
           if (!searchOpenBtn) return
@@ -477,7 +520,7 @@
             const thumbnailButton = document.createElement('button')
             thumbnailButton.type = 'button'
             thumbnailButton.className = 'photo-overlay-thumb'
-            thumbnailButton.setAttribute('aria-label', `View photo ${index + 1}`)
+            thumbnailButton.setAttribute('aria-label', `${photoOverlayThumbs.dataset.viewLabel || 'View photo'} ${index + 1}`)
             thumbnailButton.dataset.photoIndex = `${index}`
 
             const thumbnailImage = document.createElement('img')
@@ -531,15 +574,11 @@
               : null
 
           setOverlayLoadingState(true)
-          photoOverlayImage.classList.remove('is-entering')
-          // restart animation for each photo switch
-          void photoOverlayImage.offsetWidth
           photoOverlayImage.alt = altText || ''
 
           const markReady = () => {
             if (requestToken !== overlayImageRequestToken) return
             setOverlayLoadingState(false)
-            photoOverlayImage.classList.add('is-entering')
           }
 
           const loadFull = () => {
@@ -581,7 +620,6 @@
             photoOverlayImage.onload = () => {
               if (requestToken !== overlayImageRequestToken) return
               // Placeholder visible; still loading full in background.
-              photoOverlayImage.classList.add('is-entering')
               loadFull()
             }
             photoOverlayImage.onerror = () => {
@@ -616,7 +654,12 @@
           if (!photoOverlayToggleAutoplay) return
           photoOverlayToggleAutoplay.classList.toggle('is-playing', isPlaying)
           photoOverlayToggleAutoplay.setAttribute('aria-pressed', isPlaying ? 'true' : 'false')
-          photoOverlayToggleAutoplay.setAttribute('aria-label', isPlaying ? 'Pause slideshow' : 'Start slideshow')
+          photoOverlayToggleAutoplay.setAttribute(
+            'aria-label',
+            isPlaying
+              ? (photoOverlayToggleAutoplay.dataset.pauseLabel || 'Pause slideshow')
+              : (photoOverlayToggleAutoplay.dataset.startLabel || 'Start slideshow')
+          )
         }
 
         const cancelAutoplayAnimation = () => {
@@ -691,7 +734,12 @@
           const isFullscreen = document.fullscreenElement === photoOverlay
           photoOverlayToggleFullscreen.classList.toggle('is-active', isFullscreen)
           photoOverlayToggleFullscreen.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false')
-          photoOverlayToggleFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen')
+          photoOverlayToggleFullscreen.setAttribute(
+            'aria-label',
+            isFullscreen
+              ? (photoOverlayToggleFullscreen.dataset.exitLabel || 'Exit fullscreen')
+              : (photoOverlayToggleFullscreen.dataset.enterLabel || 'Enter fullscreen')
+          )
         }
 
         const toggleOverlayFullscreen = async () => {
@@ -708,24 +756,11 @@
           }
         }
 
-        const setOverlayExifVisibility = (isVisible) => {
+        const mountOverlayExif = () => {
           if (!photoOverlayExif) return
-
-          if (exifVisibilityTimerId) {
-            window.clearTimeout(exifVisibilityTimerId)
-            exifVisibilityTimerId = null
-          }
-
-          if (isVisible) {
-            photoOverlayExif.hidden = false
-            return
-          }
-
-          exifVisibilityTimerId = window.setTimeout(() => {
-            if (!photoOverlay?.classList.contains('is-exif-open')) {
-              photoOverlayExif.hidden = true
-            }
-          }, 180)
+          // Keep the absolute-positioned inspector mounted so opacity/transform
+          // can interpolate without reintroducing it into the image layout.
+          photoOverlayExif.hidden = false
         }
 
         const parsePhotoMeta = (link) => {
@@ -848,7 +883,7 @@
           if (!hasExif) {
             photoOverlay.classList.remove('is-exif-open')
             photoOverlayToggleExif.setAttribute('aria-pressed', 'false')
-            setOverlayExifVisibility(false)
+            mountOverlayExif()
             ;['camera', 'lens', 'settings', 'capturedAt', 'format', 'range', 'display', 'fallback'].forEach((key) => {
               setRow(key, '', false)
             })
@@ -865,7 +900,7 @@
           setRow('fallback', fallbackState, shouldShowFallback)
 
           const isExifOpen = photoOverlay.classList.contains('is-exif-open')
-          setOverlayExifVisibility(isExifOpen)
+          mountOverlayExif()
         }
 
         const updateOverlay = (photoIndex, { resetAutoplay = true } = {}) => {
@@ -899,6 +934,7 @@
           }
 
           activePhotoLinks = links?.length ? links : allPhotoLinks
+          overlayTrigger = activePhotoLinks[photoIndex] || null
           const albumKey = activePhotoLinks[0]?.closest?.('.photo-album')?.dataset?.album || 'all'
           if (albumKey !== thumbsAlbumKey) {
             thumbsAlbumKey = albumKey
@@ -912,20 +948,19 @@
           photoOverlay.classList.remove('is-closing')
           photoOverlay.classList.remove('is-exif-open')
           photoOverlayToggleExif?.setAttribute('aria-pressed', 'false')
-          setOverlayExifVisibility(false)
+          mountOverlayExif()
           // Mobile / narrow / short viewports: collapse thumbs so main image stays primary.
           // Keep 820px to match CSS overlay breakpoint; short height mirrors plan max-height ~540.
           setOverlayThumbnailsCollapsed(shouldDefaultCollapseThumbs())
-          autoCollapsedThumbsForExif = false
           updateOverlay(photoIndex)
-          const scrollbarCompensation = window.innerWidth - document.documentElement.clientWidth
-          document.body.style.setProperty('--overlay-scrollbar-compensation', `${Math.max(0, scrollbarCompensation)}px`)
+          lockPageScroll('overlay')
           document.body.classList.add('photo-overlay-open')
           document.documentElement.classList.add('photo-overlay-open')
           photoOverlay.hidden = false
           photoOverlay.setAttribute('aria-hidden', 'false')
           window.requestAnimationFrame(() => {
             photoOverlay.classList.add('is-visible')
+            photoOverlayClose?.focus({ preventScroll: true })
           })
           syncFullscreenButtonState()
         }
@@ -955,7 +990,9 @@
             photoOverlay.classList.remove('is-closing')
             document.body.classList.remove('photo-overlay-open')
             document.documentElement.classList.remove('photo-overlay-open')
-            document.body.style.removeProperty('--overlay-scrollbar-compensation')
+            unlockPageScroll('overlay')
+            overlayTrigger?.focus({ preventScroll: true })
+            overlayTrigger = null
           }, 140)
         }
 
@@ -986,7 +1023,6 @@
           const willCollapse = !photoOverlay.classList.contains('is-thumbs-collapsed')
           photoOverlay.classList.toggle('is-thumbs-collapsed', willCollapse)
           photoOverlayToggleThumbs.setAttribute('aria-pressed', willCollapse ? 'true' : 'false')
-          autoCollapsedThumbsForExif = false
         }
 
         // Align with CSS `@media (max-width: 820px)` overlay layout (wider than plan's 768 mobile).
@@ -1004,70 +1040,65 @@
         const toggleOverlayExif = () => {
           if (!photoOverlay || !photoOverlayToggleExif || photoOverlayToggleExif.hidden) return
           const willOpen = !photoOverlay.classList.contains('is-exif-open')
-          setOverlayExifVisibility(willOpen)
+          mountOverlayExif()
           photoOverlay.classList.toggle('is-exif-open', willOpen)
           photoOverlayToggleExif.setAttribute('aria-pressed', willOpen ? 'true' : 'false')
-
-          if (willOpen && shouldDefaultCollapseThumbs() && !photoOverlay.classList.contains('is-thumbs-collapsed')) {
-            setOverlayThumbnailsCollapsed(true)
-            autoCollapsedThumbsForExif = true
-          } else if (!willOpen && autoCollapsedThumbsForExif) {
-            setOverlayThumbnailsCollapsed(false)
-            autoCollapsedThumbsForExif = false
-          }
         }
 
         const TAP_MOVE_THRESHOLD = 10
+        let touchedPhotoLink = null
+        let linkTouchStartX = 0
+        let linkTouchStartY = 0
+        const suppressClickUntil = new WeakMap()
 
-        allPhotoLinks.forEach((link) => {
-          const openFromLinkEvent = (event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            const links = albumLinksFor(link)
-            const index = Math.max(0, links.indexOf(link))
-            openOverlay(index, links)
+        const photoLinkFromEvent = (event) => {
+          const target = event.target
+          if (!(target instanceof Element)) return null
+          const link = target.closest('#photos .image-link')
+          return link && photos?.contains(link) ? link : null
+        }
+
+        const openFromPhotoLink = (link, event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          const links = albumLinksFor(link)
+          const index = Math.max(0, links.indexOf(link))
+          openOverlay(index, links)
+        }
+
+        photos?.addEventListener('touchstart', (event) => {
+          const link = photoLinkFromEvent(event)
+          const touch = event.changedTouches?.[0] || event.touches?.[0]
+          if (!link || !touch) return
+          touchedPhotoLink = link
+          linkTouchStartX = touch.clientX
+          linkTouchStartY = touch.clientY
+        }, { passive: true })
+
+        photos?.addEventListener('touchend', (event) => {
+          const link = photoLinkFromEvent(event)
+          const touch = event.changedTouches?.[0]
+          if (!link || link !== touchedPhotoLink || !touch) {
+            touchedPhotoLink = null
+            return
           }
 
-          let linkTouchStartX = 0
-          let linkTouchStartY = 0
+          const dx = touch.clientX - linkTouchStartX
+          const dy = touch.clientY - linkTouchStartY
+          const moved = Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD
+          suppressClickUntil.set(link, Date.now() + 500)
+          touchedPhotoLink = null
+          if (!moved) openFromPhotoLink(link, event)
+        }, { passive: false })
 
-          link.addEventListener('touchstart', (event) => {
-            const touch = event.changedTouches?.[0] || event.touches?.[0]
-            if (!touch) return
-            linkTouchStartX = touch.clientX
-            linkTouchStartY = touch.clientY
-          }, { passive: true })
-
-          link.addEventListener('click', (event) => {
-            if (justHandledTouch) {
-              justHandledTouch = false
-              event.preventDefault()
-              return
-            }
-            openFromLinkEvent(event)
-          })
-
-          link.addEventListener('touchend', (event) => {
-            const touch = event.changedTouches?.[0]
-            if (!touch) return
-
-            const dx = touch.clientX - linkTouchStartX
-            const dy = touch.clientY - linkTouchStartY
-            const moved = Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD
-
-            if (moved) {
-              // Ignore scroll gestures. Briefly swallow a possible synthetic click
-              // without leaving justHandledTouch stuck (which would block the next real tap).
-              justHandledTouch = true
-              window.setTimeout(() => {
-                justHandledTouch = false
-              }, 400)
-              return
-            }
-
-            justHandledTouch = true
-            openFromLinkEvent(event)
-          }, { passive: false })
+        photos?.addEventListener('click', (event) => {
+          const link = photoLinkFromEvent(event)
+          if (!link) return
+          if ((suppressClickUntil.get(link) || 0) > Date.now()) {
+            event.preventDefault()
+            return
+          }
+          openFromPhotoLink(link, event)
         })
 
         if (!fullscreenApiSupported && photoOverlayToggleFullscreen) {
@@ -1127,7 +1158,24 @@
         document.addEventListener('keydown', (event) => {
           if (!photoOverlay || photoOverlay.hidden) return
 
-          if (event.key === 'Escape') {
+          if (event.key === 'Tab') {
+            const focusable = Array.from(
+              photoOverlay.querySelectorAll('button:not([hidden]):not([disabled])')
+            ).filter((element) => element.getClientRects().length > 0)
+            const first = focusable[0]
+            const last = focusable[focusable.length - 1]
+
+            if (!first || !last) {
+              event.preventDefault()
+              photoOverlay.focus({ preventScroll: true })
+            } else if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault()
+              last.focus({ preventScroll: true })
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault()
+              first.focus({ preventScroll: true })
+            }
+          } else if (event.key === 'Escape') {
             closeOverlay()
           } else if (event.key === 'ArrowLeft') {
             goToPreviousPhoto()
