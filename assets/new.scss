@@ -524,13 +524,21 @@ header {
   padding-top: 2.5em;
 }
 
-/* 照片页：让 header 左右排列，控件与标志同一行 */
-[data-page-type="photos"] header {
+/* 照片页：Afilmory-like top bar — back/logo stay reachable while scrolling */
+[data-page-type="photos"] > header {
+  position: sticky;
+  top: 0;
+  z-index: 8;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .5em;
   flex-wrap: wrap;
+  padding-top: 0.85em;
+  padding-bottom: 0.55em;
+  margin: 0;
+  background: var(--backgroundColor);
+  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 10%, transparent);
 }
 
 footer {
@@ -965,10 +973,28 @@ figure {
 }
 
 [data-page-type="photos"] {
+  // Stack: site header (back) → tools chrome → album title.
+  --photos-site-header-height: 0px;
+  --photos-chrome-height: 0px;
+  --photos-sticky-stack: calc(
+    var(--photos-site-header-height, 0px) + var(--photos-chrome-height, 0px)
+  );
+
   header, main, footer {
     max-width: 100%;
     overflow: initial;
   }
+}
+
+// Columns + search under sticky site header (measured top offset in JS).
+.photos-chrome {
+  position: sticky;
+  top: var(--photos-site-header-height, 0px);
+  z-index: 7;
+  margin: 0 0 1rem;
+  padding: 0.45rem 0 0.65rem;
+  background: var(--backgroundColor);
+  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 10%, transparent);
 }
 
 [data-page-type="photos"] .photo-layout-controls {
@@ -977,7 +1003,7 @@ figure {
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.4rem 0.55rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.55rem;
 
   .photo-layout-icon {
     display: inline-flex;
@@ -1117,7 +1143,7 @@ figure {
   position: relative;
   width: 100%;
   max-width: min(32rem, 100%);
-  margin: 0 auto 1rem;
+  margin: 0 auto;
 }
 
 .photo-search-row {
@@ -1191,7 +1217,7 @@ figure {
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 5;
+  z-index: 7;
   max-height: 18rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -1303,8 +1329,9 @@ figure {
 
 .photo-album-header {
   position: sticky;
-  top: 0;
-  z-index: 3;
+  // Under sticky site header + tools chrome.
+  top: var(--photos-sticky-stack, 0px);
+  z-index: 5;
   margin: 0 0 0.75rem;
   padding: 0.55rem 0 0.5rem;
   text-align: left;
@@ -1329,8 +1356,8 @@ figure {
   --photo-columns: 2;
   --photo-column-gap: 0.85rem;
   --photo-row-gap: 1rem;
-  // Room under sticky album header when scrolling to a figure / hash.
-  --photo-album-sticky-offset: 4.25rem;
+  // Room under sticky stack + album header when scrolling to a figure / hash.
+  --photo-album-sticky-offset: calc(var(--photos-sticky-stack, 0px) + 4.25rem);
 
   &:focus { outline: none; }
   scroll-behavior: smooth;
@@ -1442,10 +1469,16 @@ figure {
   }
 }
 
-// Hide columns control below desktop; CSS still forces responsive column counts.
+// Hide columns control below desktop; search stays sticky in .photos-chrome.
+// CSS still forces responsive column counts.
 @media (max-width: 1023.98px) {
   [data-page-type="photos"] .photo-layout-controls {
     display: none;
+  }
+
+  .photos-chrome {
+    padding-top: 0.15rem;
+    padding-bottom: 0.5rem;
   }
 }
 

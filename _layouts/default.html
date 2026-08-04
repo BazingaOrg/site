@@ -135,37 +135,6 @@
     </header>
     <main>
       {% capture content_and_then_some do %}
-        {% if page.type == "photos" %}
-          {% assign photos_copy = copy.list_pages[lang] | default: copy.list_pages['en-US'] %}
-          <div class="photo-layout-controls" role="group" aria-label="{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}">
-            <span class="photo-layout-icon" aria-hidden="true">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <title>{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}</title>
-                <rect x="1.5" y="1.5" width="5.4" height="7.8" rx="0.9"></rect>
-                <rect x="8.1" y="1.5" width="5.4" height="4.2" rx="0.9"></rect>
-                <rect x="8.1" y="7.2" width="5.4" height="6.3" rx="0.9"></rect>
-              </svg>
-            </span>
-            <label class="photo-columns-label" for="photo-columns">{{ photos_copy.photos_columns | default: 'Columns' }}</label>
-            <div class="photo-columns-control">
-              <input
-                type="range"
-                id="photo-columns"
-                class="photo-columns-slider"
-                name="photo-columns"
-                min="0"
-                max="6"
-                step="1"
-                value="0"
-                data-auto-label="{{ photos_copy.photos_columns_auto | default: 'Auto' }}"
-                aria-valuemin="0"
-                aria-valuemax="6"
-                aria-valuenow="0"
-                aria-valuetext="{{ photos_copy.photos_columns_auto | default: 'Auto' }}">
-              <output class="photo-columns-value" id="photo-columns-value" for="photo-columns">{{ photos_copy.photos_columns_auto | default: 'Auto' }}</output>
-            </div>
-          </div>
-        {% endif %}
         {{ content }}
         {% if page.type == "photos" %}
           <div id="photo-overlay" class="photo-overlay" hidden aria-hidden="true">

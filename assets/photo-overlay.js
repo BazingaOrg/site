@@ -1,9 +1,34 @@
         const photos = document.querySelector('#photos')
+        const photosChrome = document.querySelector('#photos-chrome')
+        // Site chrome on photos page (back/logo) — sticky like afilmory top bar.
+        const photosSiteHeader = document.querySelector('body[data-page-type="photos"] > header')
         let layoutTransitionTimer = null
         // Range: 0 = Auto, 1..6 → columns 3..8
         const columnsSlider = document.querySelector('#photo-columns')
         const columnsValueEl = document.querySelector('#photo-columns-value')
         const COLUMNS_STORAGE_KEY = 'photos-columns'
+
+        // Stack heights: site header → tools chrome → album title stickies.
+        const syncPhotosStickyOffsets = () => {
+          const headerH = photosSiteHeader
+            ? Math.ceil(photosSiteHeader.getBoundingClientRect().height)
+            : 0
+          const chromeH = photosChrome
+            ? Math.ceil(photosChrome.getBoundingClientRect().height)
+            : 0
+          const root = document.documentElement
+          root.style.setProperty('--photos-site-header-height', `${headerH}px`)
+          root.style.setProperty('--photos-chrome-height', `${chromeH}px`)
+        }
+        syncPhotosStickyOffsets()
+        if (typeof ResizeObserver !== 'undefined') {
+          const stickyRo = new ResizeObserver(() => {
+            syncPhotosStickyOffsets()
+          })
+          if (photosSiteHeader) stickyRo.observe(photosSiteHeader)
+          if (photosChrome) stickyRo.observe(photosChrome)
+        }
+        window.addEventListener('resize', syncPhotosStickyOffsets, { passive: true })
         const COLUMN_STEPS = ['auto', '3', '4', '5', '6', '7', '8']
         const ALLOWED_COLUMNS = new Set(COLUMN_STEPS)
         // All gallery links (for click binding). Active strip/nav is album-scoped.
