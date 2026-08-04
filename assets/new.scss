@@ -524,21 +524,66 @@ header {
   padding-top: 2.5em;
 }
 
-/* 照片页：Afilmory-like top bar — back/logo stay reachable while scrolling */
-[data-page-type="photos"] > header {
+/* Photos: single sticky top bar (afilmory-like) — back left, tools right */
+[data-page-type="photos"] > header.photos-site-header {
   position: sticky;
   top: 0;
   z-index: 8;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .5em;
-  flex-wrap: wrap;
-  padding-top: 0.85em;
+  gap: .65rem;
+  flex-wrap: nowrap;
+  padding-top: 0.75em;
   padding-bottom: 0.55em;
   margin: 0;
   background: var(--backgroundColor);
   border-bottom: 1px solid color-mix(in srgb, var(--textColor) 10%, transparent);
+}
+
+.photos-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.photos-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--mutedTextColor);
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+
+  &:hover {
+    color: var(--textColor);
+    background: var(--subtleBackgroundColor);
+  }
+
+  &:focus-visible {
+    outline: none;
+    color: var(--textColor);
+    border-color: var(--secondaryTextColor);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 40%, transparent);
+  }
+
+  &[aria-expanded="true"] {
+    color: var(--textColor);
+    background: var(--subtleBackgroundColor);
+    border-color: color-mix(in srgb, var(--borderColor) 80%, transparent);
+  }
+
+  svg {
+    display: block;
+  }
 }
 
 footer {
@@ -973,12 +1018,7 @@ figure {
 }
 
 [data-page-type="photos"] {
-  // Stack: site header (back) → tools chrome → album title.
-  --photos-site-header-height: 0px;
-  --photos-chrome-height: 0px;
-  --photos-sticky-stack: calc(
-    var(--photos-site-header-height, 0px) + var(--photos-chrome-height, 0px)
-  );
+  --photos-site-header-height: 3.25rem;
 
   header, main, footer {
     max-width: 100%;
@@ -986,167 +1026,41 @@ figure {
   }
 }
 
-// Columns + search under sticky site header (measured top offset in JS).
-.photos-chrome {
-  position: sticky;
-  top: var(--photos-site-header-height, 0px);
-  z-index: 7;
-  margin: 0 0 1rem;
-  padding: 0.45rem 0 0.65rem;
+// Lock page scroll while search dialog is open (wheel/touch on backdrop).
+html.photo-search-open,
+html.photo-search-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+// --- Photos search dialog (icon → modal, afilmory-like) ---
+.photo-search-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  max-width: 100%;
+  max-height: min(80vh, 36rem);
+  margin: min(12vh, 5rem) auto auto;
+  padding: 0;
+  border: 1px solid var(--borderColor);
+  border-radius: 10px;
   background: var(--backgroundColor);
-  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 10%, transparent);
-}
+  color: var(--textColor);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--textColor) 14%, transparent);
+  overflow: hidden;
 
-[data-page-type="photos"] .photo-layout-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.55rem;
-  margin: 0 0 0.55rem;
-
-  .photo-layout-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--logoAccentColor);
-    line-height: 0;
-  }
-
-  .photo-layout-icon svg {
-    display: block;
-  }
-
-  .photo-layout-icon rect {
-    stroke: currentColor;
-    stroke-width: 1.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-  }
-
-  .photo-columns-label {
-    margin: 0;
-    font-size: 0.85em;
-    color: var(--mutedTextColor);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .photo-columns-control {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-width: 0;
-  }
-
-  // Site-styled range: 1px track, solid thumb, token colors (no OS chrome look).
-  .photo-columns-slider {
-    --columns-progress: 0%;
-    -webkit-appearance: none;
-    appearance: none;
-    width: min(11rem, 36vw);
-    height: 1.4rem;
-    margin: 0;
-    background: transparent;
-    cursor: pointer;
-
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: none;
-    }
-
-    &::-webkit-slider-runnable-track {
-      height: 4px;
-      border-radius: 999px;
-      border: 1px solid var(--borderColor);
-      background: linear-gradient(
-        to right,
-        color-mix(in srgb, var(--textColor) 55%, transparent) 0%,
-        color-mix(in srgb, var(--textColor) 55%, transparent) var(--columns-progress),
-        color-mix(in srgb, var(--mutedTextColor) 14%, transparent) var(--columns-progress),
-        color-mix(in srgb, var(--mutedTextColor) 14%, transparent) 100%
-      );
-    }
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 14px;
-      height: 14px;
-      margin-top: -6px;
-      border-radius: 50%;
-      border: 1px solid var(--borderColor);
-      background: var(--backgroundColor);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--textColor) 12%, transparent);
-      transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
-    }
-
-    &:hover::-webkit-slider-thumb {
-      border-color: var(--secondaryTextColor);
-    }
-
-    &:focus-visible::-webkit-slider-thumb {
-      border-color: var(--secondaryTextColor);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 45%, transparent);
-    }
-
-    &::-moz-range-track {
-      height: 4px;
-      border-radius: 999px;
-      border: 1px solid var(--borderColor);
-      background: color-mix(in srgb, var(--mutedTextColor) 14%, transparent);
-    }
-
-    &::-moz-range-progress {
-      height: 4px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      background: color-mix(in srgb, var(--textColor) 55%, transparent);
-    }
-
-    &::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1px solid var(--borderColor);
-      background: var(--backgroundColor);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--textColor) 12%, transparent);
-      transition: border-color 140ms ease, box-shadow 140ms ease;
-    }
-
-    &:hover::-moz-range-thumb {
-      border-color: var(--secondaryTextColor);
-    }
-
-    &:focus-visible::-moz-range-thumb {
-      border-color: var(--secondaryTextColor);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 45%, transparent);
-    }
-  }
-
-  .photo-columns-value {
-    flex: 0 0 auto;
-    min-width: 2.4em;
-    font-family: var(--monospace);
-    font-size: 0.82em;
-    line-height: 1.2;
-    color: var(--textColor);
-    text-align: left;
+  &::backdrop {
+    background: color-mix(in srgb, var(--textColor) 28%, transparent);
+    // Keep backdrop from chaining scroll to the page behind.
+    overscroll-behavior: none;
+    touch-action: none;
   }
 }
 
-.photo-search {
-  position: relative;
-  width: 100%;
-  max-width: min(32rem, 100%);
-  margin: 0 auto;
+.photo-search-dialog-form {
+  margin: 0;
+  padding: 0.75rem 0.85rem 0.85rem;
 }
 
-.photo-search-row {
+.photo-search-dialog-bar {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -1158,20 +1072,16 @@ figure {
   width: 100%;
   box-sizing: border-box;
   font: inherit;
-  font-size: 0.9em;
+  font-size: 0.95em;
   color: var(--textColor);
   background-color: var(--backgroundColor);
   border: 1px solid var(--borderColor);
   border-radius: 8px;
-  padding: 0.45em 0.7em;
+  padding: 0.55em 0.75em;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 
   &::placeholder {
     color: var(--mutedTextColor);
-  }
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--borderColor) 70%, var(--secondaryTextColor));
   }
 
   &:focus-visible {
@@ -1181,16 +1091,18 @@ figure {
   }
 }
 
-.photo-search-clear {
+.photo-search-clear,
+.photo-search-close {
   flex: 0 0 auto;
   font: inherit;
-  font-size: 0.82em;
+  font-size: 0.85em;
   color: var(--mutedTextColor);
   background: transparent;
   border: 1px solid var(--borderColor);
   border-radius: 8px;
   padding: 0.4em 0.65em;
   cursor: pointer;
+  line-height: 1.2;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 
   &:hover {
@@ -1204,27 +1116,31 @@ figure {
     border-color: var(--secondaryTextColor);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 35%, transparent);
   }
+}
 
-  &[hidden] {
-    display: none;
-  }
+.photo-search-clear[hidden] {
+  display: none;
+}
+
+.photo-search-close {
+  width: 2rem;
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 1.15em;
+  line-height: 1;
 }
 
 .photo-search-results {
   list-style: none;
-  margin: 0.35rem 0 0;
-  padding: 0.2rem 0;
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 7;
-  max-height: 18rem;
+  margin: 0.55rem 0 0;
+  padding: 0.15rem 0;
+  max-height: min(50vh, 20rem);
   overflow-x: hidden;
   overflow-y: auto;
-  background: var(--backgroundColor);
-  border: 1px solid var(--borderColor);
+  overscroll-behavior: contain;
+  border: 1px solid color-mix(in srgb, var(--borderColor) 85%, transparent);
   border-radius: 8px;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--textColor) 10%, transparent);
+  background: color-mix(in srgb, var(--subtleBackgroundColor) 35%, var(--backgroundColor));
 
   &[hidden] {
     display: none;
@@ -1236,7 +1152,6 @@ figure {
   padding: 0;
 }
 
-// Afilmory-inspired row: thumb + title + album subtitle; site tokens only.
 .photo-search-result {
   display: flex;
   align-items: center;
@@ -1248,7 +1163,7 @@ figure {
   color: var(--textColor);
   background: transparent;
   border: 0;
-  padding: 0.4rem 0.65rem;
+  padding: 0.45rem 0.65rem;
   cursor: pointer;
   transition: background-color 140ms ease;
 
@@ -1256,10 +1171,6 @@ figure {
   &:focus-visible {
     background: var(--subtleBackgroundColor);
     outline: none;
-  }
-
-  &:focus-visible {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--activeColor) 40%, transparent);
   }
 }
 
@@ -1311,12 +1222,179 @@ figure {
 }
 
 .photo-search-status {
-  margin: 0.3rem 0 0;
+  margin: 0.4rem 0 0;
   min-height: 1.2em;
   font-family: var(--monospace);
   font-size: 0.78em;
   color: var(--mutedTextColor);
   text-align: center;
+}
+
+// --- Columns popover (icon → panel with slider) ---
+.photo-columns-panel {
+  position: fixed;
+  z-index: 9;
+  width: min(18rem, calc(100vw - 1.5rem));
+  padding: 0;
+  border: 1px solid var(--borderColor);
+  border-radius: 10px;
+  background: var(--backgroundColor);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--textColor) 12%, transparent);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.photo-columns-panel-inner {
+  padding: 0.85rem 0.95rem 0.75rem;
+}
+
+.photo-columns-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.photo-columns-label {
+  margin: 0;
+  font-size: 0.88em;
+  color: var(--mutedTextColor);
+}
+
+.photo-columns-value {
+  font-family: var(--monospace);
+  font-size: 0.85em;
+  color: var(--textColor);
+}
+
+.photo-columns-slider-wrap {
+  position: relative;
+  padding: 0 0.35rem 0.1rem;
+}
+
+.photo-columns-slider {
+  --columns-progress: 0%;
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 1.35rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--borderColor);
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--textColor) 55%, transparent) 0%,
+      color-mix(in srgb, var(--textColor) 55%, transparent) var(--columns-progress),
+      color-mix(in srgb, var(--mutedTextColor) 14%, transparent) var(--columns-progress),
+      color-mix(in srgb, var(--mutedTextColor) 14%, transparent) 100%
+    );
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -6px;
+    border-radius: 50%;
+    border: 1px solid var(--borderColor);
+    background: var(--backgroundColor);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--textColor) 12%, transparent);
+  }
+
+  &:hover::-webkit-slider-thumb {
+    border-color: var(--secondaryTextColor);
+  }
+
+  &:focus-visible::-webkit-slider-thumb {
+    border-color: var(--secondaryTextColor);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 45%, transparent);
+  }
+
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--borderColor);
+    background: color-mix(in srgb, var(--mutedTextColor) 14%, transparent);
+  }
+
+  &::-moz-range-progress {
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--textColor) 55%, transparent);
+  }
+
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--borderColor);
+    background: var(--backgroundColor);
+  }
+}
+
+// Step ticks under the track (Auto + 3–8).
+.photo-columns-marks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -0.15rem 0.15rem 0.2rem;
+  pointer-events: none;
+}
+
+.photo-columns-mark {
+  width: 1px;
+  height: 0.45rem;
+  background: color-mix(in srgb, var(--mutedTextColor) 45%, transparent);
+  border-radius: 1px;
+}
+
+.photo-columns-mark-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.15rem;
+  margin: 0 0 0.05rem;
+  font-size: 0.68em;
+  line-height: 1.2;
+  color: var(--mutedTextColor);
+  pointer-events: none;
+
+  span {
+    flex: 0 0 auto;
+    min-width: 0;
+    text-align: center;
+  }
+
+  // Keep first/last labels readable without crowding.
+  span:first-child {
+    text-align: left;
+    min-width: 2.2em;
+  }
+
+  span:last-child {
+    text-align: right;
+    min-width: 0.8em;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .photos-header-action--columns {
+    display: none;
+  }
 }
 
 // Album section: sticky title for orientation (no accordion).
@@ -1329,9 +1407,13 @@ figure {
 
 .photo-album-header {
   position: sticky;
-  // Under sticky site header + tools chrome.
-  top: var(--photos-sticky-stack, 0px);
+  // Under single sticky site header (tools are icons in the header).
+  top: var(--photos-site-header-height, 3.25rem);
   z-index: 5;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
   margin: 0 0 0.75rem;
   padding: 0.55rem 0 0.5rem;
   text-align: left;
@@ -1341,23 +1423,31 @@ figure {
 
 .photo-album-title {
   margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
   font-size: 1.15em;
   font-weight: 600;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .photo-album-meta {
-  margin: 0.25rem 0 0;
+  margin: 0;
+  flex: 0 0 auto;
   font-size: 0.8em;
+  line-height: 1.3;
   color: var(--mutedTextColor);
+  white-space: nowrap;
 }
 
 .photos-wrapper {
   --photo-columns: 2;
   --photo-column-gap: 0.85rem;
   --photo-row-gap: 1rem;
-  // Room under sticky stack + album header when scrolling to a figure / hash.
-  --photo-album-sticky-offset: calc(var(--photos-sticky-stack, 0px) + 4.25rem);
+  // Room under sticky header + album title when scrolling to a figure / hash.
+  --photo-album-sticky-offset: calc(var(--photos-site-header-height, 3.25rem) + 4.25rem);
 
   &:focus { outline: none; }
   scroll-behavior: smooth;
@@ -1466,19 +1556,6 @@ figure {
   .photos-wrapper[data-columns="auto"],
   .photos-wrapper:not([data-columns]) {
     --photo-columns: 8;
-  }
-}
-
-// Hide columns control below desktop; search stays sticky in .photos-chrome.
-// CSS still forces responsive column counts.
-@media (max-width: 1023.98px) {
-  [data-page-type="photos"] .photo-layout-controls {
-    display: none;
-  }
-
-  .photos-chrome {
-    padding-top: 0.15rem;
-    padding-bottom: 0.5rem;
   }
 }
 

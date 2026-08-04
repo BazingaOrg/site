@@ -1,32 +1,26 @@
         const photos = document.querySelector('#photos')
-        const photosChrome = document.querySelector('#photos-chrome')
-        // Site chrome on photos page (back/logo) — sticky like afilmory top bar.
+        // Single sticky site header (back + action icons).
         const photosSiteHeader = document.querySelector('body[data-page-type="photos"] > header')
         let layoutTransitionTimer = null
         // Range: 0 = Auto, 1..6 → columns 3..8
         const columnsSlider = document.querySelector('#photo-columns')
         const columnsValueEl = document.querySelector('#photo-columns-value')
+        const columnsOpenBtn = document.querySelector('#photo-columns-open')
+        const columnsPanel = document.querySelector('#photo-columns-panel')
         const COLUMNS_STORAGE_KEY = 'photos-columns'
 
-        // Stack heights: site header → tools chrome → album title stickies.
         const syncPhotosStickyOffsets = () => {
           const headerH = photosSiteHeader
             ? Math.ceil(photosSiteHeader.getBoundingClientRect().height)
             : 0
-          const chromeH = photosChrome
-            ? Math.ceil(photosChrome.getBoundingClientRect().height)
-            : 0
-          const root = document.documentElement
-          root.style.setProperty('--photos-site-header-height', `${headerH}px`)
-          root.style.setProperty('--photos-chrome-height', `${chromeH}px`)
+          document.documentElement.style.setProperty('--photos-site-header-height', `${headerH}px`)
         }
         syncPhotosStickyOffsets()
-        if (typeof ResizeObserver !== 'undefined') {
+        if (photosSiteHeader && typeof ResizeObserver !== 'undefined') {
           const stickyRo = new ResizeObserver(() => {
             syncPhotosStickyOffsets()
           })
-          if (photosSiteHeader) stickyRo.observe(photosSiteHeader)
-          if (photosChrome) stickyRo.observe(photosChrome)
+          stickyRo.observe(photosSiteHeader)
         }
         window.addEventListener('resize', syncPhotosStickyOffsets, { passive: true })
         const COLUMN_STEPS = ['auto', '3', '4', '5', '6', '7', '8']
@@ -217,13 +211,50 @@
           commitPhotoColumns(columnsSlider.value, { persist: true, track: true })
         })
 
-        // Compact album/filename jump search (max 10 results)
-        const searchRoot = document.querySelector('.photo-search')
+        const positionColumnsPanel = () => {
+          if (!columnsPanel || !columnsOpenBtn || columnsPanel.hidden) return
+          const rect = columnsOpenBtn.getBoundingClientRect()
+          const panelWidth = columnsPanel.offsetWidth || 288
+          const gap = 8
+          let left = rect.right - panelWidth
+          left = Math.max(12, Math.min(left, window.innerWidth - panelWidth - 12))
+          const top = Math.min(rect.bottom + gap, window.innerHeight - 12)
+          columnsPanel.style.left = `${Math.round(left)}px`
+          columnsPanel.style.top = `${Math.round(top)}px`
+        }
+
+        const setColumnsPanelOpen = (open) => {
+          if (!columnsPanel || !columnsOpenBtn) return
+          columnsPanel.hidden = !open
+          columnsOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false')
+          if (open) {
+            positionColumnsPanel()
+            columnsSlider?.focus({ preventScroll: true })
+          }
+        }
+
+        columnsOpenBtn?.addEventListener('click', (event) => {
+          event.stopPropagation()
+          setColumnsPanelOpen(Boolean(columnsPanel?.hidden))
+        })
+
+        document.addEventListener('click', (event) => {
+          if (!columnsPanel || columnsPanel.hidden) return
+          if (columnsPanel.contains(event.target) || columnsOpenBtn?.contains(event.target)) return
+          setColumnsPanelOpen(false)
+        })
+
+        window.addEventListener('resize', () => {
+          if (!columnsPanel?.hidden) positionColumnsPanel()
+        }, { passive: true })
+
+        // Search dialog (afilmory-like icon → modal)
+        const searchOpenBtn = document.querySelector('#photo-search-open')
+        const searchDialog = document.querySelector('#photo-search-dialog')
         const searchInput = document.querySelector('#photo-search-input')
         const searchClear = document.querySelector('.photo-search-clear')
         const searchResults = document.querySelector('#photo-search-results')
         const searchStatus = document.querySelector('#photo-search-status')
-        // Afilmory-style row: thumb + title + subtitle (site tokens; no cmdk).
         const searchIndex = Array.from(document.querySelectorAll('#photos figure[data-photo-search]')).map((figure) => {
           const title = figure.dataset.photoTitle || figure.dataset.photoLabel || figure.id
           const subtitle = figure.dataset.photoSubtitle || ''
@@ -252,7 +283,49 @@
           if (searchClear) searchClear.hidden = true
         }
 
+        const setSearchScrollLock = (locked) => {
+          document.documentElement.classList.toggle('photo-search-open', locked)
+          document.body.classList.toggle('photo-search-open', locked)
+        }
+
+        const closeSearchDialog = () => {
+          if (searchDialog?.open) {
+            searchDialog.close()
+          } else if (searchDialog?.hasAttribute('open')) {
+            searchDialog.removeAttribute('open')
+            setSearchScrollLock(false)
+          }
+        }
+
+        const openSearchDialog = () => {
+          setColumnsPanelOpen(false)
+          if (!searchDialog) return
+          if (typeof searchDialog.showModal === 'function') {
+            if (!searchDialog.open) searchDialog.showModal()
+          } else {
+            searchDialog.setAttribute('open', '')
+          }
+          setSearchScrollLock(true)
+          window.setTimeout(() => {
+            searchInput?.focus()
+            searchInput?.select?.()
+          }, 0)
+        }
+
+        // Prevent wheel/touch on the dimmed backdrop from scrolling the page.
+        const blockBackgroundScroll = (event) => {
+          if (!document.documentElement.classList.contains('photo-search-open')) return
+          const path = typeof event.composedPath === 'function' ? event.composedPath() : []
+          const inDialog = path.includes(searchDialog) || searchDialog?.contains(event.target)
+          if (!inDialog) {
+            event.preventDefault()
+          }
+        }
+        window.addEventListener('wheel', blockBackgroundScroll, { passive: false })
+        window.addEventListener('touchmove', blockBackgroundScroll, { passive: false })
+
         const jumpToPhotoResult = (photoId) => {
+          closeSearchDialog()
           const target = document.getElementById(photoId)
           if (target) {
             target.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -265,7 +338,6 @@
               }
             }
           }
-          if (searchResults) searchResults.hidden = true
         }
 
         const runPhotoSearch = (rawQuery) => {
@@ -346,6 +418,10 @@
           searchStatus.textContent = capped ? '10+' : String(matches.length)
         }
 
+        searchOpenBtn?.addEventListener('click', () => {
+          openSearchDialog()
+        })
+
         searchInput?.addEventListener('input', () => {
           if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
           searchDebounceTimer = window.setTimeout(() => {
@@ -353,22 +429,43 @@
           }, 150)
         })
 
-        searchInput?.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') {
-            clearPhotoSearch()
-            searchInput.blur()
-          }
-        })
-
         searchClear?.addEventListener('click', () => {
           clearPhotoSearch()
           searchInput?.focus()
         })
 
-        document.addEventListener('click', (event) => {
-          if (!searchRoot || !searchResults || searchResults.hidden) return
-          if (searchRoot.contains(event.target)) return
-          searchResults.hidden = true
+        searchDialog?.addEventListener('close', () => {
+          clearPhotoSearch()
+          setSearchScrollLock(false)
+        })
+        searchDialog?.addEventListener('cancel', () => {
+          setSearchScrollLock(false)
+        })
+
+        // / or Cmd/Ctrl+K opens search on photos page
+        document.addEventListener('keydown', (event) => {
+          if (!searchOpenBtn) return
+          const target = event.target
+          const tag = target?.tagName
+          const typing =
+            tag === 'INPUT'
+            || tag === 'TEXTAREA'
+            || tag === 'SELECT'
+            || target?.isContentEditable
+          if (typing) return
+
+          const metaK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k'
+          const slash = event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey
+          if (!metaK && !slash) return
+          event.preventDefault()
+          openSearchDialog()
+        })
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape') return
+          if (columnsPanel && !columnsPanel.hidden) {
+            setColumnsPanelOpen(false)
+          }
         })
 
         const buildOverlayThumbnails = () => {

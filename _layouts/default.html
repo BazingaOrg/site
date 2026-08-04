@@ -97,7 +97,7 @@
   </head>
   
   <body class="{% if page.root != true %}post-body{% endif %} col-{{ page.collection }}" data-page-type="{{ page.type }}">
-    <header>
+    <header{% if page.type == "photos" %} class="photos-site-header"{% endif %}>
       {% if page.root != true %}
         <div class="logo-container">
           <a href="/{% if page.collection == "notes" %}notes{% endif %}" aria-label="Home" class="back-link"
@@ -119,11 +119,41 @@
           </svg>
             <span class="font">Bazinga</span>
         </div>
-        {% unless page.type == "photos" %}
+        {% if page.type == "photos" %}
+          {% assign photos_copy = copy.list_pages[lang] | default: copy.list_pages['en-US'] %}
+          <div class="photos-header-actions" id="photos-header-actions">
+            <button
+              type="button"
+              class="photos-header-action"
+              id="photo-search-open"
+              aria-haspopup="dialog"
+              aria-controls="photo-search-dialog"
+              aria-label="{{ photos_copy.photos_search_open | default: photos_copy.photos_search_placeholder | default: 'Search photos' }}">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.25" fill="none" stroke="currentColor" stroke-width="1.75"></circle>
+                <path d="M16.2 16.2 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path>
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="photos-header-action photos-header-action--columns"
+              id="photo-columns-open"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="photo-columns-panel"
+              aria-label="{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}">
+              <svg viewBox="0 0 15 15" width="16" height="16" aria-hidden="true">
+                <rect x="1.5" y="1.5" width="5.4" height="7.8" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.25"></rect>
+                <rect x="8.1" y="1.5" width="5.4" height="4.2" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.25"></rect>
+                <rect x="8.1" y="7.2" width="5.4" height="6.3" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.25"></rect>
+              </svg>
+            </button>
+          </div>
+        {% else %}
           <h1 class="h1">
             <span lang="{{lang}}">{{ page.title }}</span>
           </h1>
-        {% endunless %}
+        {% endif %}
       {% endif %}
       {% if page.root == true %}
         {% include signature.html %}

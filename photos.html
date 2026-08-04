@@ -12,38 +12,10 @@ permalink: /photos/
 {% assign photo_groups = photos_sorted | group_by_exp: "photo", "photo.meta.album" %}
 
 {% if photos_sorted.size > 0 %}
-{% comment %}Sticky tools strip: columns + search (site header is sticky separately for back).{% endcomment %}
-<div class="photos-chrome" id="photos-chrome">
-  <div class="photo-layout-controls" role="group" aria-label="{{ copy.photos_layout_controls | default: 'Gallery density' }}">
-    <span class="photo-layout-icon" aria-hidden="true">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <title>{{ copy.photos_layout_controls | default: 'Gallery density' }}</title>
-        <rect x="1.5" y="1.5" width="5.4" height="7.8" rx="0.9"></rect>
-        <rect x="8.1" y="1.5" width="5.4" height="4.2" rx="0.9"></rect>
-        <rect x="8.1" y="7.2" width="5.4" height="6.3" rx="0.9"></rect>
-      </svg>
-    </span>
-    <label class="photo-columns-label" for="photo-columns">{{ copy.photos_columns | default: 'Columns' }}</label>
-    <div class="photo-columns-control">
-      <input
-        type="range"
-        id="photo-columns"
-        class="photo-columns-slider"
-        name="photo-columns"
-        min="0"
-        max="6"
-        step="1"
-        value="0"
-        data-auto-label="{{ copy.photos_columns_auto | default: 'Auto' }}"
-        aria-valuemin="0"
-        aria-valuemax="6"
-        aria-valuenow="0"
-        aria-valuetext="{{ copy.photos_columns_auto | default: 'Auto' }}">
-      <output class="photo-columns-value" id="photo-columns-value" for="photo-columns">{{ copy.photos_columns_auto | default: 'Auto' }}</output>
-    </div>
-  </div>
-  <div class="photo-search" role="search">
-    <div class="photo-search-row">
+{% comment %}Afilmory-style: tools live in sticky header icons; panels below are dialogs/popovers.{% endcomment %}
+<dialog class="photo-search-dialog" id="photo-search-dialog" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}">
+  <form method="dialog" class="photo-search-dialog-form">
+    <div class="photo-search-dialog-bar">
       <input
         type="search"
         id="photo-search-input"
@@ -53,9 +25,63 @@ permalink: /photos/
         autocomplete="off"
         enterkeyhint="search">
       <button type="button" class="photo-search-clear" hidden>{{ copy.photos_search_clear | default: 'Clear' }}</button>
+      <button type="submit" class="photo-search-close" value="cancel" aria-label="{{ copy.photos_search_close | default: 'Close' }}">×</button>
     </div>
     <ul class="photo-search-results" id="photo-search-results" hidden role="listbox" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"></ul>
     <p class="photo-search-status" id="photo-search-status" aria-live="polite" data-no-results="{{ copy.photos_search_no_results | default: 'No matches' }}"></p>
+  </form>
+</dialog>
+
+<div class="photo-columns-panel" id="photo-columns-panel" hidden>
+  <div class="photo-columns-panel-inner" role="group" aria-label="{{ copy.photos_layout_controls | default: 'Gallery density' }}">
+    <div class="photo-columns-panel-head">
+      <span class="photo-columns-label">{{ copy.photos_columns | default: 'Columns' }}</span>
+      <output class="photo-columns-value" id="photo-columns-value" for="photo-columns">{{ copy.photos_columns_auto | default: 'Auto' }}</output>
+    </div>
+    <div class="photo-columns-slider-wrap">
+      <input
+        type="range"
+        id="photo-columns"
+        class="photo-columns-slider"
+        name="photo-columns"
+        min="0"
+        max="6"
+        step="1"
+        value="0"
+        list="photo-columns-ticks"
+        data-auto-label="{{ copy.photos_columns_auto | default: 'Auto' }}"
+        aria-valuemin="0"
+        aria-valuemax="6"
+        aria-valuenow="0"
+        aria-valuetext="{{ copy.photos_columns_auto | default: 'Auto' }}">
+      <datalist id="photo-columns-ticks">
+        <option value="0" label="{{ copy.photos_columns_auto | default: 'Auto' }}"></option>
+        <option value="1" label="3"></option>
+        <option value="2" label="4"></option>
+        <option value="3" label="5"></option>
+        <option value="4" label="6"></option>
+        <option value="5" label="7"></option>
+        <option value="6" label="8"></option>
+      </datalist>
+      <div class="photo-columns-marks" aria-hidden="true">
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+        <span class="photo-columns-mark"></span>
+      </div>
+      <div class="photo-columns-mark-labels monospace" aria-hidden="true">
+        <span>{{ copy.photos_columns_auto | default: 'Auto' }}</span>
+        <span>3</span>
+        <span>4</span>
+        <span>5</span>
+        <span>6</span>
+        <span>7</span>
+        <span>8</span>
+      </div>
+    </div>
   </div>
 </div>
 {% endif %}
