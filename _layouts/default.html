@@ -136,26 +136,34 @@
     <main>
       {% capture content_and_then_some do %}
         {% if page.type == "photos" %}
-          <div class="photo-layout-controls" role="group" aria-label="Photo layout switcher">
-            <input type="radio" name="layout" value="y-scroll" id="y-scroll" checked>
-            <label for="y-scroll">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <title>vertical scroll</title>
-                <rect x="1.5" y="1.5" width="12" height="8.2" rx="1.2"></rect>
-                <line x1="1.5" y1="11.8" x2="13.5" y2="11.8"></line>
-                <line x1="1.5" y1="13.5" x2="13.5" y2="13.5"></line>
+          {% assign photos_copy = copy.list_pages[lang] | default: copy.list_pages['en-US'] %}
+          <div class="photo-layout-controls" role="group" aria-label="{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}">
+            <span class="photo-layout-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <title>{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}</title>
+                <rect x="1.5" y="1.5" width="5.4" height="7.8" rx="0.9"></rect>
+                <rect x="8.1" y="1.5" width="5.4" height="4.2" rx="0.9"></rect>
+                <rect x="8.1" y="7.2" width="5.4" height="6.3" rx="0.9"></rect>
               </svg>
-            </label>
-            <input type="radio" name="layout" value="grid2fr" id="grid2fr">
-            <label for="grid2fr">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <title>grid 2 columns</title>
-                <rect x="1.5" y="1.5" width="5.4" height="5.4" rx="0.9"></rect>
-                <rect x="8.1" y="1.5" width="5.4" height="5.4" rx="0.9"></rect>
-                <rect x="1.5" y="8.1" width="5.4" height="5.4" rx="0.9"></rect>
-                <rect x="8.1" y="8.1" width="5.4" height="5.4" rx="0.9"></rect>
-              </svg>
-            </label>
+            </span>
+            <label class="photo-columns-label" for="photo-columns">{{ photos_copy.photos_columns | default: 'Columns' }}</label>
+            <div class="photo-columns-control">
+              <input
+                type="range"
+                id="photo-columns"
+                class="photo-columns-slider"
+                name="photo-columns"
+                min="0"
+                max="6"
+                step="1"
+                value="0"
+                data-auto-label="{{ photos_copy.photos_columns_auto | default: 'Auto' }}"
+                aria-valuemin="0"
+                aria-valuemax="6"
+                aria-valuenow="0"
+                aria-valuetext="{{ photos_copy.photos_columns_auto | default: 'Auto' }}">
+              <output class="photo-columns-value" id="photo-columns-value" for="photo-columns">{{ photos_copy.photos_columns_auto | default: 'Auto' }}</output>
+            </div>
           </div>
         {% endif %}
         {{ content }}

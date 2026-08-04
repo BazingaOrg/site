@@ -7,6 +7,7 @@ _old_posts/
 .env
 .env.local
 node_modules/
+.playwright-cli/
 
 # Deploy-time photo derivatives (afilmory-style; generated on CI / npm run photos:build-variants)
 images/photos/variants/*

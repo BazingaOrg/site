@@ -63,6 +63,12 @@ list_pages:
     notes_limit_hint: Only the most recent 200 notes are shown.
     photos_title: Photos
     photos_albums: Albums
+    photos_layout_controls: Gallery density
+    photos_columns: Columns
+    photos_columns_auto: Auto
+    photos_search_placeholder: Search albums or filenames…
+    photos_search_clear: Clear
+    photos_search_no_results: No matches
     stories_title: Stories
     caption_expand: Expand
     caption_collapse: Collapse
@@ -78,6 +84,12 @@ list_pages:
     notes_limit_hint: 仅显示最近 200 条随笔。
     photos_title: 照片
     photos_albums: 相册
+    photos_layout_controls: 画廊密度
+    photos_columns: 列数
+    photos_columns_auto: 自动
+    photos_search_placeholder: 搜索相册或文件名…
+    photos_search_clear: 清除
+    photos_search_no_results: 无匹配
     stories_title: 故事
     caption_expand: 展开
     caption_collapse: 收起

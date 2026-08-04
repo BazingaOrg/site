@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run photos:build-variants && npm run vendor:sync && bundle exec jekyll build",
+  "buildCommand": "PHOTOS_BUILD_CONCURRENCY=8 npm run photos:build-variants && npm run vendor:sync && bundle exec jekyll build",
   "outputDirectory": "_site",
   "installCommand": "bundle install && npm install",
   "devCommand": "bundle exec jekyll serve --host 0.0.0.0 --port $PORT",

@@ -12,31 +12,24 @@ permalink: /photos/
 {% assign photo_groups = photos_sorted | group_by_exp: "photo", "photo.meta.album" %}
 
 {% if photos_sorted.size > 0 %}
-<nav class="photo-album-nav" aria-label="{{ copy.photos_albums | default: 'Albums' }}">
-  {% assign current_nav_year = '' %}
-  {% for group in photo_groups %}
-  {% assign album_photos = group.items | sort: "uploaded" | reverse %}
-  {% assign nav_year = group.name | slice: 0, 4 %}
-  {% if nav_year != current_nav_year %}
-  {% if current_nav_year != '' %}
-    </div>
+<div class="photo-search" role="search">
+  <div class="photo-search-row">
+    <input
+      type="search"
+      id="photo-search-input"
+      class="photo-search-input"
+      placeholder="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"
+      aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"
+      autocomplete="off"
+      enterkeyhint="search">
+    <button type="button" class="photo-search-clear" hidden>{{ copy.photos_search_clear | default: 'Clear' }}</button>
   </div>
-  {% endif %}
-  {% assign current_nav_year = nav_year %}
-  <div class="photo-album-year" data-year="{{ nav_year }}">
-    <span class="photo-album-year-label">{{ nav_year }}</span>
-    <div class="photo-album-year-scroller" role="list">
-  {% endif %}
-      <a class="photo-album-nav-link" role="listitem" href="#album-{{ forloop.index }}" title="{{ group.name }}" data-album-raw="{{ group.name }}">{{ group.name }} <span class="photo-album-nav-count">{{ album_photos.size }}</span></a>
-  {% endfor %}
-  {% if current_nav_year != '' %}
-    </div>
-  </div>
-  {% endif %}
-</nav>
+  <ul class="photo-search-results" id="photo-search-results" hidden role="listbox" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"></ul>
+  <p class="photo-search-status" id="photo-search-status" aria-live="polite" data-no-results="{{ copy.photos_search_no_results | default: 'No matches' }}"></p>
+</div>
 {% endif %}
 
-<div class="photos-wrapper" id="photos">
+<div class="photos-wrapper" id="photos" data-columns="auto">
 {% if photos_sorted.size > 0 %}
 {% for group in photo_groups %}
 {% assign album_photos = group.items | sort: "uploaded" | reverse %}
@@ -48,7 +41,7 @@ permalink: /photos/
   <div class="photo-album-grid">
 {% for photo in album_photos %}
 {% assign original = photo.variants.original %}
-{% assign list_image = photo.variants.preview | default: photo.variants.thumbnail | default: original %}
+{% assign list_image = photo.variants.thumbnail | default: original %}
 {% assign photo_ratio = photo.meta.ratio %}
 {% assign figure_orientation = 'unknown' %}
 {% if photo_ratio and photo_ratio > 1 %}
@@ -56,7 +49,12 @@ permalink: /photos/
 {% elsif photo_ratio and photo_ratio <= 1 %}
   {% assign figure_orientation = 'portrait' %}
 {% endif %}
-<figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %}>
+{% capture photo_search_raw %}{{ photo.meta.album }} {{ photo.meta.alt }} {{ photo.id }} {{ photo.source.filename }} {{ photo.meta.location }}{% endcapture %}
+{% assign photo_search = photo_search_raw | strip | strip_newlines %}
+{% assign photo_title = photo.source.filename | default: photo.id %}
+{% assign photo_subtitle = photo.meta.album | default: photo.meta.location | default: '' %}
+{% assign photo_label = photo.meta.alt | default: photo_title %}
+<figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %} data-photo-search="{{ photo_search | escape }}" data-photo-title="{{ photo_title | escape }}" data-photo-subtitle="{{ photo_subtitle | escape }}" data-photo-thumb="{{ list_image.src | escape }}" data-photo-label="{{ photo_label | escape }}">
   <a href="{{ original.src }}" class="image-link"
      data-umami-event="photo_full_view"
      data-umami-event-photo-id="{{ photo.id }}"
@@ -64,7 +62,6 @@ permalink: /photos/
      data-umami-event-ratio="{{ figure_orientation }}"
      data-photo-original-src="{{ original.src }}"
      data-photo-thumbnail-src="{{ list_image.src }}"
-     data-photo-preview-src="{{ list_image.src }}"
      data-photo-meta='{{ photo.meta | jsonify | escape }}'>
     <img
       src="{{ list_image.src }}"

@@ -969,149 +969,347 @@ figure {
     max-width: 100%;
     overflow: initial;
   }
-
-  input {
-    position: absolute;
-    left: -100px;
-
-    &:checked + label {
-      color: var(--activeColor);
-      border-color: var(--activeColor);
-      background-color: var(--subtleBackgroundColor);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 24%, transparent);
-    }
-
-    &:focus + label {
-      outline: auto;
-      outline-color: var(--activeColor);
-    }
-  }
-
-  label {
-    padding: .35em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin: .5rem 0 0;
-    float: none;
-    white-space: nowrap;
-    vertical-align: middle;
-    color: var(--logoAccentColor);
-    border: 1px solid transparent;
-    border-radius: 8px;
-    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 120ms ease, box-shadow 180ms ease;
-
-    &:hover {
-      color: var(--textColor);
-      border-color: color-mix(in srgb, var(--borderColor) 85%, transparent);
-      background-color: color-mix(in srgb, var(--subtleBackgroundColor) 70%, transparent);
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-  }
-
-  label svg {
-    display: block;
-  }
-
-  label rect,
-  label line,
-  label path {
-    stroke: currentColor;
-    stroke-width: 1.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-  }
 }
 
 [data-page-type="photos"] .photo-layout-controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  margin: 0 0 .5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  margin: 0 0 0.75rem;
+
+  .photo-layout-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--logoAccentColor);
+    line-height: 0;
+  }
+
+  .photo-layout-icon svg {
+    display: block;
+  }
+
+  .photo-layout-icon rect {
+    stroke: currentColor;
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .photo-columns-label {
+    margin: 0;
+    font-size: 0.85em;
+    color: var(--mutedTextColor);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .photo-columns-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  // Site-styled range: 1px track, solid thumb, token colors (no OS chrome look).
+  .photo-columns-slider {
+    --columns-progress: 0%;
+    -webkit-appearance: none;
+    appearance: none;
+    width: min(11rem, 36vw);
+    height: 1.4rem;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--borderColor);
+      background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--textColor) 55%, transparent) 0%,
+        color-mix(in srgb, var(--textColor) 55%, transparent) var(--columns-progress),
+        color-mix(in srgb, var(--mutedTextColor) 14%, transparent) var(--columns-progress),
+        color-mix(in srgb, var(--mutedTextColor) 14%, transparent) 100%
+      );
+    }
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      margin-top: -6px;
+      border-radius: 50%;
+      border: 1px solid var(--borderColor);
+      background: var(--backgroundColor);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--textColor) 12%, transparent);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+    }
+
+    &:hover::-webkit-slider-thumb {
+      border-color: var(--secondaryTextColor);
+    }
+
+    &:focus-visible::-webkit-slider-thumb {
+      border-color: var(--secondaryTextColor);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 45%, transparent);
+    }
+
+    &::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--borderColor);
+      background: color-mix(in srgb, var(--mutedTextColor) 14%, transparent);
+    }
+
+    &::-moz-range-progress {
+      height: 4px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: color-mix(in srgb, var(--textColor) 55%, transparent);
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid var(--borderColor);
+      background: var(--backgroundColor);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--textColor) 12%, transparent);
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    &:hover::-moz-range-thumb {
+      border-color: var(--secondaryTextColor);
+    }
+
+    &:focus-visible::-moz-range-thumb {
+      border-color: var(--secondaryTextColor);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 45%, transparent);
+    }
+  }
+
+  .photo-columns-value {
+    flex: 0 0 auto;
+    min-width: 2.4em;
+    font-family: var(--monospace);
+    font-size: 0.82em;
+    line-height: 1.2;
+    color: var(--textColor);
+    text-align: left;
+  }
 }
 
-.photo-album-nav {
+.photo-search {
+  position: relative;
+  width: 100%;
+  max-width: min(32rem, 100%);
+  margin: 0 auto 1rem;
+}
+
+.photo-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.photo-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.9em;
+  color: var(--textColor);
+  background-color: var(--backgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: 8px;
+  padding: 0.45em 0.7em;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+
+  &::placeholder {
+    color: var(--mutedTextColor);
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--borderColor) 70%, var(--secondaryTextColor));
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--secondaryTextColor);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 35%, transparent);
+  }
+}
+
+.photo-search-clear {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.82em;
+  color: var(--mutedTextColor);
+  background: transparent;
+  border: 1px solid var(--borderColor);
+  border-radius: 8px;
+  padding: 0.4em 0.65em;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+
+  &:hover {
+    color: var(--textColor);
+    border-color: var(--secondaryTextColor);
+    background-color: color-mix(in srgb, var(--subtleBackgroundColor) 70%, transparent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--secondaryTextColor);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--activeColor) 35%, transparent);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.photo-search-results {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0.2rem 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  max-height: 18rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--backgroundColor);
+  border: 1px solid var(--borderColor);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--textColor) 10%, transparent);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.photo-search-results li {
+  margin: 0;
+  padding: 0;
+}
+
+// Afilmory-inspired row: thumb + title + album subtitle; site tokens only.
+.photo-search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  font: inherit;
+  color: var(--textColor);
+  background: transparent;
+  border: 0;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--subtleBackgroundColor);
+    outline: none;
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--activeColor) 40%, transparent);
+  }
+}
+
+.photo-search-result-thumb {
+  flex: 0 0 auto;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--borderColor) 85%, transparent);
+  background: color-mix(in srgb, var(--mutedTextColor) 8%, transparent);
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+.photo-search-result-text {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  margin: 0 0 1.25rem;
-  padding: 0 0 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 12%, transparent);
+  gap: 0.1rem;
 }
 
-.photo-album-year {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.45rem 0.65rem;
-  align-items: center;
-  min-width: 0;
+.photo-search-result-title {
+  font-size: 0.88em;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--textColor);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.photo-album-year-label {
+.photo-search-result-sub {
   font-family: var(--monospace);
-  font-size: 0.78em;
+  font-size: 0.75em;
   line-height: 1.3;
   color: var(--mutedTextColor);
-  opacity: 0.9;
-}
-
-.photo-album-year-scroller {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.35rem 0.45rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  min-width: 0;
-  padding-bottom: 0.1rem;
-}
-
-.photo-album-nav-link {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: baseline;
-  gap: 0.3em;
-  max-width: min(14rem, 70vw);
-  padding: 0.2em 0.55em;
-  border-radius: 999px;
-  font-size: 0.82em;
-  line-height: 1.4;
-  text-decoration: none;
-  color: var(--mutedTextColor);
-  background: color-mix(in srgb, var(--mutedTextColor) 10%, transparent);
-  transition: color 160ms ease, background-color 160ms ease;
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.photo-album-nav-link:hover,
-.photo-album-nav-link:focus-visible {
-  color: var(--textColor);
-  background: color-mix(in srgb, var(--mutedTextColor) 18%, transparent);
-}
-
-.photo-album-nav-count {
+.photo-search-status {
+  margin: 0.3rem 0 0;
+  min-height: 1.2em;
   font-family: var(--monospace);
-  font-size: 0.9em;
-  opacity: 0.75;
-  flex-shrink: 0;
+  font-size: 0.78em;
+  color: var(--mutedTextColor);
+  text-align: center;
 }
 
+// Album section: sticky title for orientation (no accordion).
+// content-visibility lives on the *grid* (not the whole section) so sticky
+// headers still work — sticky children inside CV-skipped boxes break.
 .photo-album {
   margin: 0 0 2.25rem;
-  scroll-margin-top: 1.25rem;
+  scroll-margin-top: 0.5rem;
 }
 
 .photo-album-header {
-  margin: 0 0 0.85rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0 0.5rem;
   text-align: left;
+  background: var(--backgroundColor);
+  border-bottom: 1px solid color-mix(in srgb, var(--textColor) 10%, transparent);
 }
 
 .photo-album-title {
@@ -1128,25 +1326,127 @@ figure {
 }
 
 .photos-wrapper {
+  --photo-columns: 2;
+  --photo-column-gap: 0.85rem;
+  --photo-row-gap: 1rem;
+  // Room under sticky album header when scrolling to a figure / hash.
+  --photo-album-sticky-offset: 4.25rem;
+
   &:focus { outline: none; }
   scroll-behavior: smooth;
   clear: both;
-  text-align: center;
-}
-
-// When the two-column layout is active, each album grid becomes a 2-col dense grid.
-.photos-wrapper[data-layout="grid2fr"] .photo-album-grid {
-  display: grid;
-  column-gap: 1.5em;
-  row-gap: 1.75em;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-flow: dense;
   text-align: left;
+  max-width: 100%;
+
+  .photo-album-grid {
+    column-count: var(--photo-columns);
+    column-gap: var(--photo-column-gap);
+    // Skip layout/paint for off-screen album grids (runtime, not HTML weight).
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1000px;
+  }
+
+  .photo-album-grid figure {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0 0 var(--photo-row-gap);
+    width: 100%;
+    max-width: 100%;
+    display: inline-block;
+    vertical-align: top;
+    scroll-margin-top: var(--photo-album-sticky-offset);
+  }
+
+  .photo-album-grid .image-link {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    margin: 0 0 0.4em;
+  }
+
+  .photo-album-grid img {
+    max-height: none;
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
+  .photo-metadata {
+    justify-content: flex-start;
+  }
 }
 
-.photos-wrapper[data-layout="grid2fr"] .photo-album-grid figure {
-  margin: 0;
-  align-self: start;
+// Mobile <768: 2 cols portrait; wider landscape 3.
+@media (max-width: 767.98px) and (orientation: landscape) and (min-width: 560px) {
+  .photos-wrapper {
+    --photo-columns: 3;
+  }
+}
+
+// iPad 768–1023: portrait 3, landscape 4. Columns select is hidden.
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .photos-wrapper {
+    --photo-columns: 3;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023.98px) and (orientation: landscape) {
+  .photos-wrapper {
+    --photo-columns: 4;
+  }
+}
+
+// Desktop ≥1024: honor select; Auto ladders with viewport width (~4–8).
+@media (min-width: 1024px) {
+  .photos-wrapper[data-columns="auto"],
+  .photos-wrapper:not([data-columns]) {
+    --photo-columns: 4;
+  }
+
+  .photos-wrapper[data-columns="3"] { --photo-columns: 3; }
+  .photos-wrapper[data-columns="4"] { --photo-columns: 4; }
+  .photos-wrapper[data-columns="5"] { --photo-columns: 5; }
+  .photos-wrapper[data-columns="6"] { --photo-columns: 6; }
+  .photos-wrapper[data-columns="7"] { --photo-columns: 7; }
+  .photos-wrapper[data-columns="8"] { --photo-columns: 8; }
+}
+
+@media (min-width: 1280px) {
+  .photos-wrapper[data-columns="auto"],
+  .photos-wrapper:not([data-columns]) {
+    --photo-columns: 5;
+  }
+}
+
+@media (min-width: 1440px) {
+  .photos-wrapper[data-columns="auto"],
+  .photos-wrapper:not([data-columns]) {
+    --photo-columns: 6;
+  }
+}
+
+@media (min-width: 1680px) {
+  .photos-wrapper[data-columns="auto"],
+  .photos-wrapper:not([data-columns]) {
+    --photo-columns: 7;
+  }
+}
+
+@media (min-width: 1920px) {
+  .photos-wrapper[data-columns="auto"],
+  .photos-wrapper:not([data-columns]) {
+    --photo-columns: 8;
+  }
+}
+
+// Hide columns control below desktop; CSS still forces responsive column counts.
+@media (max-width: 1023.98px) {
+  [data-page-type="photos"] .photo-layout-controls {
+    display: none;
+  }
 }
 
 .photos-wrapper.is-layout-switching {
@@ -1175,55 +1475,6 @@ figure {
   aspect-ratio: 1/1;
   display: inline-block;
   border-radius:  4em;
-}
-
-// Two-column mode applies inside each album, not across whole page sections.
-.photos-wrapper[data-layout="grid2fr"] {
-  text-align: left;
-
-  .photo-album-grid img {
-    max-height: none;
-    height: auto;
-    width: 100%;
-    display: block;
-    object-fit: contain;
-  }
-
-  .photo-album-grid .image-link {
-    width: 100%;
-    display: block;
-  }
-
-  .photo-metadata {
-    justify-content: flex-start;
-  }
-}
-
-// Narrow screens: hide layout toggle and force single-column album grid.
-@media (max-width: 720px) {
-  [data-page-type="photos"] .photo-layout-controls {
-    display: none;
-  }
-
-  .photos-wrapper[data-layout="grid2fr"] .photo-album-grid {
-    grid-template-columns: 1fr;
-    column-gap: 0;
-    row-gap: 1.5em;
-  }
-
-  .photos-wrapper[data-layout="grid2fr"] {
-    .photo-album-grid figure,
-    .photo-album-grid .image-link,
-    .photo-album-grid img {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    .photo-album-grid img {
-      height: auto;
-      max-height: none;
-    }
-  }
 }
 
 .photo-metadata {
@@ -1754,19 +2005,21 @@ html.photo-overlay-open {
 }
 
 .photo-overlay-thumbs {
+  --overlay-thumb-height: 48px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: .4rem;
+  gap: .35rem;
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
-  min-height: 64px;
-  padding: .15rem var(--overlay-side-padding) .35rem;
+  min-height: calc(var(--overlay-thumb-height) + .4rem);
+  // Slim strip: no border padding budget; active state uses opacity only
+  padding: .2rem var(--overlay-side-padding) .3rem;
   box-sizing: border-box;
   scroll-padding-inline: var(--overlay-side-padding);
   transition: max-height 220ms ease, opacity 180ms ease, padding 180ms ease, min-height 180ms ease, transform 200ms cubic-bezier(.22, 1, .36, 1);
-  max-height: 88px;
+  max-height: calc(var(--overlay-thumb-height) + .7rem);
   opacity: 1;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -1782,32 +2035,34 @@ html.photo-overlay-open {
   display: none;
 }
 
+// Fixed height, width follows image aspect (landscape reads wide, not a square tile).
 .photo-overlay-thumb {
   flex: 0 0 auto;
-  width: clamp(56px, 7vw, 72px);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: .35rem;
+  width: auto;
+  height: var(--overlay-thumb-height);
+  border: 0;
+  background: transparent;
+  border-radius: .25rem;
   overflow: hidden;
   padding: 0;
   cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease, opacity 160ms ease, background-color 160ms ease;
-  opacity: .66;
+  box-sizing: border-box;
+  transition: opacity 160ms ease;
+  opacity: .55;
 }
 
 .photo-overlay-thumb img {
-  width: 100%;
-  height: 56px;
-  object-fit: cover;
+  display: block;
+  width: auto;
+  height: var(--overlay-thumb-height);
   max-width: none;
   max-height: none;
+  object-fit: cover;
   filter: grayscale(1) saturate(.35) brightness(.78);
-  transition: filter 160ms ease, transform 160ms ease;
+  transition: filter 160ms ease;
 }
 
 .photo-overlay-thumb.is-active {
-  border-color: rgba(255, 255, 255, 0.85);
-  transform: translateY(-1px);
   opacity: 1;
 }
 
@@ -1924,21 +2179,13 @@ html.photo-overlay-open {
     }
 
     .photo-overlay-thumbs {
-      max-height: 78px;
+      --overlay-thumb-height: 44px;
       padding-left: var(--overlay-side-padding);
       padding-right: var(--overlay-side-padding);
     }
 
     .photo-overlay-caption-content {
       font-size: .88rem;
-    }
-
-    .photo-overlay-thumb {
-      width: clamp(52px, 18vw, 64px);
-    }
-
-    .photo-overlay-thumb img {
-      height: 52px;
     }
 }
 

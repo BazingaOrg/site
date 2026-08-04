@@ -1,3 +1,4 @@
+// Legacy 3-tier local derivative helper. Deploy path is build-variants-for-deploy.js (two-tier: thumbnail + original).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

@@ -1,6 +1,11 @@
         const photos = document.querySelector('#photos')
         let layoutTransitionTimer = null
-        const checkedLayoutInput = document.querySelector('input[name="layout"]:checked')
+        // Range: 0 = Auto, 1..6 → columns 3..8
+        const columnsSlider = document.querySelector('#photo-columns')
+        const columnsValueEl = document.querySelector('#photo-columns-value')
+        const COLUMNS_STORAGE_KEY = 'photos-columns'
+        const COLUMN_STEPS = ['auto', '3', '4', '5', '6', '7', '8']
+        const ALLOWED_COLUMNS = new Set(COLUMN_STEPS)
         // All gallery links (for click binding). Active strip/nav is album-scoped.
         const allPhotoLinks = Array.from(document.querySelectorAll('#photos .image-link'))
         let activePhotoLinks = allPhotoLinks
@@ -53,6 +58,7 @@
         let overlayVisibilityTimerId = null
         let exifVisibilityTimerId = null
         let thumbsAlbumKey = null
+        let searchDebounceTimer = null
 
         const fullscreenApiSupported = Boolean(
           document.fullscreenEnabled
@@ -66,9 +72,67 @@
           return Array.from(album.querySelectorAll('.image-link'))
         }
 
-        if (photos && checkedLayoutInput) {
-          photos.dataset.layout = checkedLayoutInput.value
+        const columnsAutoLabel = () =>
+          columnsSlider?.dataset?.autoLabel || columnsValueEl?.dataset?.autoLabel || 'Auto'
+
+        const columnValueFromSlider = (raw) => {
+          const index = Number(raw)
+          if (!Number.isFinite(index) || index < 0) return 'auto'
+          return COLUMN_STEPS[Math.min(COLUMN_STEPS.length - 1, Math.round(index))] || 'auto'
         }
+
+        const sliderIndexFromColumn = (value) => {
+          const index = COLUMN_STEPS.indexOf(value)
+          return index >= 0 ? index : 0
+        }
+
+        const columnDisplayLabel = (value) => (value === 'auto' ? columnsAutoLabel() : value)
+
+        const syncColumnsSliderUi = (value) => {
+          const next = ALLOWED_COLUMNS.has(value) ? value : 'auto'
+          const index = sliderIndexFromColumn(next)
+          const label = columnDisplayLabel(next)
+          if (columnsSlider) {
+            if (String(columnsSlider.value) !== String(index)) {
+              columnsSlider.value = String(index)
+            }
+            columnsSlider.dataset.resolved = next
+            columnsSlider.setAttribute('aria-valuenow', String(index))
+            columnsSlider.setAttribute('aria-valuetext', label)
+            // Fill track progress for webkit (0..1)
+            const max = Number(columnsSlider.max) || 6
+            const progress = max > 0 ? (index / max) * 100 : 0
+            columnsSlider.style.setProperty('--columns-progress', `${progress}%`)
+          }
+          if (columnsValueEl) {
+            columnsValueEl.textContent = label
+            columnsValueEl.value = label
+          }
+        }
+
+        const applyPhotoColumns = (value, { animate = true } = {}) => {
+          if (!photos) return
+          const next = ALLOWED_COLUMNS.has(value) ? value : 'auto'
+          photos.dataset.columns = next
+          syncColumnsSliderUi(next)
+          if (!animate) return
+          photos.classList.add('is-layout-switching')
+          if (layoutTransitionTimer) {
+            clearTimeout(layoutTransitionTimer)
+          }
+          layoutTransitionTimer = window.setTimeout(() => {
+            photos.classList.remove('is-layout-switching')
+          }, 220)
+        }
+
+        let storedColumns = null
+        try {
+          storedColumns = window.localStorage.getItem(COLUMNS_STORAGE_KEY)
+        } catch {
+          storedColumns = null
+        }
+        // Migrate legacy select values; default Auto
+        applyPhotoColumns(storedColumns || 'auto', { animate: false })
 
         // Initialize collapsible captions
         document.querySelectorAll('.caption-container').forEach(container => {
@@ -88,43 +152,198 @@
           }
         });
 
-        // Track layout switch and animate visual transition
-        document.addEventListener('change', function(event) {
-          const target = event.target
-
-          if (target && target.matches('input[name="layout"]')) {
-            if (photos) {
-              photos.dataset.layout = target.value
-              photos.classList.add('is-layout-switching')
-              if (layoutTransitionTimer) {
-                clearTimeout(layoutTransitionTimer)
-              }
-              layoutTransitionTimer = window.setTimeout(() => {
-                photos.classList.remove('is-layout-switching')
-              }, 220)
-            }
-
+        // Columns range: live update + persist on change
+        const commitPhotoColumns = (rawIndex, { persist = false, track = false } = {}) => {
+          const value = columnValueFromSlider(rawIndex)
+          applyPhotoColumns(value)
+          if (persist) {
             try {
-              if (typeof window.umami === 'function') {
-                window.umami('photos_layout_change', {
-                  layout: target.value,
-                  control_id: target.id,
-                  current_page: window.location.pathname,
-                  language: document.documentElement.lang || 'en-US'
-                })
-              } else if (window.umami?.track) {
-                window.umami.track('photos_layout_change', {
-                  layout: target.value,
-                  control_id: target.id,
-                  current_page: window.location.pathname,
-                  language: document.documentElement.lang || 'en-US'
-                })
+              window.localStorage.setItem(COLUMNS_STORAGE_KEY, value)
+            } catch {
+              // ignore quota / private mode
+            }
+          }
+          if (!track) return
+          try {
+            if (typeof window.umami === 'function') {
+              window.umami('photos_layout_change', {
+                layout: value,
+                control_id: 'photo-columns',
+                current_page: window.location.pathname,
+                language: document.documentElement.lang || 'en-US'
+              })
+            } else if (window.umami?.track) {
+              window.umami.track('photos_layout_change', {
+                layout: value,
+                control_id: 'photo-columns',
+                current_page: window.location.pathname,
+                language: document.documentElement.lang || 'en-US'
+              })
+            }
+          } catch (error) {
+            console.log('Umami tracking error:', error)
+          }
+        }
+
+        columnsSlider?.addEventListener('input', () => {
+          commitPhotoColumns(columnsSlider.value, { persist: false, track: false })
+        })
+        columnsSlider?.addEventListener('change', () => {
+          commitPhotoColumns(columnsSlider.value, { persist: true, track: true })
+        })
+
+        // Compact album/filename jump search (max 10 results)
+        const searchRoot = document.querySelector('.photo-search')
+        const searchInput = document.querySelector('#photo-search-input')
+        const searchClear = document.querySelector('.photo-search-clear')
+        const searchResults = document.querySelector('#photo-search-results')
+        const searchStatus = document.querySelector('#photo-search-status')
+        // Afilmory-style row: thumb + title + subtitle (site tokens; no cmdk).
+        const searchIndex = Array.from(document.querySelectorAll('#photos figure[data-photo-search]')).map((figure) => {
+          const title = figure.dataset.photoTitle || figure.dataset.photoLabel || figure.id
+          const subtitle = figure.dataset.photoSubtitle || ''
+          const thumb =
+            figure.dataset.photoThumb
+            || figure.querySelector('img')?.currentSrc
+            || figure.querySelector('img')?.src
+            || ''
+          return {
+            id: figure.id,
+            text: (figure.dataset.photoSearch || '').toLowerCase(),
+            title,
+            subtitle,
+            thumb,
+            label: figure.dataset.photoLabel || [title, subtitle].filter(Boolean).join(' · ')
+          }
+        })
+
+        const clearPhotoSearch = () => {
+          if (searchInput) searchInput.value = ''
+          if (searchResults) {
+            searchResults.hidden = true
+            searchResults.innerHTML = ''
+          }
+          if (searchStatus) searchStatus.textContent = ''
+          if (searchClear) searchClear.hidden = true
+        }
+
+        const jumpToPhotoResult = (photoId) => {
+          const target = document.getElementById(photoId)
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            if (typeof target.focus === 'function') {
+              try {
+                target.setAttribute('tabindex', '-1')
+                target.focus({ preventScroll: true })
+              } catch {
+                // ignore focus errors
               }
-            } catch (error) {
-              console.log('Umami tracking error:', error)
+            }
+          }
+          if (searchResults) searchResults.hidden = true
+        }
+
+        const runPhotoSearch = (rawQuery) => {
+          if (!searchResults || !searchStatus) return
+
+          const query = rawQuery.trim().toLowerCase()
+          if (!query) {
+            clearPhotoSearch()
+            if (searchInput) searchInput.value = ''
+            return
+          }
+
+          if (searchClear) searchClear.hidden = false
+
+          const matches = []
+          for (const item of searchIndex) {
+            if (item.text.includes(query)) {
+              matches.push(item)
+              if (matches.length >= 10) break
             }
           }
 
+          searchResults.innerHTML = ''
+          if (matches.length === 0) {
+            searchResults.hidden = true
+            searchStatus.textContent = searchStatus.dataset.noResults || 'No matches'
+            return
+          }
+
+          const fragment = document.createDocumentFragment()
+          matches.forEach((item) => {
+            const li = document.createElement('li')
+            li.setAttribute('role', 'option')
+
+            const button = document.createElement('button')
+            button.type = 'button'
+            button.className = 'photo-search-result'
+            button.title = item.label
+            button.setAttribute('aria-label', item.label)
+
+            const thumbWrap = document.createElement('span')
+            thumbWrap.className = 'photo-search-result-thumb'
+            thumbWrap.setAttribute('aria-hidden', 'true')
+            if (item.thumb) {
+              const thumbImg = document.createElement('img')
+              thumbImg.src = item.thumb
+              thumbImg.alt = ''
+              thumbImg.loading = 'lazy'
+              thumbImg.decoding = 'async'
+              thumbWrap.appendChild(thumbImg)
+            }
+
+            const textWrap = document.createElement('span')
+            textWrap.className = 'photo-search-result-text'
+
+            const titleEl = document.createElement('span')
+            titleEl.className = 'photo-search-result-title'
+            titleEl.textContent = item.title
+
+            textWrap.appendChild(titleEl)
+            if (item.subtitle) {
+              const subEl = document.createElement('span')
+              subEl.className = 'photo-search-result-sub'
+              subEl.textContent = item.subtitle
+              textWrap.appendChild(subEl)
+            }
+
+            button.appendChild(thumbWrap)
+            button.appendChild(textWrap)
+            button.addEventListener('click', () => jumpToPhotoResult(item.id))
+
+            li.appendChild(button)
+            fragment.appendChild(li)
+          })
+          searchResults.appendChild(fragment)
+          searchResults.hidden = false
+          const capped = matches.length >= 10
+          searchStatus.textContent = capped ? '10+' : String(matches.length)
+        }
+
+        searchInput?.addEventListener('input', () => {
+          if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+          searchDebounceTimer = window.setTimeout(() => {
+            runPhotoSearch(searchInput.value)
+          }, 150)
+        })
+
+        searchInput?.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            clearPhotoSearch()
+            searchInput.blur()
+          }
+        })
+
+        searchClear?.addEventListener('click', () => {
+          clearPhotoSearch()
+          searchInput?.focus()
+        })
+
+        document.addEventListener('click', (event) => {
+          if (!searchRoot || !searchResults || searchResults.hidden) return
+          if (searchRoot.contains(event.target)) return
+          searchResults.hidden = true
         })
 
         const buildOverlayThumbnails = () => {
@@ -534,8 +753,7 @@
           const image = link.querySelector('img')
           const fullSource = link.href || link.dataset.photoOriginalSrc || image?.currentSrc || image?.src
           const placeholderSource =
-            link.dataset.photoPreviewSrc
-            || link.dataset.photoThumbnailSrc
+            link.dataset.photoThumbnailSrc
             || image?.currentSrc
             || image?.src
 
@@ -573,6 +791,10 @@
           photoOverlay.classList.remove('is-exif-open')
           photoOverlayToggleExif?.setAttribute('aria-pressed', 'false')
           setOverlayExifVisibility(false)
+          // Mobile / narrow / short viewports: collapse thumbs so main image stays primary.
+          // Keep 820px to match CSS overlay breakpoint; short height mirrors plan max-height ~540.
+          setOverlayThumbnailsCollapsed(shouldDefaultCollapseThumbs())
+          autoCollapsedThumbsForExif = false
           updateOverlay(photoIndex)
           const scrollbarCompensation = window.innerWidth - document.documentElement.clientWidth
           document.body.style.setProperty('--overlay-scrollbar-compensation', `${Math.max(0, scrollbarCompensation)}px`)
@@ -645,7 +867,11 @@
           autoCollapsedThumbsForExif = false
         }
 
+        // Align with CSS `@media (max-width: 820px)` overlay layout (wider than plan's 768 mobile).
         const isCompactOverlayViewport = () => window.matchMedia('(max-width: 820px)').matches
+        const isShortOverlayViewport = () => window.matchMedia('(max-height: 540px)').matches
+        const shouldDefaultCollapseThumbs = () =>
+          isCompactOverlayViewport() || isShortOverlayViewport()
 
         const setOverlayThumbnailsCollapsed = (collapsed) => {
           if (!photoOverlay || !photoOverlayToggleThumbs) return
@@ -660,7 +886,7 @@
           photoOverlay.classList.toggle('is-exif-open', willOpen)
           photoOverlayToggleExif.setAttribute('aria-pressed', willOpen ? 'true' : 'false')
 
-          if (willOpen && isCompactOverlayViewport() && !photoOverlay.classList.contains('is-thumbs-collapsed')) {
+          if (willOpen && shouldDefaultCollapseThumbs() && !photoOverlay.classList.contains('is-thumbs-collapsed')) {
             setOverlayThumbnailsCollapsed(true)
             autoCollapsedThumbsForExif = true
           } else if (!willOpen && autoCollapsedThumbsForExif) {
@@ -720,31 +946,6 @@
             justHandledTouch = true
             openFromLinkEvent(event)
           }, { passive: false })
-        })
-
-        // Short labels for year-grouped album nav (full name stays in title + data-album-raw).
-        document.querySelectorAll('.photo-album-nav-link[data-album-raw]').forEach((navLink) => {
-          const raw = navLink.getAttribute('data-album-raw') || ''
-          const match = raw.match(/^(\d{4})(\d{2})(\d{2})(?:-(\d{4})(\d{2})(\d{2}))?-?(.*)$/)
-          if (!match) return
-
-          const [, , mm1, dd1, , mm2, dd2, placeRaw] = match
-          const place = (placeRaw || '').trim()
-          let shortLabel = `${mm1}/${dd1}`
-          if (mm2 && dd2) {
-            shortLabel += `–${mm2}/${dd2}`
-          }
-          if (place) {
-            shortLabel += ` · ${place}`
-          }
-
-          navLink.setAttribute('title', raw)
-          const countEl = navLink.querySelector('.photo-album-nav-count')
-          navLink.textContent = ''
-          navLink.append(document.createTextNode(shortLabel + (countEl ? ' ' : '')))
-          if (countEl) {
-            navLink.appendChild(countEl)
-          }
         })
 
         if (!fullscreenApiSupported && photoOverlayToggleFullscreen) {

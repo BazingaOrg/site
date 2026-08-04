@@ -6,6 +6,8 @@
     "photos:sync-exif": "node scripts/photos/sync-exif.js",
     "photos:sync-from-r2": "node scripts/photos/sync-from-r2.js",
     "photos:build-variants": "node scripts/photos/build-variants-for-deploy.js",
+    "photos:build-variants:prebuilt": "node scripts/photos/build-variants-for-deploy.js --prebuilt-only",
+    "photos:build-variants:upload": "node scripts/photos/build-variants-for-deploy.js --upload",
     "vendor:sync:open-heart": "bash scripts/vendor/sync-open-heart-element.sh",
     "vendor:sync": "npm run vendor:sync:open-heart",
     "build:site": "npm run photos:build-variants && npm run vendor:sync && bundle exec jekyll build",

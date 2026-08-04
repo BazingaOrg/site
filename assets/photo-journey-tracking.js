@@ -74,19 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  // 追踪照片页面布局变化（网格模式）
-  const layoutControls = document.querySelectorAll('input[name="layout"]')
-  layoutControls.forEach(control => {
-    control.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        window.journeyTracker.trackConversionGoal('photo_layout_change', {
-          newLayout: e.target.value,
-          layoutId: e.target.id,
-          totalPhotos: photos.length
-        })
-      }
+  // 追踪照片页面列数/密度变化（range: dataset.resolved = auto|3..8）
+  const columnsSlider = document.querySelector('#photo-columns')
+  if (columnsSlider) {
+    columnsSlider.addEventListener('change', (e) => {
+      const layout = e.target.dataset.resolved || e.target.value
+      window.journeyTracker.trackConversionGoal('photo_layout_change', {
+        newLayout: layout,
+        layoutId: e.target.id || 'photo-columns',
+        totalPhotos: photos.length
+      })
     })
-  })
+  }
 
   // 追踪深度浏览行为
   let maxScrollPhotos = 0

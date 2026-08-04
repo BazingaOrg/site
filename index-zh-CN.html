@@ -89,9 +89,7 @@ lang: zh-CN
   <ul class="photo-strip-track">
   {% for photo in photos %}
     {% assign original = photo.variants.original %}
-    {% assign thumbnail = photo.variants.thumbnail | default: original %}
-    {% assign preview = photo.variants.preview | default: thumbnail | default: original %}
-    {% assign display = preview | default: thumbnail | default: original %}
+    {% assign display = photo.variants.thumbnail | default: original %}
     <li class="photo-strip-item">
       <a href="/photos#{{ photo.id }}"
          class="photo-strip-link"
