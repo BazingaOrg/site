@@ -71,6 +71,17 @@ list_pages:
     photos_search_clear: Clear
     photos_search_close: Close
     photos_search_no_results: No matches
+    photos_search_result: result
+    photos_search_results: results
+    photos_count: photos
+    photos_viewer: Photo viewer
+    photos_view_photo: View photo
+    photos_thumbnails_toggle: Toggle thumbnails
+    photos_fullscreen_enter: Enter fullscreen
+    photos_fullscreen_exit: Exit fullscreen
+    photos_slideshow_start: Start slideshow
+    photos_slideshow_pause: Pause slideshow
+    photos_viewer_close: Close photo viewer
     stories_title: Stories
     caption_expand: Expand
     caption_collapse: Collapse
@@ -94,6 +105,17 @@ list_pages:
     photos_search_clear: 清除
     photos_search_close: 关闭
     photos_search_no_results: 无匹配
+    photos_search_result: 条结果
+    photos_search_results: 条结果
+    photos_count: 张照片
+    photos_viewer: 照片查看器
+    photos_view_photo: 查看照片
+    photos_thumbnails_toggle: 显示或隐藏缩略图
+    photos_fullscreen_enter: 进入全屏
+    photos_fullscreen_exit: 退出全屏
+    photos_slideshow_start: 开始幻灯片播放
+    photos_slideshow_pause: 暂停幻灯片播放
+    photos_viewer_close: 关闭照片查看器
     stories_title: 故事
     caption_expand: 展开
     caption_collapse: 收起

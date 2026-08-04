@@ -12,7 +12,6 @@ permalink: /photos/
 {% assign photo_groups = photos_sorted | group_by_exp: "photo", "photo.meta.album" %}
 
 {% if photos_sorted.size > 0 %}
-{% comment %}Afilmory-style: tools live in sticky header icons; panels below are dialogs/popovers.{% endcomment %}
 <dialog class="photo-search-dialog" id="photo-search-dialog" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}">
   <form method="dialog" class="photo-search-dialog-form">
     <div class="photo-search-dialog-bar">
@@ -27,8 +26,8 @@ permalink: /photos/
       <button type="button" class="photo-search-clear" hidden>{{ copy.photos_search_clear | default: 'Clear' }}</button>
       <button type="submit" class="photo-search-close" value="cancel" aria-label="{{ copy.photos_search_close | default: 'Close' }}">×</button>
     </div>
-    <ul class="photo-search-results" id="photo-search-results" hidden role="listbox" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"></ul>
-    <p class="photo-search-status" id="photo-search-status" aria-live="polite" data-no-results="{{ copy.photos_search_no_results | default: 'No matches' }}"></p>
+    <ul class="photo-search-results" id="photo-search-results" hidden role="list" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"></ul>
+    <p class="photo-search-status" id="photo-search-status" aria-live="polite" data-no-results="{{ copy.photos_search_no_results | default: 'No matches' }}" data-result-label="{{ copy.photos_search_result | default: 'result' }}" data-results-label="{{ copy.photos_search_results | default: 'results' }}"></p>
   </form>
 </dialog>
 
@@ -93,7 +92,11 @@ permalink: /photos/
 <section class="photo-album" id="album-{{ forloop.index }}" data-album="{{ group.name | escape }}">
   <header class="photo-album-header">
     <h2 class="photo-album-title">{{ group.name }}</h2>
-    <p class="photo-album-meta monospace">{{ album_photos.size }} · {{ album_photos.first.uploaded | date: "%Y/%m/%d" }}{% if album_photos.size > 1 %} – {{ album_photos.last.uploaded | date: "%Y/%m/%d" }}{% endif %}</p>
+    <p class="photo-album-meta monospace">
+      <span class="photo-album-count">{{ album_photos.size }} {{ copy.photos_count | default: 'photos' }}</span>
+      <span class="photo-album-meta-separator" aria-hidden="true">·</span>
+      <span class="photo-album-dates"><time datetime="{{ album_photos.last.uploaded | date_to_xmlschema }}">{{ album_photos.last.uploaded | date: "%Y/%m/%d" }}</time>{% if album_photos.size > 1 %}<span aria-hidden="true">–</span><time datetime="{{ album_photos.first.uploaded | date_to_xmlschema }}">{{ album_photos.first.uploaded | date: "%Y/%m/%d" }}</time>{% endif %}</span>
+    </p>
   </header>
   <div class="photo-album-grid">
 {% for photo in album_photos %}
@@ -126,13 +129,13 @@ permalink: /photos/
       {% if list_image.height %}height="{{ list_image.height }}"{% endif %}
       alt="{{ photo.meta.alt }}"
       title="{{ photo.meta.alt }}"
-      loading="lazy"
+      {% if photo.id == photos_sorted.first.id %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
       decoding="async">
   </a>
   <figcaption>
     <div class="desc photo-metadata">
-      <div>{{ photo.uploaded | date: "%Y/%m/%d (%a)" }}</div>
-      {% if photo.meta.location  %}<div>@ {{ photo.meta.location }}</div>{% endif %}
+      <time datetime="{{ photo.uploaded | date_to_xmlschema }}">{{ photo.uploaded | date: "%Y/%m/%d" }}</time>
+      {% if photo.meta.location and photo.meta.location != group.name %}<span class="photo-location">{{ photo.meta.location }}</span>{% endif %}
       <open-heart class="text-open-heart" href="https://site.bazinga.ink/like?id=photo-P{{ photo.id }}" emoji="❤️" aria-labelledby="like-prompt">
         <span class="on">{{ copy.notes_liked }} ♥︎.</span><span class="off">{{ copy.notes_like }}</span>
       </open-heart>
