@@ -4,6 +4,26 @@
   "installCommand": "bundle install && npm install",
   "devCommand": "bundle exec jekyll serve --host 0.0.0.0 --port $PORT",
   "framework": null,
+  "headers": [
+    {
+      "source": "/images/photos/variants/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/assets/fonts/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/photos/search.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/feed.xml",
