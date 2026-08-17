@@ -54091,6 +54091,12 @@
         "width": 720,
         "height": 405,
         "type": "image/webp"
+      },
+      "viewer": {
+        "src": "/images/photos/variants/photo-20240803-p1050749-8ca55c69-viewer.webp",
+        "width": 1920,
+        "height": 1080,
+        "type": "image/webp"
       }
     },
     "meta": {

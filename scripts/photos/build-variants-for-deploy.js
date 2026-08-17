@@ -16,10 +16,10 @@ import {
  * Afilmory-style thumbs (default = site static asset, not R2 write):
  *   download original (CDN/R2 read) → 720w WebP → images/photos/variants/
  *   photos.json thumbnail.src = /images/photos/variants/…-thumb.webp
- *   list/home use thumb; lightbox uses CDN original
- *   Deploy runs encode (missing only) so thumbs ship inside Jekyll _site
+ *   list/home use thumb; lightbox uses viewer (1920w) then CDN original
+ *   Deploy runs encode (missing only) so thumbs/viewers ship inside Jekyll _site
  *
- * Schema: variants = { original, thumbnail } only (no preview/large).
+ * Schema: variants = { original, thumbnail, viewer? }.
  *
  * Deploy / full site build (default):
  *   npm run build:site
@@ -34,6 +34,11 @@ import {
 
 const THUMB_WIDTH = Number(process.env.PHOTOS_THUMB_WIDTH || 720) || 720
 const THUMB_QUALITY = Number(process.env.PHOTOS_THUMB_QUALITY || 78) || 78
+const VIEWER_WIDTH = Number(process.env.PHOTOS_VIEWER_WIDTH || 1920) || 1920
+const VIEWER_QUALITY = Number(process.env.PHOTOS_VIEWER_QUALITY || 80) || 80
+const SITE_ORIGIN = (process.env.PHOTOS_SITE_ORIGIN || 'https://site.bazinga.ink').replace(/\/$/, '')
+const ENCODE_VIEWERS = process.env.PHOTOS_ENCODE_VIEWERS !== '0'
+const BACKFILL_VIEWERS = process.env.PHOTOS_ENCODE_VIEWERS === 'all'
 // Lower effort on CI for speed (Afilmory-style deploy encode); local default still 4.
 const THUMB_EFFORT = Number(
   process.env.PHOTOS_THUMB_EFFORT ||
@@ -112,6 +117,91 @@ function thumbCdnUrl(photo, cdn) {
   return publicCdnUrl(cdn, thumbKey(photo))
 }
 
+function viewerName(photo) {
+  return `${safeBase(photo)}-viewer.webp`
+}
+
+function viewerAbs(photo) {
+  return path.join(VARIANTS_DIR, viewerName(photo))
+}
+
+function viewerUrl(photo) {
+  return `${VARIANTS_URL}/${viewerName(photo)}`
+}
+
+function originalWidth(photo) {
+  return Number(photo.variants?.original?.width) || 0
+}
+
+function shouldHaveViewer(photo) {
+  const width = originalWidth(photo)
+  return !width || width > THUMB_WIDTH
+}
+
+function encodeViewersEnabled() {
+  return ENCODE_VIEWERS
+}
+
+function backfillViewersEnabled() {
+  return BACKFILL_VIEWERS
+}
+
+function readViewerVariant(photo) {
+  const existing = photo.variants?.viewer
+  if (existsSync(viewerAbs(photo))) {
+    return {
+      src: existing?.src && String(existing.src).includes('-viewer.webp') ? existing.src : viewerUrl(photo),
+      width: existing?.width,
+      height: existing?.height,
+      type: existing?.type || 'image/webp'
+    }
+  }
+  if (existing?.src && String(existing.src).includes('-viewer.webp')) {
+    return {
+      src: existing.src,
+      width: existing.width,
+      height: existing.height,
+      type: existing.type || 'image/webp'
+    }
+  }
+  return null
+}
+
+async function hydrateVariantFromSite(filename, dest) {
+  if (existsSync(dest)) return true
+  try {
+    const response = await fetch(`${SITE_ORIGIN}/images/photos/variants/${filename}`, {
+      headers: { ...CDN_HEADERS, Accept: 'image/webp,*/*' },
+      redirect: 'follow'
+    })
+    if (!response.ok) return false
+    const buffer = Buffer.from(await response.arrayBuffer())
+    if (buffer.length < 32) return false
+    writeFileSync(dest, buffer)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function ensureLocalDerivatives(photo) {
+  const jobs = []
+  if (!existsSync(thumbAbs(photo))) {
+    jobs.push(hydrateVariantFromSite(thumbName(photo), thumbAbs(photo)))
+  }
+  if (encodeViewersEnabled() && shouldHaveViewer(photo) && !existsSync(viewerAbs(photo))) {
+    jobs.push(hydrateVariantFromSite(viewerName(photo), viewerAbs(photo)))
+  }
+  if (jobs.length) await Promise.all(jobs)
+}
+
+function needsEncode(photo, { force = false } = {}) {
+  if (force) return true
+  if (!existsSync(thumbAbs(photo))) return true
+  if (backfillViewersEnabled() && shouldHaveViewer(photo) && !existsSync(viewerAbs(photo))) return true
+  return false
+}
+
 /** True when src is an https CDN URL under photos/variants (thumb). */
 function isCdnVariantsThumbSrc(src, cdn) {
   if (!src || typeof src !== 'string') return false
@@ -154,7 +244,7 @@ function assetPolicyForThumb(thumbSrc) {
   return 'r2-original-local-thumb'
 }
 
-function withThumb(photo, cdn, { thumb, originalMeta }) {
+function withThumb(photo, cdn, { thumb, viewer, originalMeta }) {
   const original = {
     src: originalUrl(photo, cdn),
     width: originalMeta?.width || photo.variants?.original?.width || thumb.width,
@@ -167,13 +257,16 @@ function withThumb(photo, cdn, { thumb, originalMeta }) {
       : thumb.width && thumb.height
         ? thumb.width / thumb.height
         : photo.meta?.ratio
+  const nextViewer = viewer || readViewerVariant({ ...photo, variants: { ...photo.variants, original } })
+  const variants = {
+    original,
+    thumbnail: thumb
+  }
+  if (nextViewer) variants.viewer = nextViewer
 
   return {
     ...photo,
-    variants: {
-      original,
-      thumbnail: thumb
-    },
+    variants,
     meta: {
       ...photo.meta,
       ...(ratio ? { ratio } : {}),
@@ -260,6 +353,8 @@ function normalizeVariants(photo, cdn) {
 
   const variants = { original }
   if (thumbnail) variants.thumbnail = thumbnail
+  const viewer = readViewerVariant({ ...photo, variants: { ...photo.variants, original, thumbnail } })
+  if (viewer) variants.viewer = viewer
 
   const nextMeta = {
     ...photo.meta,
@@ -374,6 +469,32 @@ async function encodeThumb(photo, imageBuffer) {
 
   writeFileSync(thumbAbs(photo), data)
 
+  const originalMeta = {
+    width: display.width,
+    height: display.height,
+    type:
+      rawMeta.format === 'jpeg' || rawMeta.format === 'jpg'
+        ? 'image/jpeg'
+        : `image/${rawMeta.format || 'jpeg'}`
+  }
+
+  let viewer = null
+  const viewerWidth = Math.min(VIEWER_WIDTH, display.width)
+  if (encodeViewersEnabled() && viewerWidth > THUMB_WIDTH) {
+    const encoded = await sharp(imageBuffer, SHARP_OPTS)
+      .rotate()
+      .resize({ width: viewerWidth, withoutEnlargement: true })
+      .webp({ quality: VIEWER_QUALITY, effort: Math.min(6, Math.max(0, THUMB_EFFORT || 2)) })
+      .toBuffer({ resolveWithObject: true })
+    writeFileSync(viewerAbs(photo), encoded.data)
+    viewer = {
+      src: viewerUrl(photo),
+      width: encoded.info.width,
+      height: encoded.info.height,
+      type: 'image/webp'
+    }
+  }
+
   return {
     thumbBuffer: data,
     thumb: {
@@ -382,15 +503,8 @@ async function encodeThumb(photo, imageBuffer) {
       height: info.height,
       type: 'image/webp'
     },
-    // Store *display* dimensions (after orientation), not raw sensor box.
-    originalMeta: {
-      width: display.width,
-      height: display.height,
-      type:
-        rawMeta.format === 'jpeg' || rawMeta.format === 'jpg'
-          ? 'image/jpeg'
-          : `image/${rawMeta.format || 'jpeg'}`
-    }
+    viewer,
+    originalMeta
   }
 }
 
@@ -460,6 +574,15 @@ async function hydrateFromDisk(photo, cdn) {
       existing?.src && isCdnVariantsThumbSrc(existing.src, cdn)
         ? existing.src
         : expectedLocal
+    let viewer = readViewerVariant(photo)
+    if (viewer && (!viewer.width || !viewer.height) && existsSync(viewerAbs(photo))) {
+      const viewerMeta = await sharp(viewerAbs(photo), SHARP_OPTS).metadata()
+      viewer = {
+        ...viewer,
+        width: viewerMeta.width,
+        height: viewerMeta.height
+      }
+    }
     return withThumb(photo, cdn, {
       thumb: {
         src,
@@ -467,6 +590,7 @@ async function hydrateFromDisk(photo, cdn) {
         height: meta.height,
         type: 'image/webp'
       },
+      viewer,
       originalMeta: {
         width: photo.variants?.original?.width,
         height: photo.variants?.original?.height,
@@ -557,6 +681,8 @@ Options:
   --dry-run         Log only; no writes
   --force           Re-encode even when on-disk thumb exists
   --limit=N         Encode only first N selected photos
+  PHOTOS_ENCODE_VIEWERS=all   Also download originals to backfill missing 1920w viewers
+  PHOTOS_SITE_ORIGIN          Existing-site origin used to reuse deployed variants (default https://site.bazinga.ink)
   --album=NAME      Filter by album
   --concurrency=N   Parallelism (default 4 local, 8 on CI/Vercel)
   -h, --help
@@ -688,7 +814,10 @@ Typical:
       }
     }
   } else {
-    const needsDownload = list.some((p) => options.force || !existsSync(thumbAbs(p)))
+    if (!options.dryRun) {
+      await mapPool(list, options.concurrency, (photo) => ensureLocalDerivatives(photo))
+    }
+    const needsDownload = list.some((p) => needsEncode(p, options))
     if (needsDownload && !options.dryRun) {
       const sample = list.find((p) => options.force || !existsSync(thumbAbs(p))) || list[0]
       try {
@@ -705,7 +834,7 @@ Typical:
     await mapPool(list, options.concurrency, async (photo) => {
       const label = labelOf(photo)
       try {
-        if (!options.force && existsSync(thumbAbs(photo))) {
+        if (!options.force && !needsEncode(photo)) {
           if (options.dryRun) {
             console.log(`  would reuse ${label}`)
             reused += 1
@@ -800,7 +929,7 @@ Typical:
     writeFileSync(dataPath, `${JSON.stringify(next, null, 2)}\n`)
     console.log(
       `Done. built=${built} reused=${reused} skipped=${skipped} failed=${failed} ` +
-        `uploaded=${uploaded} uploadFailed=${uploadFailed} (variants: thumbnail+original only)`
+        `uploaded=${uploaded} uploadFailed=${uploadFailed} (variants: thumbnail+viewer+original)`
     )
   }
 
