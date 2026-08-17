@@ -1,6 +1,7 @@
 ---
 layout: default
 type: photos
+photos_view: index
 has_open_heart: true
 title: Photos
 permalink: /photos/
@@ -8,152 +9,39 @@ permalink: /photos/
 
 {% assign current_lang = page.lang | default: page.locale | default: site.lang | default: 'en-US' %}
 {% assign copy = site.data.i18n_copy.list_pages[current_lang] %}
-{% assign photos_sorted = site.data.photos | sort: "uploaded" | reverse %}
-{% assign photo_groups = photos_sorted | group_by_exp: "photo", "photo.meta.album" %}
+{% assign albums = site.data.photo_albums %}
 
-{% if photos_sorted.size > 0 %}
-<dialog class="photo-search-dialog" id="photo-search-dialog" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}">
-  <form method="dialog" class="photo-search-dialog-form">
-    <div class="photo-search-dialog-bar">
-      <input
-        type="search"
-        id="photo-search-input"
-        class="photo-search-input"
-        placeholder="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"
-        aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"
-        autocomplete="off"
-        enterkeyhint="search">
-      <button type="button" class="photo-search-clear" hidden>{{ copy.photos_search_clear | default: 'Clear' }}</button>
-      <button type="submit" class="photo-search-close" value="cancel" aria-label="{{ copy.photos_search_close | default: 'Close' }}">×</button>
-    </div>
-    <ul class="photo-search-results" id="photo-search-results" hidden role="list" aria-label="{{ copy.photos_search_placeholder | default: 'Search albums or filenames…' }}"></ul>
-    <p class="photo-search-status" id="photo-search-status" aria-live="polite" data-no-results="{{ copy.photos_search_no_results | default: 'No matches' }}" data-result-label="{{ copy.photos_search_result | default: 'result' }}" data-results-label="{{ copy.photos_search_results | default: 'results' }}"></p>
-  </form>
-</dialog>
+{% include photos-toolbar.html %}
 
-<div class="photo-columns-panel" id="photo-columns-panel" hidden>
-  <div class="photo-columns-panel-inner" role="group" aria-label="{{ copy.photos_layout_controls | default: 'Gallery density' }}">
-    <div class="photo-columns-panel-head">
-      <span class="photo-columns-label">{{ copy.photos_columns | default: 'Columns' }}</span>
-      <output class="photo-columns-value" id="photo-columns-value" for="photo-columns">{{ copy.photos_columns_auto | default: 'Auto' }}</output>
-    </div>
-    <div class="photo-columns-slider-wrap">
-      <input
-        type="range"
-        id="photo-columns"
-        class="photo-columns-slider"
-        name="photo-columns"
-        min="0"
-        max="6"
-        step="1"
-        value="0"
-        list="photo-columns-ticks"
-        data-auto-label="{{ copy.photos_columns_auto | default: 'Auto' }}"
-        aria-valuemin="0"
-        aria-valuemax="6"
-        aria-valuenow="0"
-        aria-valuetext="{{ copy.photos_columns_auto | default: 'Auto' }}">
-      <datalist id="photo-columns-ticks">
-        <option value="0" label="{{ copy.photos_columns_auto | default: 'Auto' }}"></option>
-        <option value="1" label="3"></option>
-        <option value="2" label="4"></option>
-        <option value="3" label="5"></option>
-        <option value="4" label="6"></option>
-        <option value="5" label="7"></option>
-        <option value="6" label="8"></option>
-      </datalist>
-      <div class="photo-columns-marks" aria-hidden="true">
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-        <span class="photo-columns-mark"></span>
-      </div>
-      <div class="photo-columns-mark-labels monospace" aria-hidden="true">
-        <span>{{ copy.photos_columns_auto | default: 'Auto' }}</span>
-        <span>3</span>
-        <span>4</span>
-        <span>5</span>
-        <span>6</span>
-        <span>7</span>
-        <span>8</span>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<div class="photos-wrapper" id="photos" data-columns="auto">
-{% if photos_sorted.size > 0 %}
-{% for group in photo_groups %}
-{% assign album_photos = group.items | sort: "uploaded" | reverse %}
-<section class="photo-album" id="album-{{ forloop.index }}" data-album="{{ group.name | escape }}">
-  <header class="photo-album-header">
-    <h2 class="photo-album-title">{{ group.name }}</h2>
-    <p class="photo-album-meta monospace">
-      <span class="photo-album-count">{{ album_photos.size }} {{ copy.photos_count | default: 'photos' }}</span>
-      <span class="photo-album-meta-separator" aria-hidden="true">·</span>
-      <span class="photo-album-dates"><time datetime="{{ album_photos.last.uploaded | date_to_xmlschema }}">{{ album_photos.last.uploaded | date: "%Y/%m/%d" }}</time>{% if album_photos.size > 1 %}<span aria-hidden="true">–</span><time datetime="{{ album_photos.first.uploaded | date_to_xmlschema }}">{{ album_photos.first.uploaded | date: "%Y/%m/%d" }}</time>{% endif %}</span>
-    </p>
-  </header>
-  <div class="photo-album-grid">
-{% for photo in album_photos %}
-{% assign original = photo.variants.original %}
-{% assign list_image = photo.variants.thumbnail | default: original %}
-{% assign photo_ratio = photo.meta.ratio %}
-{% assign figure_orientation = 'unknown' %}
-{% if photo_ratio and photo_ratio > 1 %}
-  {% assign figure_orientation = 'landscape' %}
-{% elsif photo_ratio and photo_ratio <= 1 %}
-  {% assign figure_orientation = 'portrait' %}
-{% endif %}
-{% capture photo_search_raw %}{{ photo.meta.album }} {{ photo.meta.alt }} {{ photo.id }} {{ photo.source.filename }} {{ photo.meta.location }}{% endcapture %}
-{% assign photo_search = photo_search_raw | strip | strip_newlines %}
-{% assign photo_title = photo.source.filename | default: photo.id %}
-{% assign photo_subtitle = photo.meta.album | default: photo.meta.location | default: '' %}
-{% assign photo_label = photo.meta.alt | default: photo_title %}
-<figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %} data-photo-search="{{ photo_search | escape }}" data-photo-title="{{ photo_title | escape }}" data-photo-subtitle="{{ photo_subtitle | escape }}" data-photo-thumb="{{ list_image.src | escape }}" data-photo-label="{{ photo_label | escape }}">
-  <a href="{{ original.src }}" class="image-link"
-     data-umami-event="photo_full_view"
-     data-umami-event-photo-id="{{ photo.id }}"
-     data-umami-event-location="photos_page"
-     data-umami-event-ratio="{{ figure_orientation }}"
-     data-photo-original-src="{{ original.src }}"
-     data-photo-thumbnail-src="{{ list_image.src }}"
-     data-photo-meta='{{ photo.meta | jsonify | escape }}'>
-    <img
-      src="{{ list_image.src }}"
-      {% if list_image.width %}width="{{ list_image.width }}"{% endif %}
-      {% if list_image.height %}height="{{ list_image.height }}"{% endif %}
-      alt="{{ photo.meta.alt }}"
-      title="{{ photo.meta.alt }}"
-      {% if photo.id == photos_sorted.first.id %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
-      decoding="async">
-  </a>
-  <figcaption>
-    <div class="desc photo-metadata">
-      <time datetime="{{ photo.uploaded | date_to_xmlschema }}">{{ photo.uploaded | date: "%Y/%m/%d" }}</time>
-      {% if photo.meta.location and photo.meta.location != group.name %}<span class="photo-location">{{ photo.meta.location }}</span>{% endif %}
-      <open-heart class="text-open-heart" href="https://site.bazinga.ink/like?id=photo-P{{ photo.id }}" emoji="❤️" aria-labelledby="like-prompt">
-        <span class="on">{{ copy.notes_liked }} ♥︎.</span><span class="off">{{ copy.notes_like }}</span>
-      </open-heart>
-    </div>
-    {% if photo.meta.caption %}
-    <div class="caption-container" data-expand-label="{{ copy.caption_expand }}" data-collapse-label="{{ copy.caption_collapse }}">
-      <div class="caption-content">{{ photo.meta.caption | markdownify }}</div>
-      <button class="caption-toggle" style="display: none;">{{ copy.caption_expand }}</button>
-    </div>
-    {% endif %}
-  </figcaption>
-</figure>
-{% endfor %}
-  </div>
-</section>
-{% endfor %}
+<div class="photos-wrapper photos-wrapper--index" id="photos" data-photos-view="index">
+{% if albums.size > 0 %}
+  <h1 class="photos-index-heading">{{ copy.photos_albums | default: copy.photos_title | default: 'Albums' }}</h1>
+  <ul class="photo-album-index">
+    {% for album in albums %}
+    <li>
+      <a href="/photos/{{ album.slug }}/" class="photo-album-card">
+        {% if album.cover.src %}
+        <img
+          src="{{ album.cover.src }}"
+          {% if album.cover.width %}width="{{ album.cover.width }}"{% endif %}
+          {% if album.cover.height %}height="{{ album.cover.height }}"{% endif %}
+          alt="{{ album.cover.alt | escape }}"
+          {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+          decoding="async">
+        {% endif %}
+        <h2 class="photo-album-card-title">{{ album.name }}</h2>
+        <p class="photo-album-card-meta monospace">
+          <span>{{ album.count }} {{ copy.photos_count | default: 'photos' }}</span>
+          {% if album.oldest %}
+          <span aria-hidden="true">·</span>
+          <span><time datetime="{{ album.oldest | date_to_xmlschema }}">{{ album.oldest | date: "%Y/%m/%d" }}</time>{% if album.newest and album.newest != album.oldest %}<span aria-hidden="true">–</span><time datetime="{{ album.newest | date_to_xmlschema }}">{{ album.newest | date: "%Y/%m/%d" }}</time>{% endif %}</span>
+          {% endif %}
+        </p>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
 {% else %}
   <p><em style="opacity: 0.65;">{{ site.data.i18n_copy.home[current_lang].empty_photos }}</em></p>
 {% endif %}
-
 </div>

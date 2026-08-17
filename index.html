@@ -82,7 +82,8 @@ root: true
     {% assign original = photo.variants.original %}
     {% assign display = photo.variants.thumbnail | default: original %}
     <li class="photo-strip-item">
-      <a href="/photos#{{ photo.id }}"
+      {% assign album_rec = site.data.photo_albums | where: "name", photo.meta.album | first %}
+      <a href="{% if album_rec %}/photos/{{ album_rec.slug }}/#{{ photo.id }}{% else %}/photos/#{{ photo.id }}{% endif %}"
          class="photo-strip-link"
          data-umami-event="photo_click"
          data-umami-event-location="homepage"

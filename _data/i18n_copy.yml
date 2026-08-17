@@ -63,6 +63,7 @@ list_pages:
     notes_limit_hint: Only the most recent 200 notes are shown.
     photos_title: Photos
     photos_albums: Albums
+    photos_back: All photos
     photos_layout_controls: Gallery density
     photos_columns: Columns
     photos_columns_auto: Auto
@@ -97,6 +98,7 @@ list_pages:
     notes_limit_hint: 仅显示最近 200 条随笔。
     photos_title: 照片
     photos_albums: 相册
+    photos_back: 全部相册
     photos_layout_controls: 画廊密度
     photos_columns: 列数
     photos_columns_auto: 自动

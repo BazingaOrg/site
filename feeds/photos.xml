@@ -27,8 +27,9 @@ permalink: /photos.xml
           {{ content | xml_escape }}{{ openheart | xml_escape }}
         </description>
         <pubDate>{{ photo.uploaded | date_to_rfc822 }}</pubDate>
-        <link>{{ site.url }}/photos#P{{ photo.id }}</link>
-        <guid isPermaLink="true">{{ site.url }}/photos#P{{ photo.id }}</guid>
+        {% assign album_rec = site.data.photo_albums | where: "name", photo.meta.album | first %}
+        <link>{{ site.url }}/photos/{% if album_rec %}{{ album_rec.slug }}/{% endif %}#{{ photo.id }}</link>
+        <guid isPermaLink="true">{{ site.url }}/photos/{% if album_rec %}{{ album_rec.slug }}/{% endif %}#{{ photo.id }}</guid>
       </item>
     {% endfor %}
   </channel>

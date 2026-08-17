@@ -1,0 +1,57 @@
+{% assign photo = include.photo %}
+{% assign original = photo.variants.original %}
+{% assign list_image = photo.variants.thumbnail | default: original %}
+{% assign viewer = photo.variants.viewer %}
+{% assign photo_ratio = photo.meta.ratio %}
+{% assign figure_orientation = 'unknown' %}
+{% if photo_ratio and photo_ratio > 1 %}
+  {% assign figure_orientation = 'landscape' %}
+{% elsif photo_ratio and photo_ratio <= 1 %}
+  {% assign figure_orientation = 'portrait' %}
+{% endif %}
+{% capture photo_search_raw %}{{ photo.meta.album }} {{ photo.source.filename }} {{ photo.id }}{% endcapture %}
+{% assign photo_search = photo_search_raw | strip | strip_newlines %}
+{% assign photo_title = photo.source.filename | default: photo.id %}
+{% assign photo_subtitle = photo.meta.album | default: photo.meta.location | default: '' %}
+{% assign photo_label = photo.meta.alt | default: photo_title %}
+{% assign photo_format = photo.meta.sourceFormat | downcase %}
+{% assign photo_has_overlay_meta = false %}
+{% if photo.meta.exif or photo.meta.hdrCandidate or photo.meta.fallbackGenerated or photo.meta.dynamicRange == 'hdr-candidate' %}
+  {% assign photo_has_overlay_meta = true %}
+{% elsif photo_format != '' and photo_format != 'jpg' and photo_format != 'jpeg' %}
+  {% assign photo_has_overlay_meta = true %}
+{% endif %}
+<figure id="{{ photo.id }}" class="figure-{{ figure_orientation }}"{% if photo_ratio %} style="--photo-ratio: {{ photo_ratio }};"{% endif %} data-photo-search="{{ photo_search | escape }}" data-photo-title="{{ photo_title | escape }}" data-photo-subtitle="{{ photo_subtitle | escape }}" data-photo-thumb="{{ list_image.src | escape }}" data-photo-label="{{ photo_label | escape }}">
+  <a href="/photos/{{ include.album_slug }}/#{{ photo.id }}" class="image-link"
+     data-umami-event="photo_full_view"
+     data-umami-event-photo-id="{{ photo.id }}"
+     data-umami-event-location="photos_page"
+     data-umami-event-ratio="{{ figure_orientation }}"
+     data-photo-original-src="{{ original.src }}"
+     {% if viewer.src %}data-photo-viewer-src="{{ viewer.src }}"{% endif %}
+     data-photo-thumbnail-src="{{ list_image.src }}"{% if photo_has_overlay_meta %}
+     data-photo-meta='{{ photo.meta | jsonify | escape }}'{% endif %}>
+    <img
+      src="{{ list_image.src }}"
+      {% if list_image.width %}width="{{ list_image.width }}"{% endif %}
+      {% if list_image.height %}height="{{ list_image.height }}"{% endif %}
+      alt="{{ photo.meta.alt }}"
+      {% if photo.id == include.first_id %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+      decoding="async">
+  </a>
+  <figcaption>
+    <div class="desc photo-metadata">
+      <time datetime="{{ photo.uploaded | date_to_xmlschema }}">{{ photo.uploaded | date: "%Y/%m/%d" }}</time>
+      {% if photo.meta.location and photo.meta.location != include.album_name %}<span class="photo-location">{{ photo.meta.location }}</span>{% endif %}
+      <open-heart class="text-open-heart" href="https://site.bazinga.ink/like?id=photo-P{{ photo.id }}" emoji="❤️" aria-labelledby="like-prompt">
+        <span class="on">{{ include.copy.notes_liked }} ♥︎.</span><span class="off">{{ include.copy.notes_like }}</span>
+      </open-heart>
+    </div>
+    {% if photo.meta.caption %}
+    <div class="caption-container" data-expand-label="{{ include.copy.caption_expand }}" data-collapse-label="{{ include.copy.caption_collapse }}">
+      <div class="caption-content">{{ photo.meta.caption | markdownify }}</div>
+      <button class="caption-toggle" style="display: none;">{{ include.copy.caption_expand }}</button>
+    </div>
+    {% endif %}
+  </figcaption>
+</figure>

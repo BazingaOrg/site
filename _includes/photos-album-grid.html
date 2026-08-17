@@ -1,0 +1,18 @@
+{% assign current_lang = page.lang | default: page.locale | default: site.lang | default: 'en-US' %}
+{% assign copy = site.data.i18n_copy.list_pages[current_lang] %}
+{% assign album_photos = site.data.photos | where_exp: "photo", "photo.meta.album == page.album" | sort: "uploaded" | reverse %}
+<section class="photo-album" data-album="{{ page.album | escape }}">
+  <header class="photo-album-header">
+    <h1 class="photo-album-title">{{ page.album }}</h1>
+    <p class="photo-album-meta monospace">
+      <span class="photo-album-count">{{ album_photos.size }} {{ copy.photos_count | default: 'photos' }}</span>
+      <span class="photo-album-meta-separator" aria-hidden="true">·</span>
+      <span class="photo-album-dates"><time datetime="{{ album_photos.last.uploaded | date_to_xmlschema }}">{{ album_photos.last.uploaded | date: "%Y/%m/%d" }}</time>{% if album_photos.size > 1 %}<span aria-hidden="true">–</span><time datetime="{{ album_photos.first.uploaded | date_to_xmlschema }}">{{ album_photos.first.uploaded | date: "%Y/%m/%d" }}</time>{% endif %}</span>
+    </p>
+  </header>
+  <div class="photo-album-grid">
+    {% for photo in album_photos %}
+      {% include photo-figure.html photo=photo album_slug=page.album_slug album_name=page.album first_id=album_photos.first.id copy=copy %}
+    {% endfor %}
+  </div>
+</section>

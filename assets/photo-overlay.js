@@ -293,7 +293,7 @@
         const searchResults = document.querySelector('#photo-search-results')
         const searchStatus = document.querySelector('#photo-search-status')
         let shouldRestoreSearchFocus = true
-        const searchIndex = Array.from(document.querySelectorAll('#photos figure[data-photo-search]')).map((figure) => {
+        let searchIndex = Array.from(document.querySelectorAll('#photos figure[data-photo-search]')).map((figure) => {
           const title = figure.dataset.photoTitle || figure.dataset.photoLabel || figure.id
           const subtitle = figure.dataset.photoSubtitle || ''
           const thumb =
@@ -303,6 +303,7 @@
             || ''
           return {
             id: figure.id,
+            slug: photos?.dataset?.albumSlug || '',
             text: (figure.dataset.photoSearch || '').toLowerCase(),
             title,
             subtitle,
@@ -310,6 +311,33 @@
             label: figure.dataset.photoLabel || [title, subtitle].filter(Boolean).join(' · ')
           }
         })
+
+        const mergeSearchItems = (items) => {
+          if (!Array.isArray(items)) return
+          const byId = new Map(searchIndex.map((item) => [item.id, item]))
+          items.forEach((item) => {
+            if (!item?.id) return
+            const current = byId.get(item.id)
+            if (current) {
+              if (item.slug && !current.slug) current.slug = item.slug
+              return
+            }
+            searchIndex.push(item)
+            byId.set(item.id, item)
+          })
+        }
+
+        let searchIndexPromise = null
+        const ensureRemoteSearchIndex = () => {
+          if (searchIndexPromise) return searchIndexPromise
+          searchIndexPromise = fetch('/photos/search.json')
+            .then((response) => (response.ok ? response.json() : []))
+            .then((items) => {
+              mergeSearchItems(items)
+            })
+            .catch(() => {})
+          return searchIndexPromise
+        }
 
         const clearPhotoSearch = () => {
           if (searchInput) searchInput.value = ''
@@ -338,6 +366,7 @@
         }
 
         const openSearchDialog = () => {
+          ensureRemoteSearchIndex()
           setColumnsPanelOpen(false)
           if (!searchDialog) return
           shouldRestoreSearchFocus = true
@@ -365,6 +394,11 @@
         window.addEventListener('wheel', blockBackgroundScroll, { passive: false })
         window.addEventListener('touchmove', blockBackgroundScroll, { passive: false })
 
+        const albumPathFor = (item) => {
+          const slug = item?.slug || photos?.dataset?.albumSlug
+          return slug ? `/photos/${slug}/` : '/photos/'
+        }
+
         const jumpToPhotoResult = (photoId) => {
           shouldRestoreSearchFocus = false
           closeSearchDialog()
@@ -382,7 +416,12 @@
                 // ignore focus errors
               }
             }
+            return
           }
+
+          const item = searchIndex.find((entry) => entry.id === photoId)
+          if (!item) return
+          window.location.href = `${albumPathFor(item)}#${photoId}`
         }
 
         const runPhotoSearch = (rawQuery) => {
@@ -466,6 +505,7 @@
         }
 
         searchOpenBtn?.addEventListener('click', () => {
+          ensureRemoteSearchIndex()
           openSearchDialog()
         })
 
@@ -524,7 +564,7 @@
             thumbnailButton.dataset.photoIndex = `${index}`
 
             const thumbnailImage = document.createElement('img')
-            thumbnailImage.src = link.dataset.photoThumbnailSrc || sourceImage?.currentSrc || sourceImage?.src || link.href
+            thumbnailImage.src = photoThumbnailSrc(link, sourceImage)
             thumbnailImage.alt = sourceImage?.alt || `Photo ${index + 1}`
             thumbnailImage.loading = 'lazy'
             thumbnailImage.decoding = 'async'
@@ -763,6 +803,43 @@
           photoOverlayExif.hidden = false
         }
 
+        const photoIdFromHash = () => {
+          const raw = window.location.hash.replace(/^#/, '')
+          if (!raw) return ''
+          try {
+            return decodeURIComponent(raw)
+          } catch {
+            return raw
+          }
+        }
+
+        const photoThumbnailSrc = (link, image = link?.querySelector?.('img')) =>
+          link?.dataset?.photoThumbnailSrc || image?.currentSrc || image?.src || ''
+
+        const photoOriginalSrc = (link, image = link?.querySelector?.('img')) =>
+          link?.dataset?.photoViewerSrc
+          || link?.dataset?.photoOriginalSrc
+          || image?.currentSrc
+          || image?.src
+          || ''
+
+        const linkForPhotoId = (photoId) => {
+          if (!photoId) return null
+          const figure = document.getElementById(photoId)
+          return figure?.querySelector(':scope > a.image-link') || figure?.querySelector('.image-link') || null
+        }
+
+        const syncPhotoHash = (link) => {
+          const photoId = link?.closest('figure')?.id
+          if (!photoId || photoIdFromHash() === photoId) return
+          history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${photoId}`)
+        }
+
+        const clearPhotoHash = () => {
+          if (!photoIdFromHash()) return
+          history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+        }
+
         const parsePhotoMeta = (link) => {
           const photoMetaJson = link?.dataset?.photoMeta
           if (!photoMetaJson) return null
@@ -908,11 +985,8 @@
           if (!link || !photoOverlayImage || !photoOverlayPosition) return
 
           const image = link.querySelector('img')
-          const fullSource = link.href || link.dataset.photoOriginalSrc || image?.currentSrc || image?.src
-          const placeholderSource =
-            link.dataset.photoThumbnailSrc
-            || image?.currentSrc
-            || image?.src
+          const fullSource = photoOriginalSrc(link, image)
+          const placeholderSource = photoThumbnailSrc(link, image)
 
           setOverlayImage(fullSource, image?.alt || 'Photo', { placeholderSource })
           photoOverlayPosition.textContent = `${photoIndex + 1} / ${activePhotoLinks.length}`
@@ -920,6 +994,7 @@
           updateThumbnailActiveState(photoIndex)
           renderOverlayCaption(link)
           renderOverlayExif(link)
+          syncPhotoHash(link)
 
           if (resetAutoplay && photoOverlayToggleAutoplay?.classList.contains('is-playing')) {
             scheduleAutoplayTick()
@@ -968,6 +1043,7 @@
         const closeOverlay = async () => {
           if (!photoOverlay || photoOverlay.hidden) return
           stopAutoplay()
+          clearPhotoHash()
 
           if (document.fullscreenElement === photoOverlay) {
             try {
@@ -1094,11 +1170,52 @@
         photos?.addEventListener('click', (event) => {
           const link = photoLinkFromEvent(event)
           if (!link) return
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+            return
+          }
           if ((suppressClickUntil.get(link) || 0) > Date.now()) {
             event.preventDefault()
             return
           }
           openFromPhotoLink(link, event)
+        })
+
+        const openFromHash = () => {
+          const link = linkForPhotoId(photoIdFromHash())
+          if (!link) return false
+          const links = albumLinksFor(link)
+          const index = Math.max(0, links.indexOf(link))
+          if (!photoOverlay?.hidden && currentPhotoIndex === index && activePhotoLinks[index] === link) {
+            return true
+          }
+          openOverlay(index, links)
+          return true
+        }
+
+        const redirectIndexHash = () => {
+          if (photos?.dataset.photosView !== 'index') return Promise.resolve(false)
+          const photoId = photoIdFromHash()
+          if (!photoId) return Promise.resolve(false)
+          return ensureRemoteSearchIndex().then(() => {
+            const item = searchIndex.find((entry) => entry.id === photoId)
+            if (!item?.slug) return false
+            window.location.replace(`/photos/${item.slug}/#${photoId}`)
+            return true
+          })
+        }
+
+        window.addEventListener('hashchange', () => {
+          if (!photoIdFromHash()) {
+            if (photoOverlay && !photoOverlay.hidden) closeOverlay()
+            return
+          }
+          redirectIndexHash().then((redirected) => {
+            if (!redirected) openFromHash()
+          })
+        })
+
+        redirectIndexHash().then((redirected) => {
+          if (!redirected) openFromHash()
         })
 
         if (!fullscreenApiSupported && photoOverlayToggleFullscreen) {

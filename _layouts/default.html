@@ -48,6 +48,9 @@
     <link rel="icon" href="/assets/apple-touch-icon.png?v1" type="image/png" sizes="180x180">
     <link rel="icon" href="/assets/favicon-32x32.png?v1" type="image/png" sizes="32x32">
     <link rel="preload" href="/assets/fonts/anuphan-latin.woff2" as="font" type="font/woff2" crossorigin>
+    {% if page.type == "photos" %}
+    <link rel="modulepreload" href="/assets/photo-overlay.js">
+    {% endif %}
     <link href="/assets/new.css" rel="stylesheet" type="text/css">
     {% if page.collection == "posts" %}
       <link href="/assets/syntax.css" rel="stylesheet" type="text/css">
@@ -100,10 +103,10 @@
     <header{% if page.type == "photos" %} class="photos-site-header"{% endif %}>
       {% if page.root != true %}
         <div class="logo-container">
-          <a href="/{% if page.collection == "notes" %}notes{% endif %}" aria-label="Home" class="back-link"
+          <a href="{% if page.photos_view == 'album' %}/photos/{% elsif page.collection == 'notes' %}/notes{% else %}/{% endif %}" aria-label="{% if page.photos_view == 'album' %}{{ copy.list_pages[lang].photos_back | default: copy.list_pages['en-US'].photos_back | default: 'All photos' }}{% else %}Home{% endif %}" class="back-link"
               data-umami-event="nav_back"
               data-umami-event-from-page="{{ page.url }}"
-              data-umami-event-to-section="{% if page.collection == 'notes' %}notes{% else %}home{% endif %}"
+              data-umami-event-to-section="{% if page.photos_view == 'album' %}photos{% elsif page.collection == 'notes' %}notes{% else %}home{% endif %}"
               data-umami-event-page-type="{{ page.collection | default: 'page' }}">&leftarrow;</a>
           <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <title>Bazinga</title>
@@ -141,6 +144,7 @@
               aria-haspopup="true"
               aria-expanded="false"
               aria-controls="photo-columns-panel"
+              {% unless page.photos_view == 'album' %}hidden{% endunless %}
               aria-label="{{ photos_copy.photos_layout_controls | default: 'Gallery density' }}">
               <svg viewBox="0 0 15 15" width="16" height="16" aria-hidden="true">
                 <rect x="1.5" y="1.5" width="5.4" height="7.8" rx="0.9" fill="none" stroke="currentColor" stroke-width="1.25"></rect>
